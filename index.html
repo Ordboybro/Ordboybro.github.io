@@ -1,0 +1,5828 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Emoji Drops</title>
+
+<script defer src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
+<script>
+window.addEventListener("DOMContentLoaded", () => {
+    emailjs.init({
+        publicKey:"aevTrSnp2VVPi1u3_"
+    });
+});
+</script>
+
+<script>
+window.addEventListener("DOMContentLoaded", () => {
+    console.log("Emoji Drops loaded");
+});
+</script>
+
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial,sans-serif;
+}
+
+html{
+    scroll-behavior:smooth;
+}
+
+body{
+    background:var(--bg);
+    color:var(--text);
+    overflow-x:hidden;
+
+    padding-bottom:110px;
+}
+
+:root{
+    --bg:#0b0b0b;
+    --z-header:1000;
+    --z-modal:2000;
+    --card:#141414;
+    --text:#ffffff;
+    --muted:#888;
+    --accent:#ff7b00;
+    --border:#2a2a2a;
+}
+
+body.light-theme{
+    --bg:#f4f4f4;
+    --card:#ffffff;
+    --text:#111111;
+    --muted:#666;
+    --border:#e5e5e5;
+    --accent:#ff7b00;
+}
+
+/* SCROLL */
+
+::-webkit-scrollbar{
+    width:8px;
+}
+
+::-webkit-scrollbar-thumb{
+    background:#ff7b00;
+    border-radius:20px;
+}
+
+/* HEADER */
+
+header{
+    width:100%;
+    height:90px;
+
+    background:#111111ee;
+
+    backdrop-filter:blur(12px);
+
+    /* border-bottom:1px solid #2d2d2d; */
+
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+
+    padding:0 40px;
+
+    position:sticky;
+    top:0;
+
+    z-index:999;
+}
+
+@keyframes profileOpenScale{
+
+    from{
+
+        transform:
+        scale(0);
+
+        opacity:0;
+    }
+
+    to{
+
+        transform:
+        scale(1);
+
+        opacity:1;
+    }
+}
+
+.settings-overlay{
+    position:fixed;
+    inset:0;
+
+    background:rgba(0,0,0,0.45);
+    backdrop-filter:blur(10px);
+
+    display:none;
+
+    align-items:center;
+    justify-content:center;
+
+    z-index:1300;
+}
+
+.settings-box{
+    width:75%;
+    max-width:850px;
+
+    background:var(--card);
+
+    border:2px solid #222;
+
+    border-radius:28px;
+
+    overflow:hidden;
+
+    animation:settingsShow .25s ease;
+}
+
+@keyframes settingsShow{
+    from{
+        transform:scale(.9);
+        opacity:0;
+    }
+    to{
+        transform:scale(1);
+        opacity:1;
+    }
+}
+
+.settings-line{
+    height:5px;
+    background:#ff9800;
+}
+
+.settings-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+
+    padding:25px;
+}
+
+.settings-title{
+    font-size:30px;
+    font-weight:800;
+}
+
+.settings-close{
+    width:42px;
+    height:42px;
+
+    border:none;
+
+    border-radius:12px;
+
+    background:#1f1f1f;
+
+    color:white;
+
+    cursor:pointer;
+
+    font-size:18px;
+}
+
+.settings-list{
+    padding:25px;
+
+    display:flex;
+    flex-direction:column;
+    gap:22px;
+}
+
+.settings-item{
+    background:#181818;
+
+    border:2px solid #252525;
+
+    border-radius:18px;
+
+    padding:18px;
+
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+.settings-item-column{
+    background:#181818;
+
+    border:2px solid #252525;
+
+    border-radius:18px;
+
+    padding:18px;
+
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+}
+
+.settings-name{
+    font-size:18px;
+    font-weight:700;
+}
+
+.settings-sub{
+    color:#888;
+    margin-top:5px;
+}
+
+.settings-input{
+    height:45px;
+
+    border:none;
+
+    border-radius:12px;
+
+    background:#101010;
+
+    border:2px solid #2b2b2b;
+
+    color:white;
+
+    padding:0 15px;
+
+    font-size:16px;
+}
+
+.settings-action-btn{
+    height:45px;
+
+    border:none;
+
+    border-radius:12px;
+
+    background:#202020;
+
+    border:2px solid #333;
+
+    color:white;
+
+    cursor:pointer;
+
+    font-weight:700;
+}
+
+.delete-btn{
+    border-color:#5c1b1b;
+    color:#ff6b6b;
+}
+
+.red{
+    color:#ff6b6b;
+}
+
+.switch{
+    position:relative;
+    display:inline-block;
+    width:58px;
+    height:32px;
+}
+
+.switch input{
+    opacity:0;
+    width:0;
+    height:0;
+}
+
+.slider{
+    position:absolute;
+    inset:0;
+
+    background:#444;
+
+    border-radius:50px;
+
+    transition:.2s;
+
+    cursor:pointer;
+}
+
+.slider:before{
+    content:"";
+
+    position:absolute;
+
+    width:24px;
+    height:24px;
+
+    left:4px;
+    top:4px;
+
+    background:white;
+
+    border-radius:50%;
+
+    transition:.2s;
+}
+
+input:checked + .slider{
+    background:#34c759;
+}
+
+input:checked + .slider:before{
+    transform:translateX(26px);
+}
+
+.profile-top-line{
+    width:100%;
+    height:4px;
+
+    background:
+    linear-gradient(
+        90deg,
+        transparent,
+        #ff7b00,
+        #ffae00,
+        #ff7b00,
+        transparent
+    );
+
+    box-shadow:
+    0 0 10px #ff7b00,
+    0 0 25px #ff7b00;
+}
+
+.profile-content{
+    width:100%;
+    height:100%;
+    padding:30px;
+    position:relative;
+}
+
+.withdraw-hover{
+    position:absolute;
+    right:14px;
+    bottom:64px;
+}
+
+.center-indicator{
+position:absolute;
+
+left:50%;
+top:0;
+
+transform:translateX(-50%);
+
+width:4px;
+height:100%;
+
+background:
+linear-gradient(
+to bottom,
+transparent,
+#ff7b00,
+#ffae00,
+#ff7b00,
+transparent
+);
+
+box-shadow:
+0 0 12px #ff7b00,
+0 0 25px #ff7b00;
+
+z-index:50;
+border-radius:20px;
+}
+
+/* LOGO */
+
+.logo{
+    display:flex;
+    align-items:center;
+
+    gap:14px;
+}
+
+.logo-img{
+    width:55px;
+    height:55px;
+
+    border-radius:14px;
+
+    object-fit:cover;
+}
+
+.logo-text span{
+    display:block;
+
+    font-size:30px;
+    font-weight:bold;
+
+    line-height:28px;
+}
+
+.logo-text p{
+    font-size:30px;
+    font-weight:bold;
+
+    color:#ff7b00;
+}
+
+/* RIGHT */
+
+.top-right{
+    display:flex;
+    align-items:center;
+
+    gap:20px;
+}
+
+.top-btn{
+    background:var(--card);
+    border:1px solid var(--border);
+
+    padding:12px 24px;
+
+    border-radius:40px;
+
+    transition:0.2s;
+
+    cursor:pointer;
+}
+
+.top-btn:hover{
+    border-color:#ff7b00;
+
+    box-shadow:0 0 15px #ff7b0044;
+}
+
+/* ONLINE */
+
+.online-box{
+    display:flex;
+    align-items:center;
+
+    gap:10px;
+}
+
+.online-dot{
+    width:10px;
+    height:10px;
+
+    border-radius:50%;
+
+    background:#ff2a2a;
+
+    box-shadow:
+    0 0 10px #ff2a2a,
+    0 0 20px #ff2a2a;
+
+    animation:blink 1s infinite;
+}
+
+@keyframes blink{
+
+    0%{
+        opacity:1;
+    }
+
+    50%{
+        opacity:0.3;
+    }
+
+    100%{
+        opacity:1;
+    }
+}
+
+.sell-item-btn{
+
+    position:absolute;
+
+    right:16px;
+    bottom:14px;
+
+    width:54px;
+    height:54px;
+
+    border-radius:16px;
+
+    border:none;
+
+    background:#ff7b00;
+
+    color:white;
+
+    font-size:24px;
+
+    cursor:pointer;
+
+    transition:0.2s;
+}
+
+.sell-item-btn:hover{
+
+    transform:scale(1.08);
+
+    box-shadow:
+    0 0 20px #ff7b0077;
+}
+
+/* SUPPORT */
+
+.support-menu{
+    position:relative;
+}
+
+.support-dropdown{
+    position:absolute;
+    top:70px;
+    left:50%;
+    transform:translateX(-50%);
+    background:#161616;
+    border:1px solid #333;
+    border-radius:20px;
+    padding:15px;
+
+    display:flex;
+    gap:15px;
+
+    opacity:0;
+    visibility:hidden;
+    pointer-events:none;
+
+    transition:0.2s;
+
+    z-index:10000;
+}
+
+.support-menu:hover .support-dropdown{
+    opacity:1;
+    visibility:visible;
+    pointer-events:auto;
+}
+
+header { z-index: 1000; }
+.win-popup { z-index: 2000; }
+.auth-popup { z-index: 2000; }
+
+.support-dropdown img{
+    width:45px;
+    height:45px;
+
+    border-radius:12px;
+
+    transition:0.2s;
+}
+
+.support-dropdown img:hover{
+    transform:scale(1.1);
+
+    box-shadow:0 0 15px #ff7b0044;
+}
+
+body.modal-open {
+    overflow:hidden;
+}
+
+header { z-index: var(--z-header); }
+.win-popup { z-index: var(--z-modal); }
+.auth-popup { z-index: var(--z-modal); }
+
+/* BALANCE */
+
+.balance-menu{
+    position:relative;
+}
+
+.balance-dropdown{
+    position:absolute;
+    top:70px;
+    left:50%;
+    transform:translateX(-50%);
+    opacity:0;
+    visibility:hidden;
+    transition:0.2s;
+    z-index:300;
+}
+
+.balance-menu:hover .balance-dropdown{
+    opacity:1;
+    visibility:visible;
+}
+
+.balance-dropdown button{
+    background:#ff7b00;
+    color:white;
+
+    border:none;
+
+    padding:14px 28px;
+
+    border-radius:18px;
+
+    cursor:pointer;
+
+    font-weight:bold;
+}
+
+.multi-roulette {
+    position: relative;
+    overflow-x: auto;
+}
+
+.multi-track {
+    display: flex;
+    align-items: center;
+}
+
+.roulette-marker {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 4px;
+    transform: translateX(-50%);
+    background: orange;
+    box-shadow: 0 0 15px orange;
+    z-index: 10;
+}
+
+.back-btn-profile {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+}
+
+/* PROFILE */
+
+.profile-box{
+    display:flex;
+    flex-direction:column;
+
+    align-items:center;
+    justify-content:center;
+
+    gap:6px;
+
+    position:relative;
+}
+
+.user{
+    width:52px;
+    height:52px;
+
+    border-radius:50%;
+
+    background:#242424;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    font-size:24px;
+}
+
+.nickname{
+    font-size:13px;
+    color:#aaa;
+}
+
+.fast-open-btn:hover{
+transform:translateY(-2px);
+background:#292929;
+}
+
+.hidden{
+    display:none;
+}
+
+.live-title{
+    font-size:22px;
+    font-weight:800;
+    color:#fff;
+    margin-bottom:14px;
+    padding-left:4px;
+    letter-spacing:1px;
+}
+
+.live-title{
+    font-size:22px;
+    font-weight:800;
+    color:#ff8a00;
+    margin-bottom:14px;
+    padding-left:4px;
+    letter-spacing:1px;
+
+    text-shadow:
+    0 0 10px #ff8a00,
+    0 0 25px #ff8a00aa;
+}
+
+/* LINE */
+
+.top-line{
+    width:100%;
+    height:4px;
+
+    background:
+    linear-gradient(
+        90deg,
+        transparent,
+        #ff7b00,
+        #ffae00,
+        #ff7b00,
+        transparent
+    );
+
+    box-shadow:
+    0 0 8px #ff7b00,
+    0 0 18px #ff7b00,
+    0 0 35px #ff7b00;
+}
+
+.open-buttons{
+display:flex;
+justify-content:center;
+align-items:center;
+gap:18px;
+
+margin-top:30px;
+flex-wrap:wrap;
+}
+
+.open-btn,
+.fast-open-btn,
+.main-btn,
+.fast-btn{
+
+width:260px;
+height:72px;
+
+border-radius:18px;
+
+font-size:20px;
+font-weight:700;
+
+display:flex;
+flex-direction:column;
+justify-content:center;
+align-items:center;
+
+gap:4px;
+
+padding:0;
+
+flex-shrink:0;
+}
+
+.fast-open-btn{
+
+    height:60px;
+
+    min-width:220px;
+
+    border:none;
+
+    border-radius:16px;
+
+    background:#1f1f1f;
+
+    color:white;
+
+    font-size:18px;
+
+    font-weight:700;
+
+    cursor:pointer;
+
+    transition:0.2s;
+}
+
+.fast-open-btn:hover{
+    transform:scale(1.03);
+}
+
+.case-items-list{
+margin-top:35px;
+
+display:flex;
+flex-wrap:wrap;
+justify-content:center;
+
+gap:14px;
+
+padding:0 20px 140px;
+
+width:100%;
+
+overflow:visible;
+}
+
+.case-item-card{
+width:110px;
+background:#161616;
+border-radius:16px;
+padding:12px;
+display:flex;
+flex-direction:column;
+align-items:center;
+gap:10px;
+transition:.2s;
+}
+
+.case-item-card:hover{
+transform:translateY(-4px);
+}
+
+.case-item-emoji{
+font-size:42px;
+width:70px;
+height:70px;
+display:flex;
+align-items:center;
+justify-content:center;
+border-radius:16px;
+background:#101010;
+}
+
+.case-item-price{
+font-size:16px;
+font-weight:700;
+color:#fff;
+}
+
+.case-item-rarity{
+font-size:12px;
+font-weight:700;
+letter-spacing:1px;
+}
+
+.case-items-list::-webkit-scrollbar{
+width:8px;
+}
+
+.case-items-list::-webkit-scrollbar-track{
+background:#111;
+border-radius:10px;
+}
+
+.case-items-list::-webkit-scrollbar-thumb{
+background:#333;
+border-radius:10px;
+}
+
+.case-items-list::-webkit-scrollbar-thumb:hover{
+background:#555;
+}
+
+.btn-subtext {
+    font-size: 12px;
+    opacity: 0.7;
+}
+
+#multiRouletteContainer {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.profile-mini-btn {
+    padding: 14px 18px;
+    font-size: 16px;
+    border-radius: 12px;
+}
+
+/* SEARCH */
+
+.search-wrap{
+    width:100%;
+
+    display:flex;
+    justify-content:center;
+
+    margin-top:25px;
+}
+
+.search{
+    width:380px;
+    height:52px;
+
+    background:var(--card);
+
+    border:none;
+    outline:none;
+
+    border-radius:50px;
+
+    padding-left:20px;
+
+    color:var(--text);
+
+    font-size:17px;
+
+    border:1px solid #2d2d2d;
+
+    transition:0.2s;
+}
+
+.search:focus{
+    border-color:#ff7b00;
+
+    transform:scale(1.03);
+}
+
+/* CASES */
+
+.cases{
+    width:92%;
+
+    margin:auto;
+    margin-top:50px;
+
+    display:grid;
+
+    grid-template-columns:repeat(4,1fr);
+
+    gap:30px;
+}
+
+.case::before{
+    content:"";
+
+    position:absolute;
+
+    width:150%;
+    height:150%;
+
+    background:
+    radial-gradient(
+        circle,
+        #ff7b0022,
+        transparent 60%
+    );
+
+    top:-50%;
+    left:-50%;
+    z-index:0;
+}
+
+.case-emoji{
+    transition:0.25s;
+    filter:drop-shadow(0 0 10px #ffffff22);
+    font-size:80px;
+    position:relative;
+    z-index:2; 
+    transition:.25s; 
+}
+
+.case:hover .case-emoji{
+
+transform:
+scale(1.12)
+translateY(-4px);
+
+filter:
+drop-shadow(0 0 15px #ff7b00)
+drop-shadow(0 0 35px #ff7b00aa);
+}
+
+.case-name{
+    margin-top:20px;
+
+    font-size:24px;
+    font-weight:bold;
+
+    position:relative;
+    z-index:2;  
+}
+
+.multi-roulette::before,
+.multi-roulette::after {
+    content:"";
+    position:absolute;
+    top:0;
+    width:120px;
+    height:100%;
+    z-index:9;
+    pointer-events:none;
+}
+
+.multi-roulette::before {
+    left:0;
+    background:linear-gradient(to right,#111,transparent);
+}
+
+.multi-roulette::after {
+    right:0;
+    background:linear-gradient(to left,#111,transparent);
+}
+
+/* PRICE */
+
+.case-price{
+
+position:absolute;
+
+left:14px;
+bottom:14px;
+
+font-size:15px;
+font-weight:700;
+
+color:white;
+
+background:#111827;
+
+padding:6px 10px;
+
+border-radius:10px;
+}
+
+.old-price{
+    color:#777;
+
+    text-decoration:line-through;
+
+    font-size:14px;
+}
+
+.new-price{
+    color:#ff7b00;
+
+    font-size:22px;
+    font-weight:bold;
+}
+
+.multi-roulette{
+
+    width:100%;
+    max-width:1200px;
+
+    height:160px;
+
+    overflow:hidden;
+
+    position:relative;
+
+    border-radius:20px;
+
+    background:#111;
+
+    border:2px solid #2a2a2a;
+
+    margin-bottom:20px;
+
+    display:flex;
+
+    align-items:center;
+}
+
+.multi-track{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:12px;
+
+    width:max-content;
+
+    padding:0 40px;
+}
+
+#multiRouletteContainer{
+    width:100%;
+
+    display:flex;
+
+    flex-direction:column;
+
+    align-items:center;
+
+    gap:20px;
+}
+
+.upgrade-page{
+    position:fixed;
+    inset:0;
+    background:#0d1117;
+    z-index:99999;
+
+    display:none;
+
+    align-items:center;
+    justify-content:center;
+    flex-direction:column;
+}
+
+/* ЦЕНТР */
+.upgrade-circle {
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    border: 2px solid #444;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 20px auto;
+    position: relative;
+}
+
+/* СТРЕЛКА (ВАЖНО!) */
+.upgrade-circle::after {
+    content: "▼";
+    position: absolute;
+    top: -15px;
+    font-size: 20px;
+    color: orange;
+}
+
+/* ЛЕНТА */
+.upgrade-roll {
+    width: 100%;
+    overflow-x: auto;
+    white-space: nowrap;
+    background: #111;
+    border-radius: 10px;
+    padding: 10px;
+    position: relative;
+}
+
+/* ЭЛЕМЕНТЫ */
+.roll-item {
+    display: inline-block;
+    width: 60px;
+    height: 60px;
+    margin-right: 10px;
+    background: #222;
+    border-radius: 8px;
+    text-align: center;
+    line-height: 60px;
+}
+
+.case{
+
+min-height:250px;
+height:auto;
+
+background:#141414;
+
+border:2px solid transparent;
+border-radius:24px;
+
+display:flex;
+flex-direction:column;
+
+align-items:center;
+justify-content:center;
+
+position:relative;
+
+overflow:hidden;
+
+cursor:pointer;
+
+transition:.25s;
+
+z-index:1;
+}
+
+.case:hover{
+
+transform:translateY(-6px);
+
+border-color:#3b82f6;
+
+box-shadow:
+0 0 20px #3b82f644;
+}
+
+#openAmounts {
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+}
+
+.main-btn {
+    padding: 12px 20px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #ff7a00, #ff3d00);
+    color: white;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.main-btn:hover {
+    transform: scale(1.05);
+}
+
+/* OPEN PAGE */
+
+.open-page{
+    position:fixed;
+    inset:0;
+    
+    overflow-y:auto;
+
+    background:#0d0d0d;
+
+    z-index:3000;
+
+    display:none;
+
+    flex-direction:column;
+    align-items:center;
+
+    transform-origin:bottom right;
+    animation:profileOpen 0.22s ease;
+}
+
+@keyframes profileOpen{
+    from{
+        opacity:0;
+        transform:scale(.95);
+    }
+
+    to{
+        opacity:1;
+        transform:scale(1);
+    }
+}
+
+.open-header{
+    width:100%;
+    height:85px;
+
+    background:#1a1a1a;
+
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+
+    padding:0 40px;
+}
+
+/* WIN POPUP */
+
+.win-popup{
+    position:fixed;
+
+    inset:0;
+
+    background:#000000bb;
+
+    backdrop-filter:blur(8px);
+
+    display:none;
+
+    align-items:center;
+    justify-content:center;
+
+    z-index:1000;
+}
+
+@keyframes glowPulse{
+    0%{
+        box-shadow:0 0 20px #ff7b0022;
+    }
+    50%{
+        box-shadow:0 0 40px #ff7b0066;
+    }
+    100%{
+        box-shadow:0 0 20px #ff7b0022;
+    }
+}
+
+.win-box{
+    width:420px;
+
+    background:#141414;
+
+    border:2px solid #333;
+
+    border-radius:30px;
+
+    padding:40px;
+
+    text-align:center;
+
+    animation:winShow 0.4s ease;
+
+    box-shadow:
+    0 0 25px #000,
+    0 0 60px #ff7b0022;
+
+    animation:
+    winShow 0.4s ease,
+    glowPulse 2s infinite;
+}
+
+.confetti{
+    font-size:28px;
+
+    margin-bottom:20px;
+}
+
+.win-emoji{
+    animation:dropItem 0.7s ease;
+    filter:drop-shadow(0 0 25px #ff7b00);
+    font-size:120px;
+}
+
+@keyframes dropItem{
+
+    0%{
+        transform:
+        translateY(-120px)
+        scale(0.3)
+        rotate(-25deg);
+
+        opacity:0;
+    }
+
+    60%{
+        transform:
+        translateY(20px)
+        scale(1.15)
+        rotate(8deg);
+    }
+
+    100%{
+        transform:
+        translateY(0)
+        scale(1)
+        rotate(0deg);
+
+        opacity:1;
+    }
+}
+
+.win-rarity{
+    margin-top:15px;
+
+    font-size:28px;
+    font-weight:bold;
+}
+
+.win-price{
+    margin-top:10px;
+
+    font-size:22px;
+
+    color:#ff7b00;
+}
+
+.win-box button{
+    width:100%;
+    height:48px;
+    border:none;
+    border-radius:14px;
+    background:#ff8800;
+    color:white;
+    font-weight:700;
+    font-size:15px;
+    cursor:pointer;
+    transition:.2s;
+    margin-top:12px;
+}
+
+.win-box button:hover{
+    transform:translateY(-2px);
+    filter:brightness(1.05);
+}
+
+.roulette-container{
+    display:flex;
+    flex-direction:column;
+    gap:20px;
+    width:100%;
+    align-items:center;
+}
+
+.roulette-wrapper{
+    width:100%;
+}
+
+.multi-open-select{
+    display:flex;
+    gap:10px;
+    margin-top:20px;
+    justify-content:center;
+}
+
+.multi-open-btn{
+    width:45px;
+    height:45px;
+    border:none;
+    border-radius:12px;
+    background:#1a1a1a;
+    color:white;
+    cursor:pointer;
+    font-weight:700;
+    transition:0.2s;
+}
+
+.multi-open-btn:hover{
+    transform:translateY(-2px);
+}
+
+.multi-open-btn.active{
+    background:#ff8800;
+}
+
+#upgradeRolls {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+/* SUPPORT CHAT */
+
+.support-chat{
+    position:fixed;
+
+    right:25px;
+    bottom:110px;
+
+    width:65px;
+    height:65px;
+
+    border-radius:50%;
+
+    background:#ff7b00;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    font-size:32px;
+
+    cursor:pointer;
+
+    z-index:1100;
+
+    box-shadow:
+    0 0 25px #ff7b0077;
+
+    animation:supportPulse 2s infinite;
+}
+
+@keyframes supportPulse{
+
+    0%{
+        transform:scale(1);
+    }
+
+    50%{
+        transform:scale(1.05);
+    }
+
+    100%{
+        transform:scale(1);
+    }
+}
+
+.win-buttons{
+    display:flex;
+    gap:15px;
+    justify-content:center;
+    margin-top:30px;
+}
+
+.sell-btn{
+    height:34px;
+    padding:0 14px;
+
+    border:none;
+    border-radius:12px;
+
+    background:#2b2b2b;
+    color:white;
+
+    font-weight:700;
+
+    cursor:pointer;
+
+    transition:.2s;
+}
+
+.sell-btn:hover{
+    background:#ff7b00;
+}
+
+@keyframes winShow{
+
+    
+    from{
+        transform:scale(0.7);
+        opacity:0;
+    }
+
+    to{
+        transform:scale(1);
+        opacity:1;
+    }
+    
+}
+
+/* PROFILE MENU */
+
+.profile-menu{
+    position:relative;
+}
+
+.profile-dropdown{
+    position:absolute;
+
+    top:75px;
+    left:50%;
+
+    transform:translateX(-50%);
+
+    background:#161616;
+
+    border:1px solid #333;
+
+    border-radius:20px;
+
+    padding:12px;
+
+    display:flex;
+    flex-direction:column;
+
+    gap:10px;
+
+    opacity:0;
+    visibility:hidden;
+
+    transition:0.25s;
+
+    min-width:180px;
+
+    z-index:100;
+}
+
+.profile-menu:hover .profile-dropdown{
+    opacity:1;
+    visibility:visible;
+}
+
+.profile-dropdown button{
+    background:#1f1f1f;
+
+    color:white;
+
+    border:1px solid #333;
+
+    padding:12px;
+
+    border-radius:14px;
+
+    cursor:pointer;
+
+    transition:0.2s;
+}
+
+.profile-dropdown button:hover{
+    border-color:#ff7b00;
+
+    box-shadow:0 0 15px #ff7b0033;
+}
+
+.inventory-dropdown{
+    position:absolute;
+    bottom:60px;
+    right:0;
+
+    background:#1b1b1b;
+    border:1px solid #333;
+
+    border-radius:12px;
+    padding:8px;
+
+    display:none;
+}
+
+.withdraw-btn{
+    width:120px;
+    padding:10px;
+
+    border:none;
+    border-radius:10px;
+
+    background:#2b2b2b;
+    color:white;
+
+    font-weight:700;
+
+    cursor:pointer;
+}
+
+.withdraw-btn:hover{
+    background:#ff9900;
+}
+
+.best-drop-box{
+    margin-top:30px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:15px;
+}
+
+.best-drop-title{
+    color:white;
+    font-size:20px;
+    font-weight:700;
+}
+
+.best-drop-card{
+    width:180px;
+    background:#161616;
+    border-radius:20px;
+    padding:20px;
+    border:2px solid #ffd000;
+
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:15px;
+}
+
+.best-drop-emoji{
+    font-size:60px;
+    width:90px;
+    height:90px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:20px;
+    border:3px solid #ffd000;
+}
+
+.best-drop-rarity{
+    color:#ffd000;
+    font-weight:700;
+}
+
+.settings-expand-top{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+
+    cursor:pointer;
+
+    padding:18px;
+
+    background:#181818;
+
+    border:2px solid #252525;
+
+    border-radius:18px;
+}
+
+#passwordArrow{
+    transition:.25s;
+    font-size:14px;
+}
+
+#passwordArrow.rotate{
+    transform:rotate(180deg);
+}
+
+.upgrade-container{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    gap:50px;
+}
+
+.upgrade-side{
+    width:320px;
+}
+
+.upgrade-title{
+    color:white;
+    margin-bottom:16px;
+
+    font-size:18px;
+    font-weight:bold;
+}
+
+.upgrade-item{
+    height:320px;
+
+    border-radius:24px;
+
+    background:#161b22;
+    border:1px solid #293548;
+
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+
+    color:white;
+}
+
+.target{
+    box-shadow:0 0 30px rgba(47,129,247,.25);
+}
+
+.upgrade-emoji{
+    font-size:100px;
+}
+
+.upgrade-name{
+    margin-top:20px;
+
+    font-size:24px;
+    font-weight:bold;
+}
+
+.upgrade-price{
+    margin-top:10px;
+    color:#8b949e;
+}
+
+.upgrade-center{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+
+    gap:25px;
+}
+
+.upgrade-arrow{
+    font-size:90px;
+    color:#2f81f7;
+}
+
+.upgrade-btn{
+    width:240px;
+    height:65px;
+
+    border:none;
+    border-radius:18px;
+
+    background:linear-gradient(45deg,#2f81f7,#8957ff);
+
+    color:white;
+
+    font-size:20px;
+    font-weight:bold;
+
+    cursor:pointer;
+
+    transition:.2s;
+}
+
+.upgrade-btn:hover{
+    transform:scale(1.05);
+}
+
+.upgrade-percent{
+    color:white;
+    font-size:22px;
+}
+
+.upgrade-result{
+    position:fixed;
+    inset:0;
+
+    background:rgba(0,0,0,.7);
+
+    display:none;
+    align-items:center;
+    justify-content:center;
+}
+
+.upgrade-result-box{
+    width:360px;
+
+    background:#161b22;
+
+    border-radius:24px;
+
+    padding:30px;
+
+    text-align:center;
+}
+
+.upgrade-result-emoji{
+    font-size:120px;
+}
+
+.upgrade-result-text{
+    margin-top:20px;
+
+    color:white;
+
+    font-size:28px;
+    font-weight:bold;
+}
+
+.upgrade-result-btn{
+    width:100%;
+    height:55px;
+
+    margin-top:25px;
+
+    border:none;
+    border-radius:14px;
+
+    background:#2f81f7;
+
+    color:white;
+    font-size:17px;
+    font-weight:bold;
+}
+
+/* AUTH */
+
+.auth-popup{
+    position:fixed;
+    inset:0;
+
+    background:#000000bb;
+
+    backdrop-filter:blur(8px);
+
+    display:none;
+
+    align-items:center;
+    justify-content:center;
+
+    z-index:1000;
+}
+
+.auth-box{
+    width:400px;
+
+    background:#141414;
+
+    border:1px solid #333;
+
+    border-radius:28px;
+
+    padding:35px;
+
+    display:flex;
+    flex-direction:column;
+
+    gap:18px;
+
+    animation:winShow 0.3s ease;
+}
+
+.auth-title{
+    font-size:28px;
+    font-weight:bold;
+
+    text-align:center;
+}
+
+.auth-input{
+    width:100%;
+    height:55px;
+
+    background:#1c1c1c;
+
+    border:1px solid #333;
+
+    border-radius:16px;
+
+    color:white;
+
+    padding:0 18px;
+
+    font-size:16px;
+
+    outline:none;
+}
+
+.auth-input:focus{
+    border-color:#ff7b00;
+}
+
+.auth-btn{
+    height:55px;
+
+    border:none;
+
+    border-radius:16px;
+
+    background:#ff7b00;
+
+    color:white;
+
+    font-size:18px;
+    font-weight:bold;
+
+    cursor:pointer;
+}
+
+.close-auth{
+    background:#242424;
+}
+
+/* ROULETTE */
+
+.roulette-wrapper{
+    width:100%;
+
+    margin-top:120px;
+
+    display:flex;
+    flex-direction:column;
+
+    align-items:center;
+}
+
+@keyframes pointerGlow{
+
+    0%{
+        opacity:0.7;
+    }
+
+    50%{
+        opacity:1;
+    }
+
+    100%{
+        opacity:0.7;
+    }
+}
+
+.roulette{
+    width:100%;
+    max-width:1100px;
+
+    background:#161616;
+
+    border-radius:20px;
+
+    overflow:hidden;
+
+    border:2px solid #2c2c2c;
+    max-width:95vw;
+    position:relative;
+    height:160px;
+}
+
+.roulette-track{
+display:flex;
+align-items:center;
+position:absolute;
+left:0;
+top:0;
+height:100%;
+padding:0 20px;
+gap:14px;
+will-change:transform;
+width:max-content;
+}
+
+.empty-inventory{
+    color:#777;
+    font-size:24px;
+    padding:30px;
+    text-align:center;
+}
+
+.drop-item{
+    min-width:260px;
+    height:58px;
+    background:#171717;
+    border:1px solid #2f2f2f;
+    border-radius:18px;
+    display:flex;
+    align-items:center;
+    gap:14px;
+    padding:0 18px;
+    animation:slideIn 0.4s ease;
+    flex-shrink:0;
+}
+
+.open-btn{
+    margin-top:50px;
+
+    background:#ff7b00;
+    color:white;
+
+    border:none;
+
+    padding:18px 45px;
+
+    border-radius:50px;
+
+    font-size:20px;
+    font-weight:bold;
+
+    cursor:pointer;
+
+    transition:0.25s;
+
+    box-shadow:
+    0 0 20px #ff7b0044;
+}
+
+.open-btn:hover{
+    transform:translateY(-3px);
+
+    box-shadow:
+    0 0 20px #ff7b00aa,
+    0 0 50px #ff7b0044;
+}
+
+.delete-confirm{
+    position:fixed;
+    inset:0;
+    backdrop-filter:blur(8px);
+    background:rgba(0,0,0,0.5);
+
+    display:none;
+
+    align-items:center;
+    justify-content:center;
+
+    z-index:9999;
+}
+
+.delete-box{
+    background:#1a1a1a;
+    padding:30px;
+    border-radius:20px;
+}
+
+header{
+    border-bottom:none !important;
+}
+
+/* ROULETTE SHADOWS */
+
+.roulette::before{
+
+    content:"";
+
+    position:absolute;
+
+    left:0;
+    top:0;
+
+    width:180px;
+    height:100%;
+
+    z-index:9;
+
+    pointer-events:none;
+
+    background:
+    linear-gradient(
+        to right,
+        #161616,
+        #161616cc,
+        transparent
+    );
+}
+
+.roulette::after{
+    content:"";
+
+    position:absolute;
+
+    right:0;
+    top:0;
+
+    width:180px;
+    height:100%;
+
+    z-index:9;
+
+    pointer-events:none;
+
+    background:
+    linear-gradient(
+        to left,
+        #161616,
+        transparent
+    );
+}
+
+#liveContainer{
+
+display:flex;
+flex-direction:column;
+gap:12px;
+
+max-height:420px;
+overflow:hidden;
+}
+
+.live-drop{
+
+min-width:170px;
+height:70px;
+
+display:flex;
+align-items:center;
+gap:12px;
+
+padding:10px 14px;
+
+border-radius:16px;
+
+background:#1a1a22;
+
+border:2px solid transparent;
+
+transition:.25s;
+animation:liveShow .25s ease;
+}
+
+.live-drop:hover{
+
+transform:translateY(-4px);
+border-color:#3b82f6;
+}
+
+.live-drop.legendary{
+
+box-shadow:
+0 0 12px #ffd000,
+0 0 30px #ffd00066;
+}
+
+.live-emoji{
+
+font-size:34px;
+}
+
+.live-user{
+
+font-size:15px;
+font-weight:700;
+color:white;
+}
+
+.live-rarity{
+
+font-size:12px;
+color:#999;
+}
+
+@keyframes liveShow{
+
+from{
+opacity:0;
+transform:translateY(20px);
+}
+
+to{
+opacity:1;
+transform:translateY(0);
+}
+}
+
+@keyframes liveMove{
+
+    from{
+        transform:translateX(0);
+    }
+
+    to{
+        transform:translateX(-50%);
+    }
+}
+
+.settings-btn{
+    height:45px;
+    border:none;
+    border-radius:12px;
+    background:#ff8800;
+    color:white;
+    font-weight:700;
+}
+
+/* RARITIES */
+
+.common-drop{
+    border-color:#808080;
+}
+
+.common-drop .drop-rarity{
+    color:#808080;
+}
+
+.rare-drop{
+    border-color:#3b82f6;
+}
+
+.rare-drop .drop-rarity{
+    color:#3b82f6;
+}
+
+.epic-drop{
+    border-color:#a855f7;
+}
+
+.epic-drop .drop-rarity{
+    color:#a855f7;
+}
+
+.mythical-drop{
+    border-color:#ef4444;
+}
+
+.mythical-drop .drop-rarity{
+    color:#ef4444;
+}
+
+.legendary-drop{
+
+    border:1px solid #ffb300;
+
+    background:
+    linear-gradient(
+        135deg,
+        #2a2100,
+        #1b1b1b
+    );
+
+    box-shadow:
+    0 0 10px #ffb30055,
+    0 0 25px #ffb30044,
+    inset 0 0 20px #ffb30022;
+
+    animation:legendaryPulse 1.8s infinite;
+}
+
+.legendary-drop .drop-emoji{
+    box-shadow:
+    0 0 20px #ffb300aa;
+    background:#332400;
+}
+
+@keyframes legendaryPulse{
+
+    0%{
+        transform:scale(1);
+    }
+
+    50%{
+        transform:scale(1.03);
+    }
+
+    100%{
+        transform:scale(1);
+    }
+}
+
+.settings-expand-content{
+    display:none;
+    flex-direction:column;
+    gap:10px;
+    margin-top:15px;
+}
+
+.settings-expand-content.open{
+    display:flex;
+}
+
+/* SOCIALS */
+
+.socials{
+    display:flex;
+    align-items:center;
+    gap:12px;
+}
+
+.socials img{
+    width:42px;
+    height:42px;
+
+    border-radius:14px;
+
+    transition:0.2s;
+
+    background:#1a1a1a;
+    padding:8px;
+
+    border:1px solid #2f2f2f;
+}
+
+.socials img:hover{
+
+    transform:translateY(-3px) scale(1.08);
+
+    border-color:#ff7b00;
+
+    box-shadow:
+    0 0 20px #ff7b0044;
+}
+
+.legendary-drop .drop-rarity{
+    color:#ffd000;
+}
+
+@keyframes slideIn{
+
+    from{
+        transform:translateX(120px);
+        opacity:0;
+    }
+
+    to{
+        transform:translateX(0);
+        opacity:1;
+    }
+}
+
+.inventory-price,
+.withdraw-btn,
+.inventory-btn{
+    height:40px;
+    min-height:40px;
+    border-radius:12px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:14px;
+}
+
+.open-amounts {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.amount-btn{
+    width:42px;
+    height:42px;
+    border-radius:12px;
+    border:none;
+    background:#1f1f1f;
+    color:white;
+    cursor:pointer;
+    font-weight:700;
+    transition:.2s;
+}
+
+.amount-btn.active{
+    background:#ff8800;
+}
+
+.amount-btn:hover{
+    transform:translateY(-2px);
+}
+
+.new-pointer{
+
+position:absolute;
+
+top:-8px;
+left:50%;
+
+transform:translateX(-50%);
+
+width:0;
+height:0;
+
+border-left:14px solid transparent;
+border-right:14px solid transparent;
+border-top:22px solid #3b82f6;
+
+z-index:20;
+
+filter:drop-shadow(0 0 8px #3b82f6);
+}
+
+/* MOBILE */
+
+@media(max-width:1000px){
+
+    .cases{
+        grid-template-columns:repeat(2,1fr);
+    }
+
+    .roulette{
+        width:95%;
+    }
+}
+
+.winner-item{
+
+    transform:scale(1.08);
+
+    box-shadow:
+    0 0 30px #fff,
+    0 0 60px #ff7b00;
+
+    z-index:5;
+}
+
+@media(max-width:650px){
+
+    .cases{
+        grid-template-columns:1fr;
+    }
+
+    header{
+        flex-direction:column;
+
+        height:auto;
+
+        padding:20px;
+
+        gap:20px;
+    }
+}
+
+/* ================= NEW LIGHT THEME ================= */
+
+/* ОСНОВА */
+
+body.light-theme{
+    background:#f4f4f4;
+    color:#111;
+}
+
+body.light-theme header{
+    background:#ffffff;
+    border-bottom:1px solid #e7e7e7;
+}
+
+/* ORANGE LINE */
+
+body.light-theme .top-line,
+body.light-theme .profile-top-line,
+body.light-theme .settings-line{
+    background:linear-gradient(
+        90deg,
+        #ff7b00,
+        #ff9500
+    );
+}
+
+/* ================= PROFILE ================= */
+
+.profile-page{
+    position:fixed;
+    inset:0;
+    background:#050505;
+    z-index:99999;
+    display:none;
+    flex-direction:column;
+    overflow-y:auto;
+    overflow-x:hidden;
+    animation:profileOpenScale .22s ease;
+}
+
+.inventory-rarity{
+
+    position:absolute;
+
+    top:138px;
+    left:50%;
+
+    transform:translateX(-50%);
+
+    width:100%;
+
+    text-align:center;
+
+    font-size:18px;
+    font-weight:700;
+}
+
+.item {
+    width: 160px;
+    height: 120px;
+    flex: 0 0 160px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 56px;
+    background: #1a1a1a;
+    border-radius: 20px;
+    flex-shrink: 0;
+}
+
+.fast-btn:hover {
+    transform: scale(1.05);
+}
+
+.fast-btn:active {
+    transform: scale(0.98);
+}
+
+/* TOP BUTTONS */
+
+.profile-icon-btn{
+    width:62px;
+    height:62px;
+
+    border-radius:50%;
+
+    border:2px solid #ff7b00;
+
+    background:#111;
+
+    color:white;
+
+    font-size:28px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    cursor:pointer;
+
+    transition:.2s;
+
+    box-shadow:
+    0 0 18px rgba(255,123,0,.35);
+}
+
+.profile-icon-btn:hover{
+    transform:scale(1.05);
+
+    box-shadow:
+    0 0 25px rgba(255,123,0,.65);
+}
+
+.back-btn-profile{
+    position:absolute;
+    right:30px;
+    top:30px;
+}
+
+.profile-settings-btn{
+    position:absolute;
+    left:30px;
+    top:30px;
+}
+
+.live-drops-floating{
+    position:fixed;
+    right:20px;
+    bottom:20px;
+    z-index:9999;
+
+    width:320px;
+}
+
+.settings-overlay,
+.stats-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+}
+
+/* CENTER */
+
+.profile-main{
+    margin-top:120px;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:40px;
+
+    flex-wrap:wrap;
+}
+
+.profile-side{
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+}
+
+.profile-box-center{
+    width:260px;
+    height:260px;
+
+    border-radius:30px;
+
+    border:2px solid #ff7b00;
+
+    background:#111;
+
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+
+    box-shadow:
+    0 0 25px rgba(255,123,0,.35);
+}
+
+.profile-avatar{
+    width:120px;
+    height:120px;
+    border-radius:50%;
+    background:#1b1b1b;
+    border:3px solid #2f2f2f;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    font-size:55px;
+}
+
+.profile-name{
+    margin-top:18px;
+
+    font-size:42px;
+    font-weight:700;
+}
+
+/* BUTTONS */
+
+.profile-mini-btn{
+    height:42px;
+    padding:0 16px;
+
+    border:none;
+    border-radius:12px;
+
+    background:#161b22;
+    color:white;
+
+    font-size:14px;
+    font-weight:600;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+
+    cursor:pointer;
+
+    transition:.2s;
+}
+
+.profile-mini-btn:hover{
+    background:#1f2630;
+    transform:translateY(-2px);
+}
+
+.back-btn:hover{
+    transform:scale(1.05);
+}
+
+/* INVENTORY */
+
+.inventory-section{
+    width:100%;
+
+    margin-top:70px;
+
+    border:2px solid #333;
+
+    border-radius:30px;
+
+    padding:35px;
+
+    background:#0d0d0d;
+}
+
+.inventory-title{
+    text-align:center;
+
+    font-size:46px;
+    font-weight:700;
+
+    margin-bottom:30px;
+}
+
+.inventory-grid{
+    display:grid;
+
+    grid-template-columns:
+    repeat(auto-fill,minmax(210px,1fr));
+
+    gap:25px;
+}
+
+/* ITEM */
+
+.inventory-item{
+    position:relative;
+
+    height:240px;
+
+    border-radius:26px;
+
+    background:#111;
+
+    border:2px solid #2b2b2b;
+
+    overflow:visible;
+
+    transition:.2s;
+}
+
+.inventory-item:hover{
+    border-color:#ff7b00;
+
+    transform:translateY(-5px);
+
+    box-shadow:
+    0 0 25px rgba(255,123,0,.4);
+}
+
+.stats-box{
+    max-width:700px;
+}
+
+.stats-list{
+    padding:25px;
+
+    display:flex;
+    flex-direction:column;
+    gap:20px;
+}
+
+.stats-card{
+    background:#181818;
+
+    border:2px solid #2a2a2a;
+
+    border-radius:22px;
+
+    padding:22px;
+
+    display:flex;
+    align-items:center;
+
+    gap:18px;
+}
+
+.stats-icon{
+    width:65px;
+    height:65px;
+
+    border-radius:18px;
+
+    background:#ff8800;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    font-size:30px;
+
+    box-shadow:
+    0 0 20px rgba(255,136,0,.35);
+}
+
+.stats-name{
+    font-size:18px;
+    font-weight:700;
+}
+
+.stats-value{
+    margin-top:6px;
+
+    font-size:26px;
+    font-weight:800;
+
+    color:#ff8800;
+}
+
+.stats-block{
+    background:#181818;
+
+    border:2px solid #2a2a2a;
+
+    border-radius:22px;
+
+    padding:22px;
+}
+
+.stats-label{
+    font-size:18px;
+    font-weight:700;
+
+    margin-bottom:15px;
+}
+
+.stats-money{
+    display:flex;
+    align-items:center;
+    gap:18px;
+}
+
+.stats-sub{
+    margin-top:5px;
+    color:#888;
+    font-size:13px;
+}
+
+/* EMOJI */
+
+.inventory-emoji{
+    position:absolute;
+
+    top:28px;
+    left:50%;
+
+    transform:translateX(-50%);
+
+    width:95px;
+    height:95px;
+
+    border-radius:50%;
+
+    background:#1a1a1a;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    font-size:52px;
+
+    box-shadow:
+    0 0 20px rgba(255,123,0,.35);
+}
+
+.back-btn{
+display:flex;
+align-items:center;
+justify-content:center;
+
+position:fixed;
+
+top:20px;
+right:20px;
+
+z-index:9999;
+
+padding:12px 20px;
+
+border-radius:14px;
+
+background:#1a1a1a;
+border:2px solid #2c2c2c;
+
+color:white;
+
+cursor:pointer;
+
+font-weight:700;
+
+transition:.2s;
+}
+
+.back-btn:hover{
+background:#222;
+transform:scale(1.05);
+}
+
+/* ACTIONS */
+
+.inventory-actions{
+    position:absolute;
+
+    right:14px;
+    bottom:14px;
+
+    display:flex;
+    gap:8px;
+}
+
+.inventory-btn{
+
+    width:42px;
+    height:42px;
+
+    border-radius:12px;
+
+    border:2px solid #333;
+
+    background:#1b1b1b;
+
+    color:white;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    cursor:pointer;
+
+    font-size:18px;
+
+    transition:.2s;
+}
+
+.inventory-btn:hover{
+    border-color:#ff7b00;
+}
+
+.inventory-price{
+
+    position:absolute;
+
+    left:14px;
+    bottom:14px;
+
+    width:90px;
+    height:42px;
+
+    border-radius:12px;
+
+    border:2px solid #333;
+
+    background:#1b1b1b;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    color:white;
+
+    font-size:18px;
+    font-weight:700;
+}
+
+img, button, input{
+    max-width:100%;
+    display:block;
+    outline:none;
+    min-width:0;
+}
+
+.profile-page,
+.open-page,
+.settings-overlay,
+.auth-popup,
+.win-popup{
+    overflow-x:hidden;
+}
+
+.inventory-item,
+.case{
+    will-change:transform;
+}
+
+@media(max-width:700px){
+
+    .profile-main{
+        flex-direction:column;
+    }
+
+    .profile-mini-btn{
+        width:100%;
+        min-width:0;
+    }
+
+    .profile-box-center{
+        width:100%;
+        max-width:300px;
+    }
+
+    .inventory-grid{
+        grid-template-columns:1fr;
+    }
+
+    .roulette{
+        height:150px;
+    }
+}
+
+.fast-btn {
+    background: linear-gradient(135deg,#ff7b00,#ff3d00);
+    color:white;
+    border:none;
+    padding:14px 22px;
+    border-radius:12px;
+    font-weight:700;
+    cursor:pointer;
+    transition:0.2s;
+}
+
+</style>
+</head>
+<body>
+
+<header>
+
+<div class="logo">
+
+<img src="logo.png" class="logo-img">
+
+<div class="logo-text">
+<span>Emoji</span>
+<p>Drops</p>
+</div>
+
+</div>
+
+<div class="top-right">
+
+<div class="top-btn online-box">
+
+<div class="online-dot"></div>
+
+<span id="onlineCount">128</span> online
+
+</div>
+
+<div class="balance-menu">
+
+<div class="top-btn">
+💰 <span id="balance">1000</span>₽
+</div>
+
+<div class="balance-dropdown">
+
+<button>
+ПОПОЛНИТЬ
+</button>
+
+</div>
+
+</div>
+
+<div class="profile-menu">
+
+    <div class="profile-box">
+
+        <div class="user">
+            👤
+        </div>
+
+        <div class="nickname" id="nickname">
+            Гость
+        </div>
+
+    </div>
+
+<div class="profile-dropdown" id="profileDropdown">
+
+<button onclick="openAuth('login')" id="loginBtn">
+    Войти
+</button>
+
+<button onclick="openAuth('register')" id="registerBtn">
+    Регистрация
+</button>
+
+<button
+onclick="openProfile()"
+id="profileBtn"
+style="display:none;">
+    Профиль
+</button>
+
+<button
+onclick="logout()"
+id="logoutBtn"
+style="display:none;">
+    Выйти
+</button>
+
+</div>
+
+    </div>
+
+</div>
+
+</div>
+
+</header>
+
+<div class="top-line"></div>
+
+<!-- SEARCH -->
+
+<div class="search-wrap">
+
+<input
+class="search"
+id="searchInput"
+placeholder="Поиск кейсов..."
+onkeyup="searchCases()">
+
+</div>
+
+<!-- CASES -->
+
+<div class="cases">
+
+<div class="case" onclick="openCasePage('smile')">
+<div class="case-emoji">😀</div>
+<div class="case-name">Smile</div>
+
+<div class="case-price">
+<div class="old-price">200₽</div>
+<div class="new-price">100₽</div>
+</div>
+</div>
+
+<div class="case" onclick="openCasePage('moves')">
+<div class="case-emoji">🕺</div>
+<div class="case-name">Moves</div>
+
+<div class="case-price">
+<div class="new-price">80₽</div>
+</div>
+</div>
+
+<div class="case" onclick="openCasePage('nature')">
+<div class="case-emoji">🌿</div>
+<div class="case-name">Nature</div>
+
+<div class="case-price">
+<div class="new-price">60₽</div>
+</div>
+</div>
+
+<div class="case" onclick="openCasePage('food')">
+<div class="case-emoji">🍔</div>
+<div class="case-name">Food</div>
+
+<div class="case-price">
+<div class="new-price">40₽</div>
+</div>
+</div>
+
+<div class="case" onclick="openCasePage('animals')">
+<div class="case-emoji">🐶</div>
+<div class="case-name">Animals</div>
+
+<div class="case-price">
+<div class="new-price">20₽</div>
+</div>
+</div>
+
+<div class="case" onclick="openCasePage('transport')">
+<div class="case-emoji">🚗</div>
+<div class="case-name">Transport</div>
+
+<div class="case-price">
+<div class="old-price">30₽</div>
+<div class="new-price">10₽</div>
+</div>
+</div>
+
+<div class="case" onclick="openCasePage('sport')">
+<div class="case-emoji">⚽</div>
+<div class="case-name">Sport</div>
+
+<div class="case-price">
+<div class="new-price">250₽</div>
+</div>
+</div>
+
+<div class="case" onclick="openCasePage('games')">
+<div class="case-emoji">🎮</div>
+<div class="case-name">Games</div>
+
+<div class="case-price">
+<div class="new-price">500₽</div>
+</div>
+</div>
+</div>
+
+<!-- OPEN PAGE -->
+
+<div class="open-page" id="openPage">
+
+<button class="back-btn" onclick="closePage()">
+← Назад
+</button>
+
+<div class="open-header">
+
+<div class="logo">
+
+<img src="logo.png" class="logo-img">
+
+<div class="logo-text">
+<span>Emoji</span>
+<p>Drops</p>
+</div>
+
+</div>
+
+</div>
+
+<div class="roulette-wrapper">
+
+    <div class="roulette">
+
+        <div class="center-indicator"></div>
+
+        <!-- МУЛЬТИ ОТКРЫТИЕ -->
+        <div id="multiRouletteContainer"></div>
+
+    </div>
+
+</div>
+
+<div class="open-amounts" id="openAmounts">
+</div>
+
+<div class="open-buttons">
+
+<button class="main-btn" onclick="openCase()">
+    Открыть кейс
+    <div class="btn-subtext">100₽</div>
+</button>
+<button class="main-btn fast-btn">Быстро</button>
+
+</div>
+
+<div class="case-items-list" id="caseItemsList"></div>
+
+</div>
+
+<!-- WIN POPUP -->
+
+<div class="win-popup" id="winPopup">
+
+    <div class="win-box">
+
+        <div class="confetti">
+            🎉 🎊 ✨ 🎉
+        </div>
+
+        <div class="win-emoji" id="winEmoji">
+            😀
+        </div>
+
+        <div class="win-rarity" id="winRarity">
+            COMMON
+        </div>
+
+        <div class="win-price" id="winPrice">
+            10₽
+        </div>
+
+        <button onclick="takeWin()">
+            ЗАБРАТЬ
+        </button>
+
+        <button onclick="sellWin()"
+            style="
+            margin-top:15px;
+            background:#242424;
+            ">
+            ПРОДАТЬ
+        </button>
+
+    </div>
+
+</div>
+
+<!-- LIVE DROPS -->
+
+<div class="live-drops-bar live-drops-floating">
+
+    <div class="live-title">🔥 LIVE DROPS</div>
+
+    <div class="live-container" id="liveContainer">
+    </div>
+
+</div>
+
+<!-- AUTH -->
+
+<div class="auth-popup" id="authPopup">
+
+    <div class="auth-box">
+
+        <div class="auth-title" id="authTitle">
+            Вход
+        </div>
+
+        <input
+        type="email"
+        id="authEmail"
+        class="auth-input"
+        placeholder="Почта">
+
+        <input
+        type="password"
+        id="authPassword"
+        class="auth-input"
+        placeholder="Пароль">
+
+        <button
+        class="auth-btn"
+        onclick="submitAuth()">
+            Продолжить
+        </button>
+
+        <button
+        class="auth-btn close-auth"
+        onclick="closeAuth()">
+            Закрыть
+        </button>
+
+    </div>
+
+</div>
+
+<script>
+
+function updateOnline(){
+    const users = getUsers() || [];
+
+    const el = document.getElementById("onlineCount");
+    if (el) el.innerText = 128 + users.length;
+}
+
+updateOnline();
+
+/* RARITIES */
+
+const rarities = {
+
+common:{
+color:"#808080"
+},
+
+rare:{
+color:"#3b82f6"
+},
+
+epic:{
+color:"#a855f7"
+},
+
+mythical:{
+color:"#ef4444"
+},
+
+legendary:{
+color:"#ffd000"
+}
+
+};
+
+/* CASES */
+
+const casePrices = {
+
+smile:100,
+moves:80,
+nature:60,
+food:40,
+animals:20,
+transport:10,
+sport:250,
+games:500
+
+};
+
+const cases = {
+
+  smile:[
+    {emoji:"😀",rarity:"common",price:"4₽"},
+    {emoji:"😃",rarity:"common",price:"4₽"},
+    {emoji:"😄",rarity:"common",price:"5₽"},
+    {emoji:"😁",rarity:"common",price:"5₽"},
+    {emoji:"😆",rarity:"common",price:"5₽"},
+    {emoji:"😅",rarity:"common",price:"5₽"},
+    {emoji:"😂",rarity:"common",price:"6₽"},
+    {emoji:"🤣",rarity:"common",price:"6₽"},
+    {emoji:"🙂",rarity:"common",price:"6₽"},
+    {emoji:"🙃",rarity:"common",price:"6₽"},
+    {emoji:"😉",rarity:"common",price:"7₽"},
+    {emoji:"😊",rarity:"rare",price:"12₽"},
+    {emoji:"😇",rarity:"rare",price:"13₽"},
+    {emoji:"😍",rarity:"rare",price:"14₽"},
+    {emoji:"😘",rarity:"rare",price:"14₽"},
+    {emoji:"😎",rarity:"rare",price:"15₽"},
+    {emoji:"🤓",rarity:"rare",price:"16₽"},
+    {emoji:"🥳",rarity:"epic",price:"28₽"},
+    {emoji:"🤩",rarity:"epic",price:"30₽"},
+    {emoji:"😈",rarity:"epic",price:"32₽"},
+    {emoji:"👻",rarity:"epic",price:"35₽"},
+    {emoji:"🤖",rarity:"mythical",price:"70₽"},
+    {emoji:"👽",rarity:"mythical",price:"80₽"},
+    {emoji:"💀",rarity:"mythical",price:"90₽"},
+    {emoji:"👑",rarity:"legendary",price:"150₽"},
+    {emoji:"💎",rarity:"legendary",price:"180₽"},
+    {emoji:"🌟",rarity:"legendary",price:"220₽"},
+    {emoji:"🤗",rarity:"common",price:"7₽"},
+    {emoji:"🤭",rarity:"common",price:"7₽"},
+    {emoji:"🤔",rarity:"common",price:"8₽"},
+    {emoji:"😐",rarity:"common",price:"8₽"},
+    {emoji:"😑",rarity:"common",price:"8₽"},
+    {emoji:"😌",rarity:"rare",price:"11₽"},
+    {emoji:"😏",rarity:"rare",price:"12₽"},
+    {emoji:"😒",rarity:"rare",price:"13₽"},
+    {emoji:"😞",rarity:"rare",price:"14₽"},
+    {emoji:"😓",rarity:"rare",price:"15₽"},
+    {emoji:"😩",rarity:"epic",price:"25₽"},
+    {emoji:"😱",rarity:"epic",price:"27₽"},
+    {emoji:"😭",rarity:"epic",price:"30₽"},
+    {emoji:"😖",rarity:"epic",price:"33₽"},
+    {emoji:"🤯",rarity:"mythical",price:"65₽"},
+    {emoji:"🤢",rarity:"mythical",price:"75₽"},
+    {emoji:"🤧",rarity:"mythical",price:"85₽"},
+    {emoji:"🥵",rarity:"legendary",price:"170₽"},
+    {emoji:"🥶",rarity:"legendary",price:"190₽"}
+  ],
+
+  moves:[
+    {emoji:"🕺",rarity:"common",price:"3₽"},
+    {emoji:"💃",rarity:"common",price:"3₽"},
+    {emoji:"🏃",rarity:"common",price:"4₽"},
+    {emoji:"🚶",rarity:"common",price:"4₽"},
+    {emoji:"🏃‍♂️",rarity:"common",price:"5₽"},
+    {emoji:"🏃‍♀️",rarity:"common",price:"5₽"},
+    {emoji:"🤸",rarity:"rare",price:"10₽"},
+    {emoji:"🏋️",rarity:"rare",price:"12₽"},
+    {emoji:"🤾",rarity:"rare",price:"13₽"},
+    {emoji:"🚴",rarity:"rare",price:"14₽"},
+    {emoji:"⚡",rarity:"epic",price:"24₽"},
+    {emoji:"🔥",rarity:"epic",price:"28₽"},
+    {emoji:"💨",rarity:"epic",price:"30₽"},
+    {emoji:"🌪️",rarity:"mythical",price:"60₽"},
+    {emoji:"☄️",rarity:"mythical",price:"75₽"},
+    {emoji:"👑",rarity:"legendary",price:"140₽"},
+    {emoji:"🧘‍♂️",rarity:"common",price:"4₽"},
+    {emoji:"🧘‍♀️",rarity:"common",price:"4₽"},
+    {emoji:"🤺",rarity:"common",price:"5₽"},
+    {emoji:"🤼‍♂️",rarity:"common",price:"5₽"},
+    {emoji:"🤼‍♀️",rarity:"common",price:"5₽"},
+    {emoji:"🤽‍♂️",rarity:"rare",price:"11₽"},
+    {emoji:"🤽‍♀️",rarity:"rare",price:"11₽"},
+    {emoji:"🤹‍♂️",rarity:"rare",price:"12₽"},
+    {emoji:"🤹‍♀️",rarity:"rare",price:"12₽"},
+    {emoji:"🤴",rarity:"rare",price:"13₽"},
+    {emoji:"🤵‍♂️",rarity:"epic",price:"20₽"},
+    {emoji:"🤵‍♀️",rarity:"epic",price:"20₽"},
+    {emoji:"🤴",rarity:"epic",price:"22₽"},
+    {emoji:"🦸‍♂️",rarity:"epic",price:"26₽"},
+    {emoji:"🦸‍♀️",rarity:"epic",price:"26₽"},
+    {emoji:"🦹‍♂️",rarity:"mythical",price:"55₽"},
+    {emoji:"🦹‍♀️",rarity:"mythical",price:"55₽"},
+    {emoji:"🦸‍♂️",rarity:"mythical",price:"65₽"},
+    {emoji:"🦸‍♀️",rarity:"mythical",price:"65₽"},
+    {emoji:"🦹‍♂️",rarity:"legendary",price:"130₽"},
+    {emoji:"🦹‍♀️",rarity:"legendary",price:"130₽"}
+  ],
+
+  nature:[
+    {emoji:"🌿",rarity:"common",price:"2₽"},
+    {emoji:"🌲",rarity:"common",price:"3₽"},
+    {emoji:"🌳",rarity:"common",price:"3₽"},
+    {emoji:"🍀",rarity:"common",price:"3₽"},
+    {emoji:"🌱",rarity:"common",price:"4₽"},
+    {emoji:"🌵",rarity:"common",price:"4₽"},
+    {emoji:"🌸",rarity:"rare",price:"10₽"},
+    {emoji:"🌺",rarity:"rare",price:"12₽"},
+    {emoji:"🌼",rarity:"rare",price:"13₽"},
+    {emoji:"🌻",rarity:"rare",price:"14₽"},
+    {emoji:"🌈",rarity:"epic",price:"26₽"},
+    {emoji:"🌊",rarity:"epic",price:"28₽"},
+    {emoji:"🌋",rarity:"mythical",price:"55₽"},
+    {emoji:"🌪️",rarity:"mythical",price:"70₽"},
+    {emoji:"☀️",rarity:"legendary",price:"130₽"},
+    {emoji:"🌌",rarity:"legendary",price:"180₽"},
+    {emoji:"🍂",rarity:"common",price:"2₽"},
+    {emoji:"🍁",rarity:"common",price:"2₽"},
+    {emoji:"🍃",rarity:"common",price:"3₽"},
+    {emoji:"🌴",rarity:"common",price:"3₽"},
+    {emoji:"💐",rarity:"common",price:"4₽"},
+    {emoji:"🌹",rarity:"rare",price:"11₽"},
+    {emoji:"🌷",rarity:"rare",price:"12₽"},
+    {emoji:"🥀",rarity:"rare",price:"13₽"},
+    {emoji:"🌴",rarity:"rare",price:"14₽"},
+    {emoji:"🌾",rarity:"rare",price:"15₽"},
+    {emoji:"🌦️",rarity:"epic",price:"25₽"},
+    {emoji:"⛅",rarity:"epic",price:"27₽"},
+    {emoji:"🌧️",rarity:"epic",price:"29₽"},
+    {emoji:"❄️",rarity:"epic",price:"31₽"},
+    {emoji:"🌩️",rarity:"mythical",price:"60₽"},
+    {emoji:"🌤️",rarity:"mythical",price:"65₽"},
+    {emoji:"🌑",rarity:"mythical",price:"75₽"},
+    {emoji:"🌕",rarity:"mythical",price:"80₽"},
+    {emoji:"🌍",rarity:"legendary",price:"160₽"},
+    {emoji:"🌎",rarity:"legendary",price:"170₽"},
+    {emoji:"🪐",rarity:"legendary",price:"190₽"}
+  ],
+
+ food:[
+    {emoji:"🍔",rarity:"common",price:"2₽"},
+    {emoji:"🍕",rarity:"common",price:"2₽"},
+    {emoji:"🍟",rarity:"common",price:"3₽"},
+    {emoji:"🌭",rarity:"common",price:"3₽"},
+    {emoji:"🍿",rarity:"common",price:"3₽"},
+    {emoji:"🥪",rarity:"common",price:"4₽"},
+    {emoji:"🍩",rarity:"rare",price:"9₽"},
+    {emoji:"🍪",rarity:"rare",price:"10₽"},
+    {emoji:"🍫",rarity:"rare",price:"12₽"},
+    {emoji:"🍰",rarity:"epic",price:"20₽"},
+    {emoji:"🎂",rarity:"epic",price:"24₽"},
+    {emoji:"🍓",rarity:"epic",price:"26₽"},
+    {emoji:"🍣",rarity:"mythical",price:"50₽"},
+    {emoji:"🍤",rarity:"mythical",price:"65₽"},
+    {emoji:"💎",rarity:"legendary",price:"140₽"},
+    {emoji:"👑",rarity:"legendary",price:"170₽"},
+    {emoji:"🍎",rarity:"common",price:"2₽"},
+    {emoji:"🍊",rarity:"common",price:"2₽"},
+    {emoji:"🍋",rarity:"common",price:"3₽"},
+    {emoji:"🍇",rarity:"common",price:"3₽"},
+    {emoji:"🍏",rarity:"common",price:"3₽"},
+    {emoji:"🍐",rarity:"rare",price:"8₽"},
+    {emoji:"🍑",rarity:"rare",price:"9₽"},
+    {emoji:"🍒",rarity:"rare",price:"10₽"},
+    {emoji:"🍌",rarity:"rare",price:"11₽"},
+    {emoji:"🍍",rarity:"rare",price:"12₽"},
+    {emoji:"🍯",rarity:"epic",price:"18₽"},
+    {emoji:"🍼",rarity:"epic",price:"22₽"},
+    {emoji:"☕️",rarity:"epic",price:"23₽"},
+    {emoji:"🍵",rarity:"epic",price:"25₽"},
+    {emoji:"🍷",rarity:"mythical",price:"45₽"},
+    {emoji:"🍸",rarity:"mythical",price:"52₽"},
+    {emoji:"🍹",rarity:"mythical",price:"58₽"},
+    {emoji:"🍾",rarity:"mythical",price:"62₽"},
+    {emoji:"🍳",rarity:"legendary",price:"120₽"},
+    {emoji:"🍽️",rarity:"legendary",price:"130₽"},
+    {emoji:"🧁",rarity:"legendary",price:"150₽"}
+  ],
+
+  "animals": [
+    {emoji:"🐶",rarity:"common",price:"3₽"},
+    {emoji:"🐱",rarity:"common",price:"3₽"},
+    {emoji:"🐭",rarity:"common",price:"3₽"},
+    {emoji:"🐹",rarity:"common",price:"4₽"},
+    {emoji:"🐰",rarity:"common",price:"4₽"},
+    {emoji:"🦊",rarity:"rare",price:"12₽"},
+    {emoji:"🐼",rarity:"rare",price:"14₽"},
+    {emoji:"🐨",rarity:"rare",price:"15₽"},
+    {emoji:"🦁",rarity:"epic",price:"30₽"},
+    {emoji:"🐯",rarity:"epic",price:"34₽"},
+    {emoji:"🦄",rarity:"epic",price:"38₽"},
+    {emoji:"🐉",rarity:"mythical",price:"80₽"},
+    {emoji:"🦖",rarity:"mythical",price:"90₽"},
+    {emoji:"👹",rarity:"legendary",price:"170₽"},
+    {emoji:"👑",rarity:"legendary",price:"220₽"},
+    {emoji:"🦜",rarity:"common",price:"5₽"},
+    {emoji:"🕊️",rarity:"common",price:"4₽"},
+    {emoji:"🦅",rarity:"common",price:"5₽"},
+    {emoji:"🦉",rarity:"common",price:"5₽"},
+    {emoji:"🦋",rarity:"common",price:"4₽"},
+    {emoji:"🐝",rarity:"common",price:"4₽"},
+    {emoji:"🕷️",rarity:"common",price:"5₽"},
+    {emoji:"🦟",rarity:"common",price:"5₽"},
+    {emoji:"🦗",rarity:"common",price:"6₽"},
+    {emoji:"🐞",rarity:"common",price:"4₽"},
+    {emoji:"🦂",rarity:"rare",price:"11₽"},
+    {emoji:"🦃",rarity:"rare",price:"13₽"},
+    {emoji:"🦚",rarity:"rare",price:"14₽"},
+    {emoji:"🦩",rarity:"rare",price:"16₽"},
+    {emoji:"🦤",rarity:"rare",price:"17₽"},
+    {emoji:"🦛",rarity:"epic",price:"28₽"},
+    {emoji:"🦏",rarity:"epic",price:"32₽"},
+    {emoji:"🦓",rarity:"epic",price:"36₽"},
+    {emoji:"🦍",rarity:"epic",price:"42₽"},
+    {emoji:"🦧",rarity:"epic",price:"44₽"},
+    {emoji:"🦈",rarity:"mythical",price:"75₽"},
+    {emoji:"🦐",rarity:"mythical",price:"85₽"},
+    {emoji:"🦑",rarity:"mythical",price:"95₽"},
+    {emoji:"🦀",rarity:"mythical",price:"100₽"},
+    {emoji:"🦕",rarity:"legendary",price:"200₽"},
+    {emoji:"🦇",rarity:"legendary",price:"210₽"}
+  ],
+
+  "transport": [
+    {emoji:"🚗",rarity:"common",price:"2₽"},
+    {emoji:"🚕",rarity:"common",price:"2₽"},
+    {emoji:"🚌",rarity:"common",price:"3₽"},
+    {emoji:"🚓",rarity:"common",price:"3₽"},
+    {emoji:"🚑",rarity:"rare",price:"10₽"},
+    {emoji:"🏎️",rarity:"rare",price:"14₽"},
+    {emoji:"🚜",rarity:"rare",price:"15₽"},
+    {emoji:"✈️",rarity:"epic",price:"28₽"},
+    {emoji:"🚀",rarity:"epic",price:"35₽"},
+    {emoji:"🛸",rarity:"mythical",price:"70₽"},
+    {emoji:"⚡",rarity:"mythical",price:"80₽"},
+    {emoji:"🪐",rarity:"legendary",price:"150₽"},
+    {emoji:"🌌",rarity:"legendary",price:"180₽"},
+    {emoji:"🚲",rarity:"common",price:"3₽"},
+    {emoji:"🛴",rarity:"common",price:"4₽"},
+    {emoji:"🛵",rarity:"common",price:"4₽"},
+    {emoji:"🛺",rarity:"common",price:"3₽"},
+    {emoji:"🚘",rarity:"common",price:"3₽"},
+    {emoji:"🚙",rarity:"rare",price:"11₽"},
+    {emoji:"🚚",rarity:"rare",price:"12₽"},
+    {emoji:"🚛",rarity:"rare",price:"13₽"},
+    {emoji:"🚐",rarity:"rare",price:"14₽"},
+    {emoji:"🚍",rarity:"rare",price:"16₽"},
+    {emoji:"🚝",rarity:"epic",price:"25₽"},
+    {emoji:"🚞",rarity:"epic",price:"27₽"},
+    {emoji:"🚈",rarity:"epic",price:"29₽"},
+    {emoji:"🚆",rarity:"epic",price:"31₽"},
+    {emoji:"🚄",rarity:"epic",price:"33₽"},
+    {emoji:"🛩️",rarity:"mythical",price:"65₽"},
+    {emoji:"🛫",rarity:"mythical",price:"75₽"},
+    {emoji:"⛵",rarity:"mythical",price:"85₽"},
+    {emoji:"🛥️",rarity:"mythical",price:"90₽"},
+    {emoji:"🛳️",rarity:"mythical",price:"95₽"},
+    {emoji:"🛰️",rarity:"legendary",price:"160₽"},
+    {emoji:"🗼",rarity:"legendary",price:"190₽"},
+    {emoji:"🗽",rarity:"legendary",price:"200₽"}
+  ],
+
+  "sport": [
+    {emoji:"⚽",rarity:"common",price:"5₽"},
+    {emoji:"🏀",rarity:"common",price:"6₽"},
+    {emoji:"🏉",rarity:"common",price:"7₽"},
+    {emoji:"🏒",rarity:"common",price:"8₽"},
+    {emoji:"🏓",rarity:"common",price:"9₽"},
+    {emoji:"⛸️",rarity:"common",price:"10₽"},
+    {emoji:"🥌",rarity:"common",price:"11₽"},
+    {emoji:"🏸",rarity:"common",price:"12₽"},
+    {emoji:"🤸‍♂️",rarity:"common",price:"13₽"},
+    {emoji:"🤸‍♀️",rarity:"common",price:"13₽"},
+    {emoji:"🏋️‍♂️",rarity:"rare",price:"14₽"},
+    {emoji:"🏋️‍♀️",rarity:"rare",price:"14₽"},
+    {emoji:"🤺",rarity:"rare",price:"15₽"},
+    {emoji:"🏊‍♂️",rarity:"rare",price:"16₽"},
+    {emoji:"🏊‍♀️",rarity:"rare",price:"16₽"},
+    {emoji:"🚴‍♂️",rarity:"rare",price:"17₽"},
+    {emoji:"🚴‍♀️",rarity:"rare",price:"17₽"},
+    {emoji:"🏇",rarity:"rare",price:"18₽"},
+    {emoji:"🤼‍♂️",rarity:"rare",price:"19₽"},
+    {emoji:"🤼‍♀️",rarity:"rare",price:"19₽"},
+    {emoji:"🎣",rarity:"epic",price:"25₽"},
+    {emoji:"🛹",rarity:"epic",price:"27₽"},
+    {emoji:"🛼",rarity:"epic",price:"29₽"},
+    {emoji:"🤾‍♂️",rarity:"epic",price:"32₽"},
+    {emoji:"🤾‍♀️",rarity:"epic",price:"32₽"},
+    {emoji:"🤽‍♂️",rarity:"epic",price:"35₽"},
+    {emoji:"🤽‍♀️",rarity:"epic",price:"35₽"},
+    {emoji:"🏄‍♂️",rarity:"epic",price:"38₽"},
+    {emoji:"🏄‍♀️",rarity:"epic",price:"38₽"},
+    {emoji:"🏂",rarity:"epic",price:"42₽"},
+    {emoji:"🎽",rarity:"mythical",price:"60₽"},
+    {emoji:"🏋️",rarity:"mythical",price:"65₽"},
+    {emoji:"🤾",rarity:"mythical",price:"70₽"},
+    {emoji:"🏆",rarity:"mythical",price:"80₽"},
+    {emoji:"🏅",rarity:"mythical",price:"85₽"},
+    {emoji:"🥉",rarity:"legendary",price:"150₽"},
+    {emoji:"🥈",rarity:"legendary",price:"200₽"},
+    {emoji:"🥇",rarity:"legendary",price:"260₽"}
+  ],
+
+  "games": [
+    {emoji:"🎮",rarity:"common",price:"8₽"},
+    {emoji:"🕹️",rarity:"common",price:"9₽"},
+    {emoji:"🃏",rarity:"common",price:"10₽"},
+    {emoji:"🀄",rarity:"common",price:"11₽"},
+    {emoji:"🎴",rarity:"common",price:"12₽"},
+    {emoji:"🎲",rarity:"rare",price:"20₽"},
+    {emoji:"♟️",rarity:"rare",price:"22₽"},
+    {emoji:"🎯",rarity:"rare",price:"24₽"},
+    {emoji:"🧩",rarity:"rare",price:"25₽"},
+    {emoji:"🧸",rarity:"rare",price:"26₽"},
+    {emoji:"🎪",rarity:"rare",price:"28₽"},
+    {emoji:"🎰",rarity:"rare",price:"30₽"},
+    {emoji:"🎱",rarity:"rare",price:"32₽"},
+    {emoji:"🎳",rarity:"rare",price:"36₽"},
+    {emoji:"👾",rarity:"epic",price:"50₽"},
+    {emoji:"💻",rarity:"epic",price:"55₽"},
+    {emoji:"🖥️",rarity:"epic",price:"58₽"},
+    {emoji:"🎮",rarity:"epic",price:"62₽"},
+    {emoji:"🕹️",rarity:"epic",price:"65₽"},
+    {emoji:"🧙‍♂️",rarity:"mythical",price:"90₽"},
+    {emoji:"🧙‍♀️",rarity:"mythical",price:"95₽"},
+    {emoji:"🦸‍♂️",rarity:"mythical",price:"100₽"},
+    {emoji:"🦸‍♀️",rarity:"mythical",price:"105₽"},
+    {emoji:"🦹‍♂️",rarity:"mythical",price:"110₽"},
+    {emoji:"🦹‍♀️",rarity:"mythical",price:"115₽"},
+    {emoji:"🧝‍♂️",rarity:"mythical",price:"125₽"},
+    {emoji:"🧝‍♀️",rarity:"mythical",price:"130₽"},
+    {emoji:"🧛‍♂️",rarity:"mythical",price:"135₽"},
+    {emoji:"🧛‍♀️",rarity:"mythical",price:"140₽"},
+    {emoji:"🧜‍♂️",rarity:"mythical",price:"145₽"},
+    {emoji:"🧜‍♀️",rarity:"mythical",price:"150₽"},
+    {emoji:"🧞‍♂️",rarity:"legendary",price:"250₽"},
+    {emoji:"🧞‍♀️",rarity:"legendary",price:"300₽"},
+    {emoji:"🏆",rarity:"legendary",price:"350₽"},
+    {emoji:"👑",rarity:"legendary",price:"500₽"}
+  ]
+};
+
+const state = {
+    currentCase: [],
+    currentWin: null,
+    winQueue: [],
+    currentUser: null,
+
+    stats:{
+        opened:0,
+        upgrades:0,
+        deposited:0,
+        withdrawn:0,
+        withdrawnItems:0
+    },
+
+    authMode: "login",
+    generatedCode: null,
+    pendingUser: null,
+    isSpinning: false,
+    selectedCase: null,
+    openAmount:1,
+    bestDrop:null,
+    balance: 1000
+};
+
+const $ = (selector) => document.querySelector(selector);
+
+const ITEM_WIDTH = 160;
+
+function createRoulettes(){
+
+    const container =
+    document.getElementById(
+    "multiRouletteContainer"
+    );
+
+    if(!container) return;
+
+    container.innerHTML = "";
+
+    for(let i = 0; i < state.openAmount; i++){
+
+        const roulette =
+        document.createElement("div");
+
+        roulette.className =
+        "multi-roulette";
+
+        roulette.innerHTML = `
+
+        <div class="new-pointer"></div>
+
+        <div class="multi-track"></div>
+
+        `;
+
+        container.appendChild(roulette);
+
+        fillTrackPreview(
+            roulette.querySelector(".multi-track")
+        );
+    }
+}
+
+function fillTrackPreview(track){
+
+    track.innerHTML = "";
+
+    for(let i = 0; i < 40; i++){
+
+        const itemData =
+        getRandomByChance(
+        state.currentCase
+        );
+
+        const item =
+        document.createElement("div");
+
+        item.className = "item";
+
+        item.innerHTML =
+        itemData.emoji;
+
+        item.style.border =
+        `3px solid ${
+        rarities[itemData.rarity].color
+        }`;
+
+        track.appendChild(item);
+    }
+}
+
+/* OPEN */
+
+function openCasePage(type) {
+    const page = document.getElementById("openPage");
+    page.style.display = "flex";
+
+    state.currentCase = cases[type] || [];
+    state.selectedCase = type;
+
+    state.openAmount = 1;
+
+    renderOpenAmounts();
+    updateBestDrop();
+    createRoulettes();
+    renderCaseItems();
+}
+
+function renderOpenAmounts(){
+
+    const container =
+    document.getElementById(
+    "openAmounts"
+    );
+
+    if(!container) return;
+
+    container.innerHTML = "";
+
+    const casePrice =
+    casePrices[state.selectedCase];
+
+    const max =
+    Math.min(
+        10,
+        Math.floor(
+        state.balance / casePrice
+        )
+    );
+
+    if(max <= 0){
+    container.innerHTML = `
+    <div class="empty-inventory">
+        Недостаточно средств
+    </div>
+    `;
+    return;
+}
+
+    for(let i = 1; i <= max; i++){
+
+        const btn =
+        document.createElement("button");
+
+        btn.className =
+        "amount-btn";
+
+        if(i === state.openAmount){
+
+            btn.classList.add(
+            "active"
+            );
+        }
+
+        btn.innerText = i;
+
+btn.onclick = () => {
+
+state.openAmount = i;
+
+renderOpenAmounts();
+
+createRoulettes();
+
+updateOpenPrice();
+
+};
+
+        container.appendChild(btn);
+    }
+}
+
+/* CLOSE */
+
+function closePage() {
+    if (state.isSpinning) return;
+
+    const page = document.getElementById("openPage");
+    if (page) page.style.display = "none";
+
+    const container = document.getElementById("multiRouletteContainer");
+    if (container) container.innerHTML = "";
+}
+
+/* CHANCES */
+
+function getRandomByChance(items){
+
+    const rand =
+    Math.random() * 100;
+
+    let rarity;
+
+    if(rand <= 3){
+
+        rarity = "legendary";
+
+    }else if(rand <= 8){
+
+        rarity = "mythical";
+
+    }else if(rand <= 25){
+
+        rarity = "epic";
+
+    }else if(rand <= 55){
+
+        rarity = "rare";
+
+    }else{
+
+        rarity = "common";
+    }
+
+const filtered =
+items.filter(
+item => item.rarity === rarity
+);
+
+if(filtered.length === 0){
+
+    return items[
+        Math.floor(
+        Math.random() * items.length
+        )
+    ];
+}
+
+return filtered[
+Math.floor(
+Math.random() *
+filtered.length
+)
+];
+}
+
+function updateBestDrop(){
+
+    if(
+        !state.currentUser ||
+        !state.currentUser.inventory ||
+        state.currentUser.inventory.length === 0
+    ){
+
+        document.getElementById(
+        "bestDropEmoji"
+        ).innerText = "🏆";
+
+        document.getElementById(
+        "bestDropRarity"
+        ).innerText = "Нет дропа";
+
+        return;
+    }
+
+    const rarityOrder = {
+        common:1,
+        rare:2,
+        epic:3,
+        mythical:4,
+        legendary:5
+    };
+
+const inventory = state.currentUser.inventory || [];
+
+if (inventory.length === 0) {
+    document.getElementById("bestDropEmoji").innerText = "🏆";
+    document.getElementById("bestDropRarity").innerText = "Нет дропа";
+    return;
+}
+
+const best = [...inventory].sort(
+    (a,b)=> rarityOrder[b.rarity] - rarityOrder[a.rarity]
+)[0];
+
+    document.getElementById(
+    "bestDropEmoji"
+    ).innerText =
+    best.emoji;
+
+    document.getElementById(
+    "bestDropRarity"
+    ).innerText =
+    best.rarity.toUpperCase();
+
+    document.getElementById(
+    "bestDropRarity"
+    ).style.color =
+    rarities[best.rarity].color;
+}
+
+/* TRACK */
+
+function fillTrack(track, items){
+
+    if(!track) return;
+
+    track.innerHTML = "";
+
+    for(let i = 0; i < 40; i++){
+
+        const randomItem =
+        getRandomByChance(items);
+
+        const item =
+        document.createElement("div");
+
+        item.className = "item";
+
+        item.innerHTML = randomItem.emoji;
+
+        item.style.border =
+        `3px solid ${
+        rarities[randomItem.rarity].color
+        }`;
+
+        track.appendChild(item);
+    }
+}
+
+function updateProfileUI(isLogged){
+
+    document.getElementById(
+    "loginBtn"
+    ).style.display =
+    isLogged ? "none" : "block";
+
+    document.getElementById(
+    "registerBtn"
+    ).style.display =
+    isLogged ? "none" : "block";
+
+    document.getElementById(
+    "profileBtn"
+    ).style.display =
+    isLogged ? "block" : "none";
+
+    document.getElementById(
+    "logoutBtn"
+    ).style.display =
+    isLogged ? "block" : "none";
+}
+
+function updateBalanceUI() {
+    $("#balance").innerText = state.balance;
+
+    const profileBalance = $("#profileBalance");
+    if(profileBalance){
+        profileBalance.innerText = state.balance;
+    }
+}
+
+document.addEventListener("click", (e) => {
+
+    const menus =
+    document.querySelectorAll(".withdraw-hover");
+
+    menus.forEach(menu => {
+
+        const item =
+        menu.closest(".inventory-item");
+
+        if(item && !item.contains(e.target)){
+
+            menu.style.display = "none";
+        }
+
+    });
+
+});
+
+function toggleTheme(){
+
+    document.body.classList.toggle(
+    "light-theme"
+    );
+
+    const toggle = document.getElementById("themeToggle");
+if (toggle) {
+    toggle.checked = document.body.classList.contains("light-theme");
+}
+
+localStorage.setItem(
+"theme",
+document.body.classList.contains("light-theme") ? "true" : "false"
+);
+}
+
+function startUpgrade(){
+
+    const success = Math.random() < 0.48;
+
+    document.getElementById("upgradeResult")
+        .style.display = "flex";
+
+    if(success){
+
+        document.getElementById("upgradeResultEmoji")
+            .innerHTML = "👑";
+
+        document.getElementById("upgradeResultText")
+            .innerHTML = "АПГРЕЙД УСПЕШЕН";
+
+    }else{
+
+        document.getElementById("upgradeResultEmoji")
+            .innerHTML = "💥";
+
+        document.getElementById("upgradeResultText")
+            .innerHTML = "НЕ УДАЛОСЬ";
+    }
+}
+
+function closeUpgradeResult(){
+
+    document.getElementById("upgradeResult")
+        .style.display = "none";
+}
+
+function renderCaseItems(){
+
+const container =
+document.getElementById(
+"caseItemsList"
+);
+
+if(!container) return;
+
+container.innerHTML = "";
+
+state.currentCase.forEach(item => {
+
+const div =
+document.createElement("div");
+
+div.className =
+"case-item-card";
+
+div.innerHTML = `
+
+<div
+class="case-item-emoji"
+style="
+border:3px solid ${rarities[item.rarity].color};
+">
+${item.emoji}
+</div>
+
+<div
+class="case-item-rarity"
+style="
+color:${rarities[item.rarity].color};
+">
+${item.rarity.toUpperCase()}
+</div>
+
+<div class="case-item-price">
+${item.price}
+</div>
+
+`;
+
+container.appendChild(div);
+
+});
+}
+
+/* SPIN */
+
+async function openCase(count = state.openAmount) {
+    if (state.isSpinning) return;
+    if (!state.selectedCase) return alert("Выберите кейс");
+    if (!state.currentUser) return openAuth("login");
+
+    const price = casePrices[state.selectedCase] * count;
+
+    if (state.balance < price) {
+        return alert("Недостаточно средств");
+    }
+
+    state.isSpinning = true;
+
+    // списываем баланс
+state.currentUser.balance -= price;
+state.balance = state.currentUser.balance;
+
+saveUsers();
+updateBalanceUI();
+
+    const wins = [];
+
+    for (let i = 0; i < count; i++) {
+        const item = getRandomByChance(state.currentCase);
+        wins.push(item);
+
+        if (!state.currentUser.inventory) {
+            state.currentUser.inventory = [];
+        }
+
+        state.currentUser.inventory.push(item);
+
+        addLiveDrop(state.currentUser.nickname, item);
+    }
+
+    // статистика
+    state.stats.opened += count;
+    saveStats();
+
+    saveUsers();
+    renderInventory();
+
+    state.isSpinning = false;
+
+    // показываем последний выигрыш
+    state.winQueue = wins;
+    showNextWin();
+}
+
+function openUpgradeMenu(){
+    document.getElementById("upgradePage").style.display = "flex";
+}
+
+function closeUpgradeMenu(){
+    document.getElementById("upgradePage").style.display = "none";
+}
+
+function openProfile(){
+
+    if (!document.getElementById("profilePage")) return;
+
+    if(!state.currentUser){
+        alert("Сначала войдите");
+        return;
+    }
+
+    const page = document.getElementById("profilePage");
+
+    page.style.display = "flex";
+
+    document.getElementById("profileName").innerText =
+        state.currentUser.nickname;
+
+    document.getElementById("profileBalance").innerText =
+        state.balance;
+
+    renderInventory();
+
+    updateStatsUI();
+
+    page.animate([
+        { transform:"scale(0.9)", opacity:0 },
+        { transform:"scale(1)", opacity:1 }
+    ], {
+        duration:200,
+        easing:"ease-out"
+    });
+}
+
+document.querySelectorAll(
+".multi-open-btn"
+).forEach(btn => {
+
+btn.onclick = () => {
+
+const count =
+Number(btn.dataset.count);
+
+state.openAmount = count;
+
+document.querySelectorAll(
+".multi-open-btn"
+).forEach(b =>
+b.classList.remove("active")
+);
+
+btn.classList.add("active");
+
+renderOpenAmounts();
+
+};
+
+});
+
+/* SEARCH */
+
+function searchCases(){
+
+const input =
+document.getElementById(
+"searchInput"
+).value.toLowerCase();
+
+const casesList =
+document.querySelectorAll(".case");
+
+casesList.forEach(card => {
+
+const name =
+card.querySelector(".case-name")
+.innerText.toLowerCase();
+
+if(name.includes(input)){
+
+card.style.display = "flex";
+
+}else{
+
+card.style.display = "none";
+}
+});
+}
+
+const liveContainer =
+document.getElementById("liveContainer");
+
+const usernames = [
+
+"Shadow","Blaze","Ghost","Venom","Orion",
+"Razor","Hunter","Skylix","Toxic","Storm",
+"Krypton","Night","Falcon","Inferno","Vortex",
+"Alpha","Reaper","Nova","Flame","Matrix",
+"Ordboy","Sniper","Dragon","Pixel","Cyber"
+
+];
+
+const allDrops = [];
+
+Object.values(cases).forEach(caseItems => {
+    caseItems.forEach(item => {
+        allDrops.push(item);
+    });
+});
+
+function createLiveDrop(username,item){
+
+    if(!liveContainer) return;
+
+    const div = document.createElement("div");
+
+    div.className =
+    `live-drop ${item.rarity}`;
+
+    div.innerHTML = `
+
+    <div class="live-emoji">
+        ${item.emoji}
+    </div>
+
+    <div class="live-info">
+
+        <div class="live-user">
+            ${username}
+        </div>
+
+        <div class="live-rarity">
+            ${item.rarity.toUpperCase()}
+        </div>
+
+    </div>
+
+    `;
+
+    liveContainer.prepend(div);
+
+    if(liveContainer.children.length > 20){
+
+        liveContainer.removeChild(
+        liveContainer.lastChild
+        );
+    }
+}
+
+function randomLiveDrop(){
+
+    const username =
+    usernames[
+        Math.floor(
+        Math.random() * usernames.length
+        )
+    ];
+
+    const item =
+    allDrops[
+        Math.floor(
+        Math.random() * allDrops.length
+        )
+    ];
+
+    createLiveDrop(username,item);
+}
+
+for(let i = 0; i < 20; i++){
+    randomLiveDrop();
+}
+
+setInterval(randomLiveDrop,1000);
+
+/* WIN */
+
+function showWin(item){
+
+    state.currentWin = item;
+
+    const popup =
+    document.getElementById(
+    "winPopup"
+    );
+
+    document.getElementById(
+    "winEmoji"
+    ).innerText = item.emoji;
+
+    document.getElementById(
+    "winRarity"
+    ).innerText =
+    item.rarity.toUpperCase();
+
+    document.getElementById(
+    "winRarity"
+    ).style.color =
+    rarities[item.rarity].color;
+
+    document.getElementById(
+    "winPrice"
+    ).innerText =
+    item.price;
+
+    popup.style.display = "flex";
+}
+
+function closeWin(){
+
+document.getElementById(
+"winPopup"
+).style.display = "none";
+}
+
+function showNextWin(){
+
+    if(state.winQueue.length <= 0){
+
+        state.currentWin = null;
+
+        return;
+    }
+
+    const nextItem =
+    state.winQueue.shift();
+
+    showWin(nextItem);
+}
+
+function takeWin(){
+
+    closeWin();
+
+    showNextWin();
+}
+
+function addLiveDrop(username,item){
+
+const div =
+document.createElement("div");
+
+div.className =
+`drop-item ${item.rarity}-drop`;
+
+div.innerHTML = `
+
+<div class="drop-emoji">
+${item.emoji}
+</div>
+
+<div class="drop-info">
+
+<div class="drop-user">
+${username} выбил
+</div>
+
+<div class="drop-rarity">
+${item.rarity.toUpperCase()}
+</div>
+
+</div>
+
+`;
+
+liveContainer.prepend(div);
+
+if(liveContainer.children.length > 20){
+
+liveContainer.removeChild(
+liveContainer.lastChild
+);
+
+}
+}
+
+function renderInventory(){
+
+const grid = document.getElementById("inventoryGrid");
+
+if(!grid) return;
+
+grid.innerHTML = "";
+
+    if(
+        !state.currentUser ||
+        !state.currentUser.inventory ||
+        state.currentUser.inventory.length === 0
+    ){
+
+        grid.innerHTML = `
+        <div class="empty-inventory">
+            Инвентарь пуст
+        </div>
+        `;
+
+        return;
+    }
+
+    state.currentUser.inventory.forEach((item,index) => {
+
+        const div = document.createElement("div");
+
+        div.className = "inventory-item";
+
+        div.innerHTML = `
+
+        <div
+        class="inventory-emoji"
+        style="border:3px solid ${rarities[item.rarity].color};">
+            ${item.emoji}
+        </div>
+
+        <div
+        class="inventory-rarity"
+        style="color:${rarities[item.rarity].color};">
+            ${item.rarity.toUpperCase()}
+        </div>
+
+        <div class="inventory-bottom">
+
+            <div class="inventory-price">
+    ${item.price || "0₽"}
+</div>
+
+            <div class="inventory-actions">
+
+                <button
+                class="inventory-btn sell-btn"
+                onclick="sellInventoryItem(${index})">
+                    💰
+                </button>
+
+                <button
+                class="inventory-btn menu-btn"
+                onclick="toggleWithdraw(this, event)">
+                    ⋯
+                </button>
+
+            </div>
+
+        </div>
+
+        <div class="withdraw-hover">
+            <button class="withdraw-btn">
+                Вывести
+            </button>
+        </div>
+
+        `;
+
+        grid.appendChild(div);
+    });
+
+    updateBestDrop();
+}
+
+function sellInventoryItem(index){
+
+    if(!state.currentUser) return;
+
+    const item = state.currentUser.inventory[index];
+    if(!item) return;
+
+    const value = Number((item.price || "0").replace(/[^\d]/g, ""));
+
+state.balance += value;
+state.currentUser.balance = state.balance;
+
+    state.stats.withdrawnItems += 1; // 🔥 FIX
+
+    saveStats();
+    saveBalance();
+
+    state.currentUser.inventory.splice(index, 1);
+
+    updateBalanceUI();
+    saveUsers();
+    renderInventory();
+    updateBestDrop();
+}
+
+function sellWin(){
+
+    if(!state.currentWin) return;
+
+    const value = Number(state.currentWin.price.replace(/[^\d]/g, ""));
+
+    state.currentUser.balance += value;
+    state.balance = state.currentUser.balance;
+
+    syncBalance();
+    saveUsers();
+
+    closeWin();
+
+    showNextWin();
+}
+
+function changeNickname(){
+
+    const value =
+    document.getElementById(
+    "newNickname"
+    ).value.trim();
+
+    if(!value){
+
+        alert("Введите ник");
+        return;
+    }
+
+    if(value.length < 3){
+
+        alert("Минимум 3 символа");
+        return;
+    }
+
+    if(!state.currentUser) return;
+
+    state.currentUser.nickname = value;
+
+    saveUsers();
+
+    $("#nickname").innerText = value;
+
+    $("#profileName").innerText = value;
+
+    alert("Ник изменен");
+}
+
+function changePassword(){
+
+    const oldPassword =
+    document.getElementById(
+    "oldPassword"
+    ).value.trim();
+
+    const newPassword =
+    document.getElementById(
+    "newPasswordSettings"
+    ).value.trim();
+
+    if(!state.currentUser) return;
+
+    if(oldPassword !== state.currentUser.password){
+
+        alert("Старый пароль неверный");
+        return;
+    }
+
+    if(newPassword.length < 8){
+
+        alert("Минимум 8 символов");
+        return;
+    }
+
+    state.currentUser.password =
+    newPassword;
+
+    saveUsers();
+
+    alert("Пароль изменен");
+}
+
+function deleteAccount(){
+
+    if(!confirm(
+    "Удалить аккаунт?"
+    )) return;
+
+    let users =
+    JSON.parse(
+    localStorage.getItem("users")
+    ) || [];
+
+    users =
+    users.filter(
+    u => u.email !== state.currentUser.email
+    );
+
+    localStorage.setItem(
+    "users",
+    JSON.stringify(users)
+    );
+
+    logout();
+
+    closeSettings();
+
+    alert("Аккаунт удален");
+}
+
+function saveUsers(){
+
+    if(!state.currentUser) return;
+
+    let users = JSON.parse(
+        localStorage.getItem("users")
+    ) || [];
+
+    const index = users.findIndex(
+        u => u.email === state.currentUser.email
+    );
+
+    if(index !== -1){
+
+    users[index] = {
+    ...users[index],
+    ...state.currentUser
+};
+
+}else{
+
+    users.push(state.currentUser);
+}
+
+    localStorage.setItem(
+        "users",
+        JSON.stringify(users)
+    );
+}
+
+/* AUTH */
+
+function openAuth(mode){
+    state.authMode = mode;
+
+    document.getElementById("authPopup").style.display = "flex";
+
+    document.getElementById("authTitle").innerText =
+        mode === "login" ? "Вход" : "Регистрация";
+}
+
+function closeAuth(){
+
+    document.getElementById(
+    "authPopup"
+    ).style.display = "none";
+}
+
+function sendVerificationCode(email){
+
+    state.generatedCode =
+    Math.floor(
+    100000 + Math.random() * 900000
+    );
+
+    emailjs.send(
+    "service_9okzrkg",
+    "template_arn6e7i",
+    {
+        to_email: email,
+        code: state.generatedCode
+    })
+
+    .then(() => {
+
+        closeAuth();
+
+        document.getElementById(
+        "verifyPopup"
+        ).style.display = "flex";
+    });
+}
+
+function submitAuth(){
+
+    const email =
+    document.getElementById(
+    "authEmail"
+    ).value.trim();
+
+    const password =
+    document.getElementById(
+    "authPassword"
+    ).value.trim();
+
+    if(!email || !password){
+
+        alert("Заполните поля");
+        return;
+    }
+
+    if(password.length < 8){
+
+        alert("Минимум 8 символов");
+        return;
+    }
+
+    let users =
+    JSON.parse(
+    localStorage.getItem("users")
+    ) || [];
+
+    /* LOGIN */
+
+    if(state.authMode === "login"){
+
+        const user =
+        users.find(
+        u =>
+        u.email === email &&
+        u.password === password
+        );
+
+        if(!user){
+
+            alert("Неверные данные");
+            return;
+        }
+
+        state.pendingUser = user;
+
+        if(user.twofa){
+
+        sendVerificationCode(email);
+        return;
+        }
+
+    }else{
+
+        /* REGISTER */
+
+        const exists =
+        users.find(
+        u => u.email === email
+        );
+
+        if(exists){
+
+            alert("Аккаунт уже существует");
+            return;
+        }
+
+        state.pendingUser = {
+            
+            twofa:false,
+
+            email,
+            password,
+
+            nickname:
+            "user" +
+            Math.floor(
+            Math.random() * 1000
+            ),
+
+            balance:1000,
+
+            inventory:[]
+        };
+    }
+
+    state.generatedCode =
+    Math.floor(
+    100000 + Math.random() * 900000
+    );
+
+    emailjs.send(
+    "service_9okzrkg",
+    "template_arn6e7i",
+    {
+        to_email: email,
+        code: state.generatedCode
+    })
+
+    .then(() => {
+
+        closeAuth();
+
+        document.getElementById(
+        "verifyPopup"
+        ).style.display = "flex";
+
+        alert("Код отправлен");
+
+    })
+
+.catch((error) => {
+
+    console.log(error);
+
+    alert("Ошибка отправки email кода");
+
+});
+}
+
+function openDeleteConfirm(){
+
+    document.getElementById(
+    "deleteConfirm"
+    ).style.display = "flex";
+}
+
+function confirmDelete(){
+
+    let users =
+    JSON.parse(
+    localStorage.getItem("users")
+    ) || [];
+
+    users = users.filter(
+    u => u.email !== state.currentUser.email
+    );
+
+    localStorage.setItem(
+    "users",
+    JSON.stringify(users)
+    );
+
+    logout();
+
+    location.reload();
+}
+
+let currentCasePrice = 100;
+
+function selectAmount(amount, event){
+
+    openAmount = amount;
+
+    document.querySelectorAll(".amount-btn")
+        .forEach(btn => btn.classList.remove("active"));
+
+    if (event && event.target) {
+        event.target.classList.add("active");
+    }
+
+    updateOpenPrice();
+}
+
+function syncBalance(){
+
+    if(!state.currentUser) return;
+
+    state.currentUser.balance =
+    state.balance;
+
+    saveUsers();
+}
+
+function updateOpenPrice(){
+
+    const total =
+    (casePrices[state.selectedCase] || 0)
+    * state.openAmount;
+
+    const el =
+    document.querySelector(".btn-subtext");
+
+    if(el){
+        el.innerText = total + "₽";
+    }
+}
+
+function togglePasswordSettings(){
+
+    const content =
+    document.getElementById(
+    "passwordContent"
+    );
+
+    const arrow =
+    document.getElementById(
+    "passwordArrow"
+    );
+
+    content.classList.toggle("open");
+
+    arrow.classList.toggle("rotate");
+}
+
+function nextAuthStep(){
+
+    const email =
+    document.getElementById(
+    "authEmail"
+    ).value.trim();
+
+    const password =
+    document.getElementById(
+    "authPassword"
+    ).value.trim();
+
+    if(!email || !password){
+
+        alert("Заполните поля");
+        return;
+    }
+
+    if(password.length < 8){
+
+        alert("Пароль минимум 8 символов");
+        return;
+    }
+
+    submitAuth();
+}
+
+function loginUser(user){
+
+    state.currentUser = user;
+
+    state.balance = user.balance ?? 1000;
+    state.currentUser.balance = state.balance;
+
+    state.currentUser.inventory = state.currentUser.inventory || [];
+
+    state.stats = user.stats ?? {
+        opened:0,
+        upgrades:0,
+        deposited:0,
+        withdrawn:0,
+        withdrawnItems:0
+    };
+
+    updateStatsUI();
+
+    /* LOAD 2FA */
+
+    const toggle =
+    document.getElementById("twofaToggle");
+
+    if(toggle){
+        toggle.checked = !!user.twofa;
+    }
+
+    localStorage.setItem(
+        "currentUser",
+        user.email
+    );
+
+    $("#nickname").innerText = user.nickname;
+
+    updateBalanceUI();
+
+    updateProfileUI(true);
+
+    renderOpenAmounts();
+}
+
+function logout() {
+    state.currentUser = null;
+    state.selectedCase = null;
+    state.currentCase = [];
+    state.isSpinning = false;
+
+    localStorage.removeItem("currentUser");
+
+    $("#nickname").innerText = "Гость";
+
+    state.balance = 1000;
+
+    updateBalanceUI();
+    updateProfileUI(false);
+
+    const grid = $("#inventoryGrid");
+    if (grid) grid.innerHTML = "";
+
+    const profilePage = document.getElementById("profilePage");
+    if (profilePage) profilePage.style.display = "none";
+
+    state.stats = {
+        opened: 0,
+        upgrades: 0,
+        deposited: 0,
+        withdrawn: 0,
+        withdrawnItems: 0
+    };
+
+    updateStatsUI();
+}
+
+function getUsers() {
+    try {
+        return JSON.parse(localStorage.getItem("users")) || [];
+    } catch {
+        return [];
+    }
+}
+
+/* AUTO LOGIN */
+
+window.addEventListener("load", () => {
+
+    const email = localStorage.getItem("currentUser");
+
+    if(email){
+        const user = getUsers().find(u => u.email === email);
+        if(user){
+            loginUser(user);
+            renderInventory();
+        }
+    }
+
+    if(localStorage.getItem("theme") === "true"){
+        document.body.classList.add("light-theme");
+    }
+
+    updateBalanceUI();
+    updateProfileUI(false);
+});
+
+/* SAVE BALANCE */
+
+function saveBalance(){
+
+    if(!state.currentUser) return;
+
+    state.currentUser.balance =
+    state.balance;
+
+    saveUsers();
+}
+
+function updateStatsUI(){
+
+    const opened = $("#openedCases");
+    const upgrades = $("#upgradeCount");
+    const deposit = $("#depositAmount");
+    const withdraw = $("#withdrawAmount");
+    const items = $("#withdrawItems");
+
+    if(opened) opened.innerText = state.stats.opened;
+    if(upgrades) upgrades.innerText = state.stats.upgrades;
+    if(deposit) deposit.innerText = state.stats.deposited + "₽";
+    if(withdraw) withdraw.innerText = state.stats.withdrawn + "₽";
+    if(items) items.innerText = state.stats.withdrawnItems;
+}
+
+function saveStats(){
+
+    if(!state.currentUser) return;
+
+    state.currentUser.stats = state.stats;
+
+    saveUsers();
+}
+
+function closeProfile(){
+
+    const page =
+    document.getElementById("profilePage");
+
+    if(page){
+        page.style.display = "none";
+    }
+}
+
+function confirmCode(){
+
+    if(!state.pendingUser){
+        alert("Ошибка авторизации");
+        return;
+    }
+
+    const twofa = document.getElementById("twofaToggle");
+state.pendingUser.twofa = twofa ? twofa.checked : false;
+
+    const code =
+    document.getElementById(
+    "verifyCode"
+    ).value.trim();
+
+    if(Number(code) !== Number(state.generatedCode)){
+
+        alert("Неверный код");
+        return;
+    }
+
+    let users =
+    JSON.parse(
+    localStorage.getItem("users")
+    ) || [];
+
+    /* REGISTER */
+
+    if(state.authMode === "register"){
+
+        users.push(state.pendingUser);
+
+        localStorage.setItem(
+        "users",
+        JSON.stringify(users)
+        );
+    }
+
+    loginUser(state.pendingUser);
+
+    state.pendingUser = null;
+
+    saveUsers();
+
+    updateOnline();
+
+    document.getElementById(
+    "verifyPopup"
+    ).style.display = "none";
+
+    saveBalance();
+    saveStats();
+    document.getElementById(
+    "verifyCode"
+    ).value = "";
+}
+
+updateBalanceUI();
+updateProfileUI(false);
+
+</script>
+
+<!-- PROFILE PAGE -->
+
+<div class="profile-page" id="profilePage">
+
+    <div class="profile-top-line"></div>
+
+    <div class="profile-content">
+
+        <!-- SETTINGS -->
+
+<button
+class="profile-icon-btn settings-btn"
+onclick="openSettings()"
+>
+⚙
+</button>
+
+        <!-- BACK -->
+        <button
+        class="profile-icon-btn back-btn-profile"
+        onclick="closeProfile()">
+            ←
+        </button>
+
+        <!-- CENTER -->
+        <div class="profile-main">
+
+            <!-- LEFT -->
+            <div class="profile-side">
+
+<button class="profile-mini-btn">
+    💰 <span id="profileBalance">1000</span>₽
+</button>
+
+                <button
+                class="profile-mini-btn"
+                onclick="openDeposit()">
+                    ➕ Пополнить
+                </button>
+
+            </div>
+
+            <!-- PROFILE -->
+            <div class="profile-box-center">
+
+                <div class="profile-avatar">
+                    👤
+                </div>
+
+<div class="profile-name" id="profileName">
+    User0001
+</div>
+
+            </div>
+
+            <!-- RIGHT -->
+            <div class="profile-side">
+
+<button
+class="profile-mini-btn"
+onclick="openUpgradeMenu()">
+    🚀 Апгрейд
+</button>
+
+                <button
+                class="profile-mini-btn"
+                onclick="openStats()">
+                    📊 Статистика
+                </button>
+
+            </div>
+
+        </div>
+
+<div class="best-drop-box">
+
+    <div class="best-drop-title">
+        Лучший дроп
+    </div>
+
+    <div class="best-drop-card">
+
+        <div
+        class="best-drop-emoji"
+        id="bestDropEmoji">
+            👑
+        </div>
+
+        <div
+        class="best-drop-rarity"
+        id="bestDropRarity">
+            LEGENDARY
+        </div>
+
+    </div>
+
+</div>
+
+        <!-- INVENTORY -->
+        <div class="inventory-section">
+
+            <div class="inventory-title">
+                ИНВЕНТАРЬ
+            </div>
+
+            <div class="inventory-grid" id="inventoryGrid">
+
+                <div class="inventory-item">
+
+                    <div class="inventory-emoji">
+                        😎
+                    </div>
+
+                    <div class="inventory-price">
+                        147₽
+                    </div>
+
+                    <div class="inventory-actions">
+
+                        <button class="sell-mini">
+                            💰
+                        </button>
+
+                        <div class="grid-mini">
+                            ⋮
+                        </div>
+
+                    </div>
+
+                    <div class="withdraw-hover">
+
+                        <button class="withdraw-btn">
+                            Вывести
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- SUPPORT -->
+
+<div
+class="support-chat"
+onclick="openSupport()">
+🎧
+</div>
+
+<!-- VERIFY -->
+
+<div class="auth-popup" id="verifyPopup">
+
+    <div class="auth-box">
+
+        <div class="auth-title">
+            Подтверждение почты
+        </div>
+
+        <div style="
+        text-align:center;
+        color:#aaa;
+        font-size:14px;
+        ">
+            Код отправлен на почту
+        </div>
+
+        <input
+        type="text"
+        id="verifyCode"
+        class="auth-input"
+        placeholder="Введите код">
+
+        <button
+        class="auth-btn"
+        onclick="confirmCode()">
+            Подтвердить
+        </button>
+
+    </div>
+
+</div>
+
+<div id="upgradeModal" class="upgrade-modal hidden">
+    
+    <div class="upgrade-header">
+        <div class="upgrade-title">🚀 Апгрейд</div>
+        <button class="close-btn" onclick="closeUpgrade()">✖</button>
+    </div>
+
+    <!-- ПРОГРЕСС -->
+    <div class="upgrade-circle">
+        <div class="upgrade-center-icon">💣</div>
+    </div>
+
+    <!-- КНОПКИ -->
+    <div class="upgrade-multipliers">
+        <button onclick="setUpgradeChance(2)">x2</button>
+        <button onclick="setUpgradeChance(5)">x5</button>
+        <button onclick="setUpgradeChance(10)">x10</button>
+        <button onclick="setUpgradeChance(30)">30%</button>
+        <button onclick="setUpgradeChance(50)">50%</button>
+        <button onclick="setUpgradeChance(75)">75%</button>
+    </div>
+
+    <!-- ДВЕ ПАНЕЛИ -->
+    <div class="upgrade-content">
+
+        <div class="upgrade-left">
+            <h3>Выберите до 6 предметов</h3>
+            <div id="upgradeInventory"></div>
+        </div>
+
+        <div class="upgrade-right">
+            <h3>Выберите оружие</h3>
+            <div id="upgradeTarget"></div>
+        </div>
+
+    </div>
+
+    <!-- ЛЕНТА -->
+    <div id="upgradeRolls"></div>
+
+    <button class="upgrade-btn" onclick="startUpgrade()">
+        ПРОКАЧАТЬ
+    </button>
+
+</div>
+
+<!-- SETTINGS -->
+
+<div class="settings-overlay" id="settingsPage">
+
+<div class="settings-box">
+
+<div class="settings-line"></div>
+
+<div class="settings-header">
+
+<div class="settings-title">
+Настройки
+</div>
+
+<button
+class="settings-close"
+onclick="closeSettings()">
+✕
+</button>
+
+</div>
+
+<div class="settings-list">
+
+<!-- SWITCH -->
+
+<div class="settings-item">
+
+<div>
+<div class="settings-name">
+Белая тема
+</div>
+
+</div>
+
+<label class="switch">
+
+<input
+type="checkbox"
+id="themeToggle"
+onchange="toggleTheme()">
+
+<span class="slider"></span>
+
+</label>
+
+</div>
+
+<!-- 2FA -->
+
+<div class="settings-item">
+
+<div>
+<div class="settings-name">
+2FA подтверждение
+</div>
+
+<div class="settings-sub">
+Код на почту при входе
+</div>
+</div>
+
+<label class="switch">
+
+<input
+type="checkbox"
+id="twofaToggle">
+
+<span class="slider"></span>
+
+</label>
+
+</div>
+
+<div class="delete-confirm" id="deleteConfirm">
+
+<div class="delete-box">
+
+<div>
+Удалить аккаунт?
+</div>
+
+<button
+class="delete-btn"
+onclick="confirmDelete()">
+Подтвердить
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+<!-- CHANGE NICK -->
+
+<div class="settings-item-column">
+
+<div class="settings-name">
+Изменить ник
+</div>
+
+<input
+type="text"
+id="newNickname"
+class="settings-input"
+placeholder="Новый ник">
+
+<button
+class="settings-btn"
+onclick="changeNickname()">
+Сменить ник
+</button>
+
+</div>
+
+<div class="settings-item-column">
+
+    <div class="settings-expand">
+
+        <div
+        class="settings-expand-top"
+        onclick="togglePasswordSettings()">
+
+            <div class="settings-name">
+                Изменить пароль
+            </div>
+
+            <div id="passwordArrow">
+                ⬆
+            </div>
+
+        </div>
+
+        <div
+        class="settings-expand-content"
+        id="passwordContent">
+
+            <input
+            type="password"
+            class="settings-input"
+            id="oldPassword"
+            placeholder="Старый пароль">
+
+            <input
+            type="password"
+            class="settings-input"
+            id="newPasswordSettings"
+            placeholder="Новый пароль">
+
+            <button
+            class="settings-btn"
+            onclick="changePassword()">
+                Подтвердить
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- DELETE ACCOUNT -->
+
+<div class="settings-item-column">
+
+    <div class="settings-name red">
+        Удалить аккаунт
+    </div>
+
+    <button
+    class="settings-btn delete-btn"
+    onclick="openDeleteConfirm()">
+        Удалить
+    </button>
+
+</div>
+
+</div> <!-- settings-list -->
+</div> <!-- settings-box -->
+</div> <!-- settingsPage -->
+
+
+<!-- STATS -->
+
+<div class="settings-overlay" id="statsPage">
+
+    <div class="settings-box stats-box">
+
+        <div class="settings-line"></div>
+
+        <div class="settings-header">
+
+            <div class="settings-title">
+                Статистика
+            </div>
+
+            <button
+            class="settings-close"
+            onclick="closeStats()">
+                ✕
+            </button>
+
+        </div>
+
+        <div class="stats-list">
+
+            <!-- CASES -->
+
+            <div class="stats-card">
+
+                <div class="stats-icon">
+                    📦
+                </div>
+
+                <div>
+
+                    <div class="stats-name">
+                        Открыто кейсов
+                    </div>
+
+                    <div class="stats-value" id="openedCases">
+                        0
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- UPGRADES -->
+
+            <div class="stats-card">
+
+                <div class="stats-icon">
+                    🚀
+                </div>
+
+                <div>
+
+                    <div class="stats-name">
+                        Апгрейдов
+                    </div>
+
+                    <div class="stats-value" id="upgradeCount">
+                        0
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- DEPOSIT -->
+
+            <div class="stats-block">
+
+                <div class="stats-label">
+                    Пополнено
+                </div>
+
+                <div class="stats-money">
+
+                    <div class="stats-icon">
+                        💰
+                    </div>
+
+                    <div class="stats-value" id="depositAmount">
+                        0₽
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- WITHDRAW -->
+
+            <div class="stats-block">
+
+                <div class="stats-label">
+                    Выведено
+                </div>
+
+                <div class="stats-money">
+
+                    <div class="stats-icon">
+                        💸
+                    </div>
+
+                    <div>
+
+                        <div class="stats-value" id="withdrawAmount">
+                            0₽
+                        </div>
+
+                        <div class="stats-sub">
+                            Предметов выведено:
+                            <span id="withdrawItems">0</span>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+const twofaToggle = document.getElementById("twofaToggle");
+
+if (twofaToggle) {
+    twofaToggle.addEventListener("change", () => {
+        if (!state.currentUser) return;
+
+        state.currentUser.twofa = twofaToggle.checked;
+        saveUsers();
+    });
+}
+
+</script>
+
+<script>
+console.log("Emoji Drops loaded");
+</script>
+
+</body>
+</html>
