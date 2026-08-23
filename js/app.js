@@ -1,734 +1,3 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Emoji Drops</title>
-
-<script defer src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-
-<script>
-window.addEventListener("DOMContentLoaded", () => {
-    emailjs.init({
-        publicKey:"aevTrSnp2VVPi1u3_"
-    });
-});
-</script>
-
-
-
-<link rel="stylesheet" href="css/style.css">
-</head>
-<body>
-
-<header>
-
-<div class="logo">
-
-<img src="logo.png" class="logo-img">
-
-<div class="logo-text">
-<span>Emoji</span>
-<p>Drops</p>
-</div>
-
-</div>
-
-<div class="top-right">
-
-<div class="top-btn online-box">
-
-<div class="online-dot"></div>
-
-<span id="onlineCount">128</span> online
-
-</div>
-
-<div class="balance-menu">
-
-<div class="top-btn">
-💰 <span id="balance">1000</span>₽
-</div>
-
-<div class="balance-dropdown">
-
-<button>
-ПОПОЛНИТЬ
-</button>
-
-</div>
-
-</div>
-
-<div class="profile-menu">
-
-    <div class="profile-box">
-
-        <div class="user">
-            👤
-        </div>
-
-        <div class="nickname" id="nickname">
-            Гость
-        </div>
-
-    </div>
-
-<div class="profile-dropdown" id="profileDropdown">
-
-<button onclick="openAuth('login')" id="loginBtn">
-    Войти
-</button>
-
-<button onclick="openAuth('register')" id="registerBtn">
-    Регистрация
-</button>
-
-<button
-onclick="openProfile()"
-id="profileBtn"
-style="display:none;">
-    Профиль
-</button>
-
-<button
-onclick="logout()"
-id="logoutBtn"
-style="display:none;">
-    Выйти
-</button>
-
-</div>
-
-    </div>
-
-</div>
-
-</div>
-
-</header>
-
-<div class="top-line"></div>
-
-<!-- SEARCH -->
-
-<div class="search-wrap">
-
-<input
-class="search"
-id="searchInput"
-placeholder="Поиск кейсов..."
-onkeyup="searchCases()">
-
-</div>
-
-<!-- CASES -->
-
-<div class="cases">
-
-<div class="case" onclick="openCasePage('smile')">
-<div class="case-emoji">😀</div>
-<div class="case-name">Smile</div>
-
-<div class="case-price">
-<div class="old-price">200₽</div>
-<div class="new-price">100₽</div>
-</div>
-</div>
-
-<div class="case" onclick="openCasePage('moves')">
-<div class="case-emoji">🕺</div>
-<div class="case-name">Moves</div>
-
-<div class="case-price">
-<div class="new-price">80₽</div>
-</div>
-</div>
-
-<div class="case" onclick="openCasePage('nature')">
-<div class="case-emoji">🌿</div>
-<div class="case-name">Nature</div>
-
-<div class="case-price">
-<div class="new-price">60₽</div>
-</div>
-</div>
-
-<div class="case" onclick="openCasePage('food')">
-<div class="case-emoji">🍔</div>
-<div class="case-name">Food</div>
-
-<div class="case-price">
-<div class="new-price">40₽</div>
-</div>
-</div>
-
-<div class="case" onclick="openCasePage('animals')">
-<div class="case-emoji">🐶</div>
-<div class="case-name">Animals</div>
-
-<div class="case-price">
-<div class="new-price">20₽</div>
-</div>
-</div>
-
-<div class="case" onclick="openCasePage('transport')">
-<div class="case-emoji">🚗</div>
-<div class="case-name">Transport</div>
-
-<div class="case-price">
-<div class="old-price">30₽</div>
-<div class="new-price">10₽</div>
-</div>
-</div>
-
-<div class="case" onclick="openCasePage('sport')">
-<div class="case-emoji">⚽</div>
-<div class="case-name">Sport</div>
-
-<div class="case-price">
-<div class="new-price">250₽</div>
-</div>
-</div>
-
-<div class="case" onclick="openCasePage('games')">
-<div class="case-emoji">🎮</div>
-<div class="case-name">Games</div>
-
-<div class="case-price">
-<div class="new-price">500₽</div>
-</div>
-</div>
-</div>
-
-<!-- OPEN PAGE -->
-
-<div class="open-page" id="openPage">
-
-<button class="back-btn" onclick="closePage()">
-← Назад
-</button>
-
-<div class="open-header">
-
-<div class="logo">
-
-<img src="logo.png" class="logo-img">
-
-<div class="logo-text">
-<span>Emoji</span>
-<p>Drops</p>
-</div>
-
-</div>
-
-</div>
-
-<div class="roulette-wrapper">
-
-    <div class="roulette">
-
-        <div class="center-indicator"></div>
-
-        <!-- МУЛЬТИ ОТКРЫТИЕ -->
-        <div id="multiRouletteContainer"></div>
-
-    </div>
-
-</div>
-
-<div class="open-amounts" id="openAmounts">
-</div>
-
-<div class="open-buttons">
-
-<button class="main-btn" onclick="openCase()">
-    Открыть кейс
-    <div class="btn-subtext">100₽</div>
-</button>
-<button class="main-btn fast-btn">Быстро</button>
-
-</div>
-
-<div class="case-items-list" id="caseItemsList"></div>
-
-</div>
-
-<!-- WIN POPUP -->
-
-<div class="win-popup" id="winPopup">
-
-    <div class="win-box">
-
-        <div class="confetti">
-            🎉 🎊 ✨ 🎉
-        </div>
-
-        <div class="win-emoji" id="winEmoji">
-            😀
-        </div>
-
-        <div class="win-rarity" id="winRarity">
-            COMMON
-        </div>
-
-        <div class="win-price" id="winPrice">
-            10₽
-        </div>
-
-        <button onclick="takeWin()">
-            ЗАБРАТЬ
-        </button>
-
-        <button onclick="sellWin()"
-            style="
-            margin-top:15px;
-            background:#242424;
-            ">
-            ПРОДАТЬ
-        </button>
-
-    </div>
-
-</div>
-
-<!-- LIVE DROPS -->
-
-<div class="live-drops-bar live-drops-floating">
-
-    <div class="live-title">🔥 LIVE DROPS</div>
-
-    <div class="live-container" id="liveContainer">
-    </div>
-
-</div>
-
-<!-- AUTH -->
-
-<div class="auth-popup" id="authPopup">
-
-    <div class="auth-box">
-
-        <div class="auth-title" id="authTitle">
-            Вход
-        </div>
-
-        <input
-        type="email"
-        id="authEmail"
-        class="auth-input"
-        placeholder="Почта">
-
-        <input
-        type="password"
-        id="authPassword"
-        class="auth-input"
-        placeholder="Пароль">
-
-        <button
-        class="auth-btn"
-        onclick="submitAuth()">
-            Продолжить
-        </button>
-
-        <button
-        class="auth-btn close-auth"
-        onclick="closeAuth()">
-            Закрыть
-        </button>
-
-    </div>
-
-</div>
-
-<script>
-
-function updateOnline(){
-    const users = getUsers() || [];
-
-    const el = document.getElementById("onlineCount");
-    if (el) el.innerText = 128 + users.length;
-}
-
-updateOnline();
-
-/* RARITIES */
-
-const rarities = {
-
-common:{
-color:"#808080"
-},
-
-rare:{
-color:"#3b82f6"
-},
-
-epic:{
-color:"#a855f7"
-},
-
-mythical:{
-color:"#ef4444"
-},
-
-legendary:{
-color:"#ffd000"
-}
-
-};
-
-/* CASES */
-
-const casePrices = {
-
-smile:100,
-moves:80,
-nature:60,
-food:40,
-animals:20,
-transport:10,
-sport:250,
-games:500
-
-};
-
-const cases = {
-
-  smile:[
-    {emoji:"😀",rarity:"common",price:"4₽"},
-    {emoji:"😃",rarity:"common",price:"4₽"},
-    {emoji:"😄",rarity:"common",price:"5₽"},
-    {emoji:"😁",rarity:"common",price:"5₽"},
-    {emoji:"😆",rarity:"common",price:"5₽"},
-    {emoji:"😅",rarity:"common",price:"5₽"},
-    {emoji:"😂",rarity:"common",price:"6₽"},
-    {emoji:"🤣",rarity:"common",price:"6₽"},
-    {emoji:"🙂",rarity:"common",price:"6₽"},
-    {emoji:"🙃",rarity:"common",price:"6₽"},
-    {emoji:"😉",rarity:"common",price:"7₽"},
-    {emoji:"😊",rarity:"rare",price:"12₽"},
-    {emoji:"😇",rarity:"rare",price:"13₽"},
-    {emoji:"😍",rarity:"rare",price:"14₽"},
-    {emoji:"😘",rarity:"rare",price:"14₽"},
-    {emoji:"😎",rarity:"rare",price:"15₽"},
-    {emoji:"🤓",rarity:"rare",price:"16₽"},
-    {emoji:"🥳",rarity:"epic",price:"28₽"},
-    {emoji:"🤩",rarity:"epic",price:"30₽"},
-    {emoji:"😈",rarity:"epic",price:"32₽"},
-    {emoji:"👻",rarity:"epic",price:"35₽"},
-    {emoji:"🤖",rarity:"mythical",price:"70₽"},
-    {emoji:"👽",rarity:"mythical",price:"80₽"},
-    {emoji:"💀",rarity:"mythical",price:"90₽"},
-    {emoji:"👑",rarity:"legendary",price:"150₽"},
-    {emoji:"💎",rarity:"legendary",price:"180₽"},
-    {emoji:"🌟",rarity:"legendary",price:"220₽"},
-    {emoji:"🤗",rarity:"common",price:"7₽"},
-    {emoji:"🤭",rarity:"common",price:"7₽"},
-    {emoji:"🤔",rarity:"common",price:"8₽"},
-    {emoji:"😐",rarity:"common",price:"8₽"},
-    {emoji:"😑",rarity:"common",price:"8₽"},
-    {emoji:"😌",rarity:"rare",price:"11₽"},
-    {emoji:"😏",rarity:"rare",price:"12₽"},
-    {emoji:"😒",rarity:"rare",price:"13₽"},
-    {emoji:"😞",rarity:"rare",price:"14₽"},
-    {emoji:"😓",rarity:"rare",price:"15₽"},
-    {emoji:"😩",rarity:"epic",price:"25₽"},
-    {emoji:"😱",rarity:"epic",price:"27₽"},
-    {emoji:"😭",rarity:"epic",price:"30₽"},
-    {emoji:"😖",rarity:"epic",price:"33₽"},
-    {emoji:"🤯",rarity:"mythical",price:"65₽"},
-    {emoji:"🤢",rarity:"mythical",price:"75₽"},
-    {emoji:"🤧",rarity:"mythical",price:"85₽"},
-    {emoji:"🥵",rarity:"legendary",price:"170₽"},
-    {emoji:"🥶",rarity:"legendary",price:"190₽"}
-  ],
-
-  moves:[
-    {emoji:"🕺",rarity:"common",price:"3₽"},
-    {emoji:"💃",rarity:"common",price:"3₽"},
-    {emoji:"🏃",rarity:"common",price:"4₽"},
-    {emoji:"🚶",rarity:"common",price:"4₽"},
-    {emoji:"🏃‍♂️",rarity:"common",price:"5₽"},
-    {emoji:"🏃‍♀️",rarity:"common",price:"5₽"},
-    {emoji:"🤸",rarity:"rare",price:"10₽"},
-    {emoji:"🏋️",rarity:"rare",price:"12₽"},
-    {emoji:"🤾",rarity:"rare",price:"13₽"},
-    {emoji:"🚴",rarity:"rare",price:"14₽"},
-    {emoji:"⚡",rarity:"epic",price:"24₽"},
-    {emoji:"🔥",rarity:"epic",price:"28₽"},
-    {emoji:"💨",rarity:"epic",price:"30₽"},
-    {emoji:"🌪️",rarity:"mythical",price:"60₽"},
-    {emoji:"☄️",rarity:"mythical",price:"75₽"},
-    {emoji:"👑",rarity:"legendary",price:"140₽"},
-    {emoji:"🧘‍♂️",rarity:"common",price:"4₽"},
-    {emoji:"🧘‍♀️",rarity:"common",price:"4₽"},
-    {emoji:"🤺",rarity:"common",price:"5₽"},
-    {emoji:"🤼‍♂️",rarity:"common",price:"5₽"},
-    {emoji:"🤼‍♀️",rarity:"common",price:"5₽"},
-    {emoji:"🤽‍♂️",rarity:"rare",price:"11₽"},
-    {emoji:"🤽‍♀️",rarity:"rare",price:"11₽"},
-    {emoji:"🤹‍♂️",rarity:"rare",price:"12₽"},
-    {emoji:"🤹‍♀️",rarity:"rare",price:"12₽"},
-    {emoji:"🤴",rarity:"rare",price:"13₽"},
-    {emoji:"🤵‍♂️",rarity:"epic",price:"20₽"},
-    {emoji:"🤵‍♀️",rarity:"epic",price:"20₽"},
-    {emoji:"🤴",rarity:"epic",price:"22₽"},
-    {emoji:"🦸‍♂️",rarity:"epic",price:"26₽"},
-    {emoji:"🦸‍♀️",rarity:"epic",price:"26₽"},
-    {emoji:"🦹‍♂️",rarity:"mythical",price:"55₽"},
-    {emoji:"🦹‍♀️",rarity:"mythical",price:"55₽"},
-    {emoji:"🦸‍♂️",rarity:"mythical",price:"65₽"},
-    {emoji:"🦸‍♀️",rarity:"mythical",price:"65₽"},
-    {emoji:"🦹‍♂️",rarity:"legendary",price:"130₽"},
-    {emoji:"🦹‍♀️",rarity:"legendary",price:"130₽"}
-  ],
-
-  nature:[
-    {emoji:"🌿",rarity:"common",price:"2₽"},
-    {emoji:"🌲",rarity:"common",price:"3₽"},
-    {emoji:"🌳",rarity:"common",price:"3₽"},
-    {emoji:"🍀",rarity:"common",price:"3₽"},
-    {emoji:"🌱",rarity:"common",price:"4₽"},
-    {emoji:"🌵",rarity:"common",price:"4₽"},
-    {emoji:"🌸",rarity:"rare",price:"10₽"},
-    {emoji:"🌺",rarity:"rare",price:"12₽"},
-    {emoji:"🌼",rarity:"rare",price:"13₽"},
-    {emoji:"🌻",rarity:"rare",price:"14₽"},
-    {emoji:"🌈",rarity:"epic",price:"26₽"},
-    {emoji:"🌊",rarity:"epic",price:"28₽"},
-    {emoji:"🌋",rarity:"mythical",price:"55₽"},
-    {emoji:"🌪️",rarity:"mythical",price:"70₽"},
-    {emoji:"☀️",rarity:"legendary",price:"130₽"},
-    {emoji:"🌌",rarity:"legendary",price:"180₽"},
-    {emoji:"🍂",rarity:"common",price:"2₽"},
-    {emoji:"🍁",rarity:"common",price:"2₽"},
-    {emoji:"🍃",rarity:"common",price:"3₽"},
-    {emoji:"🌴",rarity:"common",price:"3₽"},
-    {emoji:"💐",rarity:"common",price:"4₽"},
-    {emoji:"🌹",rarity:"rare",price:"11₽"},
-    {emoji:"🌷",rarity:"rare",price:"12₽"},
-    {emoji:"🥀",rarity:"rare",price:"13₽"},
-    {emoji:"🌴",rarity:"rare",price:"14₽"},
-    {emoji:"🌾",rarity:"rare",price:"15₽"},
-    {emoji:"🌦️",rarity:"epic",price:"25₽"},
-    {emoji:"⛅",rarity:"epic",price:"27₽"},
-    {emoji:"🌧️",rarity:"epic",price:"29₽"},
-    {emoji:"❄️",rarity:"epic",price:"31₽"},
-    {emoji:"🌩️",rarity:"mythical",price:"60₽"},
-    {emoji:"🌤️",rarity:"mythical",price:"65₽"},
-    {emoji:"🌑",rarity:"mythical",price:"75₽"},
-    {emoji:"🌕",rarity:"mythical",price:"80₽"},
-    {emoji:"🌍",rarity:"legendary",price:"160₽"},
-    {emoji:"🌎",rarity:"legendary",price:"170₽"},
-    {emoji:"🪐",rarity:"legendary",price:"190₽"}
-  ],
-
- food:[
-    {emoji:"🍔",rarity:"common",price:"2₽"},
-    {emoji:"🍕",rarity:"common",price:"2₽"},
-    {emoji:"🍟",rarity:"common",price:"3₽"},
-    {emoji:"🌭",rarity:"common",price:"3₽"},
-    {emoji:"🍿",rarity:"common",price:"3₽"},
-    {emoji:"🥪",rarity:"common",price:"4₽"},
-    {emoji:"🍩",rarity:"rare",price:"9₽"},
-    {emoji:"🍪",rarity:"rare",price:"10₽"},
-    {emoji:"🍫",rarity:"rare",price:"12₽"},
-    {emoji:"🍰",rarity:"epic",price:"20₽"},
-    {emoji:"🎂",rarity:"epic",price:"24₽"},
-    {emoji:"🍓",rarity:"epic",price:"26₽"},
-    {emoji:"🍣",rarity:"mythical",price:"50₽"},
-    {emoji:"🍤",rarity:"mythical",price:"65₽"},
-    {emoji:"💎",rarity:"legendary",price:"140₽"},
-    {emoji:"👑",rarity:"legendary",price:"170₽"},
-    {emoji:"🍎",rarity:"common",price:"2₽"},
-    {emoji:"🍊",rarity:"common",price:"2₽"},
-    {emoji:"🍋",rarity:"common",price:"3₽"},
-    {emoji:"🍇",rarity:"common",price:"3₽"},
-    {emoji:"🍏",rarity:"common",price:"3₽"},
-    {emoji:"🍐",rarity:"rare",price:"8₽"},
-    {emoji:"🍑",rarity:"rare",price:"9₽"},
-    {emoji:"🍒",rarity:"rare",price:"10₽"},
-    {emoji:"🍌",rarity:"rare",price:"11₽"},
-    {emoji:"🍍",rarity:"rare",price:"12₽"},
-    {emoji:"🍯",rarity:"epic",price:"18₽"},
-    {emoji:"🍼",rarity:"epic",price:"22₽"},
-    {emoji:"☕️",rarity:"epic",price:"23₽"},
-    {emoji:"🍵",rarity:"epic",price:"25₽"},
-    {emoji:"🍷",rarity:"mythical",price:"45₽"},
-    {emoji:"🍸",rarity:"mythical",price:"52₽"},
-    {emoji:"🍹",rarity:"mythical",price:"58₽"},
-    {emoji:"🍾",rarity:"mythical",price:"62₽"},
-    {emoji:"🍳",rarity:"legendary",price:"120₽"},
-    {emoji:"🍽️",rarity:"legendary",price:"130₽"},
-    {emoji:"🧁",rarity:"legendary",price:"150₽"}
-  ],
-
-  "animals": [
-    {emoji:"🐶",rarity:"common",price:"3₽"},
-    {emoji:"🐱",rarity:"common",price:"3₽"},
-    {emoji:"🐭",rarity:"common",price:"3₽"},
-    {emoji:"🐹",rarity:"common",price:"4₽"},
-    {emoji:"🐰",rarity:"common",price:"4₽"},
-    {emoji:"🦊",rarity:"rare",price:"12₽"},
-    {emoji:"🐼",rarity:"rare",price:"14₽"},
-    {emoji:"🐨",rarity:"rare",price:"15₽"},
-    {emoji:"🦁",rarity:"epic",price:"30₽"},
-    {emoji:"🐯",rarity:"epic",price:"34₽"},
-    {emoji:"🦄",rarity:"epic",price:"38₽"},
-    {emoji:"🐉",rarity:"mythical",price:"80₽"},
-    {emoji:"🦖",rarity:"mythical",price:"90₽"},
-    {emoji:"👹",rarity:"legendary",price:"170₽"},
-    {emoji:"👑",rarity:"legendary",price:"220₽"},
-    {emoji:"🦜",rarity:"common",price:"5₽"},
-    {emoji:"🕊️",rarity:"common",price:"4₽"},
-    {emoji:"🦅",rarity:"common",price:"5₽"},
-    {emoji:"🦉",rarity:"common",price:"5₽"},
-    {emoji:"🦋",rarity:"common",price:"4₽"},
-    {emoji:"🐝",rarity:"common",price:"4₽"},
-    {emoji:"🕷️",rarity:"common",price:"5₽"},
-    {emoji:"🦟",rarity:"common",price:"5₽"},
-    {emoji:"🦗",rarity:"common",price:"6₽"},
-    {emoji:"🐞",rarity:"common",price:"4₽"},
-    {emoji:"🦂",rarity:"rare",price:"11₽"},
-    {emoji:"🦃",rarity:"rare",price:"13₽"},
-    {emoji:"🦚",rarity:"rare",price:"14₽"},
-    {emoji:"🦩",rarity:"rare",price:"16₽"},
-    {emoji:"🦤",rarity:"rare",price:"17₽"},
-    {emoji:"🦛",rarity:"epic",price:"28₽"},
-    {emoji:"🦏",rarity:"epic",price:"32₽"},
-    {emoji:"🦓",rarity:"epic",price:"36₽"},
-    {emoji:"🦍",rarity:"epic",price:"42₽"},
-    {emoji:"🦧",rarity:"epic",price:"44₽"},
-    {emoji:"🦈",rarity:"mythical",price:"75₽"},
-    {emoji:"🦐",rarity:"mythical",price:"85₽"},
-    {emoji:"🦑",rarity:"mythical",price:"95₽"},
-    {emoji:"🦀",rarity:"mythical",price:"100₽"},
-    {emoji:"🦕",rarity:"legendary",price:"200₽"},
-    {emoji:"🦇",rarity:"legendary",price:"210₽"}
-  ],
-
-  "transport": [
-    {emoji:"🚗",rarity:"common",price:"2₽"},
-    {emoji:"🚕",rarity:"common",price:"2₽"},
-    {emoji:"🚌",rarity:"common",price:"3₽"},
-    {emoji:"🚓",rarity:"common",price:"3₽"},
-    {emoji:"🚑",rarity:"rare",price:"10₽"},
-    {emoji:"🏎️",rarity:"rare",price:"14₽"},
-    {emoji:"🚜",rarity:"rare",price:"15₽"},
-    {emoji:"✈️",rarity:"epic",price:"28₽"},
-    {emoji:"🚀",rarity:"epic",price:"35₽"},
-    {emoji:"🛸",rarity:"mythical",price:"70₽"},
-    {emoji:"⚡",rarity:"mythical",price:"80₽"},
-    {emoji:"🪐",rarity:"legendary",price:"150₽"},
-    {emoji:"🌌",rarity:"legendary",price:"180₽"},
-    {emoji:"🚲",rarity:"common",price:"3₽"},
-    {emoji:"🛴",rarity:"common",price:"4₽"},
-    {emoji:"🛵",rarity:"common",price:"4₽"},
-    {emoji:"🛺",rarity:"common",price:"3₽"},
-    {emoji:"🚘",rarity:"common",price:"3₽"},
-    {emoji:"🚙",rarity:"rare",price:"11₽"},
-    {emoji:"🚚",rarity:"rare",price:"12₽"},
-    {emoji:"🚛",rarity:"rare",price:"13₽"},
-    {emoji:"🚐",rarity:"rare",price:"14₽"},
-    {emoji:"🚍",rarity:"rare",price:"16₽"},
-    {emoji:"🚝",rarity:"epic",price:"25₽"},
-    {emoji:"🚞",rarity:"epic",price:"27₽"},
-    {emoji:"🚈",rarity:"epic",price:"29₽"},
-    {emoji:"🚆",rarity:"epic",price:"31₽"},
-    {emoji:"🚄",rarity:"epic",price:"33₽"},
-    {emoji:"🛩️",rarity:"mythical",price:"65₽"},
-    {emoji:"🛫",rarity:"mythical",price:"75₽"},
-    {emoji:"⛵",rarity:"mythical",price:"85₽"},
-    {emoji:"🛥️",rarity:"mythical",price:"90₽"},
-    {emoji:"🛳️",rarity:"mythical",price:"95₽"},
-    {emoji:"🛰️",rarity:"legendary",price:"160₽"},
-    {emoji:"🗼",rarity:"legendary",price:"190₽"},
-    {emoji:"🗽",rarity:"legendary",price:"200₽"}
-  ],
-
-  "sport": [
-    {emoji:"⚽",rarity:"common",price:"5₽"},
-    {emoji:"🏀",rarity:"common",price:"6₽"},
-    {emoji:"🏉",rarity:"common",price:"7₽"},
-    {emoji:"🏒",rarity:"common",price:"8₽"},
-    {emoji:"🏓",rarity:"common",price:"9₽"},
-    {emoji:"⛸️",rarity:"common",price:"10₽"},
-    {emoji:"🥌",rarity:"common",price:"11₽"},
-    {emoji:"🏸",rarity:"common",price:"12₽"},
-    {emoji:"🤸‍♂️",rarity:"common",price:"13₽"},
-    {emoji:"🤸‍♀️",rarity:"common",price:"13₽"},
-    {emoji:"🏋️‍♂️",rarity:"rare",price:"14₽"},
-    {emoji:"🏋️‍♀️",rarity:"rare",price:"14₽"},
-    {emoji:"🤺",rarity:"rare",price:"15₽"},
-    {emoji:"🏊‍♂️",rarity:"rare",price:"16₽"},
-    {emoji:"🏊‍♀️",rarity:"rare",price:"16₽"},
-    {emoji:"🚴‍♂️",rarity:"rare",price:"17₽"},
-    {emoji:"🚴‍♀️",rarity:"rare",price:"17₽"},
-    {emoji:"🏇",rarity:"rare",price:"18₽"},
-    {emoji:"🤼‍♂️",rarity:"rare",price:"19₽"},
-    {emoji:"🤼‍♀️",rarity:"rare",price:"19₽"},
-    {emoji:"🎣",rarity:"epic",price:"25₽"},
-    {emoji:"🛹",rarity:"epic",price:"27₽"},
-    {emoji:"🛼",rarity:"epic",price:"29₽"},
-    {emoji:"🤾‍♂️",rarity:"epic",price:"32₽"},
-    {emoji:"🤾‍♀️",rarity:"epic",price:"32₽"},
-    {emoji:"🤽‍♂️",rarity:"epic",price:"35₽"},
-    {emoji:"🤽‍♀️",rarity:"epic",price:"35₽"},
-    {emoji:"🏄‍♂️",rarity:"epic",price:"38₽"},
-    {emoji:"🏄‍♀️",rarity:"epic",price:"38₽"},
-    {emoji:"🏂",rarity:"epic",price:"42₽"},
-    {emoji:"🎽",rarity:"mythical",price:"60₽"},
-    {emoji:"🏋️",rarity:"mythical",price:"65₽"},
-    {emoji:"🤾",rarity:"mythical",price:"70₽"},
-    {emoji:"🏆",rarity:"mythical",price:"80₽"},
-    {emoji:"🏅",rarity:"mythical",price:"85₽"},
-    {emoji:"🥉",rarity:"legendary",price:"150₽"},
-    {emoji:"🥈",rarity:"legendary",price:"200₽"},
-    {emoji:"🥇",rarity:"legendary",price:"260₽"}
-  ],
-
-  "games": [
-    {emoji:"🎮",rarity:"common",price:"8₽"},
-    {emoji:"🕹️",rarity:"common",price:"9₽"},
-    {emoji:"🃏",rarity:"common",price:"10₽"},
-    {emoji:"🀄",rarity:"common",price:"11₽"},
-    {emoji:"🎴",rarity:"common",price:"12₽"},
-    {emoji:"🎲",rarity:"rare",price:"20₽"},
-    {emoji:"♟️",rarity:"rare",price:"22₽"},
-    {emoji:"🎯",rarity:"rare",price:"24₽"},
-    {emoji:"🧩",rarity:"rare",price:"25₽"},
-    {emoji:"🧸",rarity:"rare",price:"26₽"},
-    {emoji:"🎪",rarity:"rare",price:"28₽"},
-    {emoji:"🎰",rarity:"rare",price:"30₽"},
-    {emoji:"🎱",rarity:"rare",price:"32₽"},
-    {emoji:"🎳",rarity:"rare",price:"36₽"},
-    {emoji:"👾",rarity:"epic",price:"50₽"},
-    {emoji:"💻",rarity:"epic",price:"55₽"},
-    {emoji:"🖥️",rarity:"epic",price:"58₽"},
-    {emoji:"🎮",rarity:"epic",price:"62₽"},
-    {emoji:"🕹️",rarity:"epic",price:"65₽"},
-    {emoji:"🧙‍♂️",rarity:"mythical",price:"90₽"},
-    {emoji:"🧙‍♀️",rarity:"mythical",price:"95₽"},
-    {emoji:"🦸‍♂️",rarity:"mythical",price:"100₽"},
-    {emoji:"🦸‍♀️",rarity:"mythical",price:"105₽"},
-    {emoji:"🦹‍♂️",rarity:"mythical",price:"110₽"},
-    {emoji:"🦹‍♀️",rarity:"mythical",price:"115₽"},
-    {emoji:"🧝‍♂️",rarity:"mythical",price:"125₽"},
-    {emoji:"🧝‍♀️",rarity:"mythical",price:"130₽"},
-    {emoji:"🧛‍♂️",rarity:"mythical",price:"135₽"},
-    {emoji:"🧛‍♀️",rarity:"mythical",price:"140₽"},
-    {emoji:"🧜‍♂️",rarity:"mythical",price:"145₽"},
-    {emoji:"🧜‍♀️",rarity:"mythical",price:"150₽"},
-    {emoji:"🧞‍♂️",rarity:"legendary",price:"250₽"},
-    {emoji:"🧞‍♀️",rarity:"legendary",price:"300₽"},
-    {emoji:"🏆",rarity:"legendary",price:"350₽"},
-    {emoji:"👑",rarity:"legendary",price:"500₽"}
-  ]
-};
-
 const state = {
     currentCase: [],
     currentWin: null,
@@ -2122,4 +1391,158 @@ function logout() {
         withdrawnItems: 0
     };
 
-    update
+    updateStatsUI();
+}
+
+function getUsers() {
+    try {
+        return JSON.parse(localStorage.getItem("users")) || [];
+    } catch {
+        return [];
+    }
+}
+
+/* AUTO LOGIN */
+
+window.addEventListener("load", () => {
+
+    const email = localStorage.getItem("currentUser");
+
+    if(email){
+        const user = getUsers().find(u => u.email === email);
+        if(user){
+            loginUser(user);
+            renderInventory();
+        }
+    }
+
+    if(localStorage.getItem("theme") === "true"){
+        document.body.classList.add("light-theme");
+    }
+
+    updateBalanceUI();
+    updateProfileUI(false);
+});
+
+/* SAVE BALANCE */
+
+function saveBalance(){
+
+    if(!state.currentUser) return;
+
+    state.currentUser.balance =
+    state.balance;
+
+    saveUsers();
+}
+
+function updateStatsUI(){
+
+    const opened = $("#openedCases");
+    const upgrades = $("#upgradeCount");
+    const deposit = $("#depositAmount");
+    const withdraw = $("#withdrawAmount");
+    const items = $("#withdrawItems");
+
+    if(opened) opened.innerText = state.stats.opened;
+    if(upgrades) upgrades.innerText = state.stats.upgrades;
+    if(deposit) deposit.innerText = state.stats.deposited + "₽";
+    if(withdraw) withdraw.innerText = state.stats.withdrawn + "₽";
+    if(items) items.innerText = state.stats.withdrawnItems;
+}
+
+function saveStats(){
+
+    if(!state.currentUser) return;
+
+    state.currentUser.stats = state.stats;
+
+    saveUsers();
+}
+
+function closeProfile(){
+
+    const page =
+    document.getElementById("profilePage");
+
+    if(page){
+        page.style.display = "none";
+    }
+}
+
+function confirmCode(){
+
+    if(!state.pendingUser){
+        alert("Ошибка авторизации");
+        return;
+    }
+
+    const twofa = document.getElementById("twofaToggle");
+state.pendingUser.twofa = twofa ? twofa.checked : false;
+
+    const code =
+    document.getElementById(
+    "verifyCode"
+    ).value.trim();
+
+    if(Number(code) !== Number(state.generatedCode)){
+
+        alert("Неверный код");
+        return;
+    }
+
+    let users =
+    JSON.parse(
+    localStorage.getItem("users")
+    ) || [];
+
+    /* REGISTER */
+
+    if(state.authMode === "register"){
+
+        users.push(state.pendingUser);
+
+        localStorage.setItem(
+        "users",
+        JSON.stringify(users)
+        );
+    }
+
+    loginUser(state.pendingUser);
+
+    state.pendingUser = null;
+
+    saveUsers();
+
+    updateOnline();
+
+    document.getElementById(
+    "verifyPopup"
+    ).style.display = "none";
+
+    saveBalance();
+    saveStats();
+    document.getElementById(
+    "verifyCode"
+    ).value = "";
+}
+
+updateBalanceUI();
+updateProfileUI(false);
+
+window.addEventListener("DOMContentLoaded", () => {
+    console.log("Emoji Drops loaded");
+});
+
+const twofaToggle = document.getElementById("twofaToggle");
+
+if (twofaToggle) {
+    twofaToggle.addEventListener("change", () => {
+        if (!state.currentUser) return;
+
+        state.currentUser.twofa = twofaToggle.checked;
+        saveUsers();
+    });
+}
+
+console.log("Emoji Drops loaded");
