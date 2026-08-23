@@ -45,8 +45,6 @@ jobs:
               raise SystemExit('main inline script not found')
 
           js = main.group(1).strip() + '\n\n' + '\n\n'.join(tail) + '\n'
-
-          state_match = re.search(r'(?=const state = \{)', js)
           data_match = re.search(r'const state = \{', js)
           if not data_match:
               raise SystemExit('state declaration not found')
@@ -60,7 +58,6 @@ jobs:
           Path('js/app.js').write_text(app_js, encoding='utf-8')
 
           html = html[:style_match.start()] + '<link rel="stylesheet" href="css/style.css">' + html[style_match.end():]
-          # Remove the main inline script and the small trailing inline scripts.
           for m in reversed(script_matches):
               body = m.group(1)
               if m is main or 'twofaToggle' in body or 'Emoji Drops loaded' in body:
