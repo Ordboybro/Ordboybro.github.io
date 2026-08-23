@@ -52,8 +52,6 @@
         if (!best) {
             emoji.textContent = "🏆";
             rarity.textContent = "Нет дропа";
-            emoji.style.borderColor = "#ff7b00";
-            rarity.style.color = "#ff7b00";
             return;
         }
 
@@ -170,30 +168,6 @@
         enforceLiveLimit();
     }
 
-    function seedLiveDrops() {
-        const container = document.getElementById("liveContainer");
-        if (!container || typeof allDrops === "undefined" || typeof usernames === "undefined") return;
-
-        while (container.children.length < MAX_LIVE_DROPS) {
-            const username = usernames[Math.floor(Math.random() * usernames.length)];
-            const item = allDrops[Math.floor(Math.random() * allDrops.length)];
-            if (!item) break;
-
-            const div = document.createElement("div");
-            div.className = `live-drop ${item.rarity}`;
-            div.innerHTML = `
-                <div class="live-emoji">${item.emoji}</div>
-                <div class="live-info">
-                    <div class="live-user">${username}</div>
-                    <div class="live-rarity">${String(item.rarity).toUpperCase()}</div>
-                </div>
-            `;
-            container.prepend(div);
-        }
-
-        enforceLiveLimit();
-    }
-
     function removeCurrentWinFromInventory() {
         if (typeof state === "undefined" || !state.currentUser || !state.currentWin) return;
 
@@ -260,7 +234,6 @@
         styleBestDrop();
         renderSavedBestDrop();
         normalizeLiveDrops();
-        seedLiveDrops();
     }
 
     function observeLiveDrops() {
@@ -278,15 +251,6 @@
     function boot() {
         initUpdates();
         observeLiveDrops();
-
-        let attempts = 0;
-        const timer = setInterval(() => {
-            initUpdates();
-            observeLiveDrops();
-            attempts += 1;
-
-            if (attempts >= 50) clearInterval(timer);
-        }, 100);
     }
 
     if (document.readyState === "loading") {
