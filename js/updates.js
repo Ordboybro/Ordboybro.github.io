@@ -69,27 +69,34 @@
         for (const item of items) considerBestDrop(item);
     }
 
-    function removeCurrentWinFromInventory() {
-        if (typeof state === "undefined" || !state.currentUser || !state.currentWin) return;
-        const inventory = state.currentUser.inventory;
-        if (!Array.isArray(inventory)) return;
-        const current = state.currentWin;
-        const index = inventory.findIndex(item =>
-            item === current ||
-            (item?.emoji === current?.emoji && item?.rarity === current?.rarity && item?.price === current?.price)
-        );
-        if (index !== -1) inventory.splice(index, 1);
-    }
-
     function normalizeLiveDrop(element) {
         if (!element || element.nodeType !== 1) return;
         const rarity = Object.keys(RARITY_ORDER).find(value =>
             element.classList.contains(value) || element.classList.contains(`${value}-drop`)
         );
         if (!rarity) return;
+
+        const color = RARITY_COLORS[rarity];
         element.classList.add("live-drop", rarity);
         element.dataset.rarity = rarity;
-        element.style.setProperty("--live-rarity-color", RARITY_COLORS[rarity]);
+        element.style.setProperty("--live-rarity-color", color);
+        element.style.borderColor = color;
+
+        const rarityLabel = element.querySelector(".live-rarity");
+        if (rarityLabel) {
+            rarityLabel.style.color = color;
+            rarityLabel.textContent = rarity.toUpperCase();
+        }
+
+        const emoji = element.querySelector(".live-emoji");
+        if (emoji) emoji.style.borderColor = color;
+
+        if (rarity === "legendary") {
+            element.classList.add("legendary-sparkle");
+            element.style.setProperty("--live-sparkle-color", color);
+        } else {
+            element.classList.remove("legendary-sparkle");
+        }
     }
 
     function normalizeLiveDrops() {
