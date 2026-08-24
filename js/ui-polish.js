@@ -175,6 +175,28 @@
         winLabel();
     }
 
-    function boot(){ buttonMotion(); priceBoards(); liveDrops(); opening(); }
+    function boot(){
+        buttonMotion();
+        priceBoards();
+        liveDrops();
+        opening();
+
+        // Keep the multi-open preview synchronized immediately with the selected amount.
+        const amounts = qs("#openAmounts");
+        if (amounts && !amounts.dataset.polishSync) {
+            amounts.dataset.polishSync = "1";
+            amounts.addEventListener("click", event => {
+                const button = event.target.closest(".amount-btn");
+                if (!button) return;
+                requestAnimationFrame(() => {
+                    if (typeof window.createRoulettes === "function") window.createRoulettes();
+                });
+            });
+        }
+
+        // Case wins must always appear above the open-case page instead of being hidden behind it.
+        const popup = qs("#winPopup");
+        if (popup) popup.style.zIndex = "20000";
+    }
     if(document.readyState === "loading") document.addEventListener("DOMContentLoaded",boot,{once:true}); else boot();
 })();
