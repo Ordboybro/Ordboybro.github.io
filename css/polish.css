@@ -1,0 +1,244 @@
+/* EmojiDrops visual polish: no layout replacement, only motion, hierarchy and state feedback. */
+
+:root {
+    --polish-orange: #ff7b00;
+    --polish-orange-soft: rgba(255, 123, 0, .34);
+}
+
+button,
+.top-btn,
+.case,
+.profile-box,
+.fast-open-btn,
+.amount-btn,
+.inventory-item,
+.inventory-btn,
+.open-btn,
+.main-btn,
+.fast-btn {
+    -webkit-tap-highlight-color: transparent;
+    transition:
+        transform .18s cubic-bezier(.2,.8,.2,1),
+        border-color .18s ease,
+        box-shadow .18s ease,
+        background-color .18s ease,
+        opacity .18s ease,
+        color .18s ease;
+}
+
+button:not(:disabled):hover,
+.top-btn:hover,
+.profile-box:hover,
+.amount-btn:hover,
+.inventory-btn:hover,
+.main-btn:hover,
+.fast-btn:hover {
+    transform: translateY(-2px);
+}
+
+button:not(:disabled):active,
+.top-btn.ui-pressed,
+.case.ui-pressed,
+.profile-box.ui-pressed,
+.amount-btn.ui-pressed,
+.inventory-btn.ui-pressed,
+.main-btn.ui-pressed,
+.fast-btn.ui-pressed {
+    transform: translateY(1px) scale(.985);
+}
+
+button:focus-visible,
+.top-btn:focus-visible,
+.case:focus-visible {
+    outline: 2px solid var(--polish-orange);
+    outline-offset: 3px;
+}
+
+/* Main case cards: orange interaction state instead of browser/blue-looking focus. */
+.case:hover,
+.case:focus-within {
+    border-color: var(--polish-orange) !important;
+    box-shadow: 0 0 0 1px var(--polish-orange), 0 0 24px var(--polish-orange-soft);
+}
+
+.case-item-card:hover,
+.inventory-item:hover,
+.live-drop:hover {
+    border-color: var(--polish-orange) !important;
+    box-shadow: 0 0 0 1px var(--polish-orange-soft), 0 8px 28px rgba(0,0,0,.25);
+}
+
+/* Price board: a clean compact orange frame, no heavy filled block. */
+.case-price {
+    background: transparent !important;
+    padding: 5px 0 !important;
+    display: inline-flex;
+    justify-content: center;
+}
+
+.case-price-board {
+    min-width: 86px;
+    padding: 7px 14px;
+    border: 1px solid var(--polish-orange);
+    border-radius: 11px;
+    background: rgba(255, 123, 0, .055);
+    box-shadow: 0 0 12px rgba(255,123,0,.12), inset 0 0 10px rgba(255,123,0,.035);
+    text-align: center;
+    transition: .2s ease;
+}
+
+.case:hover .case-price-board {
+    box-shadow: 0 0 18px rgba(255,123,0,.25), inset 0 0 12px rgba(255,123,0,.06);
+}
+
+/* Opening page: keep the original structure, but make every selected reel occupy the same panel. */
+#multiRouletteContainer {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.multi-roulette {
+    width: 100%;
+    min-height: 112px;
+    overflow: hidden !important;
+    border-radius: 18px;
+    background: rgba(255,255,255,.018);
+}
+
+.multi-track {
+    will-change: transform;
+    transform: translate3d(0,0,0);
+}
+
+.multi-track.roulette-spin {
+    animation: emojiDropsRouletteSpin 1.45s cubic-bezier(.12,.72,.18,1) both;
+}
+
+@keyframes emojiDropsRouletteSpin {
+    0% { transform: translate3d(0,0,0); }
+    18% { transform: translate3d(calc(var(--roulette-distance) * -.22),0,0); }
+    78% { transform: translate3d(calc(var(--roulette-distance) * -.92),0,0); }
+    100% { transform: translate3d(calc(var(--roulette-distance) * -1),0,0); }
+}
+
+.new-pointer,
+.roulette-marker {
+    pointer-events: none;
+}
+
+.back-btn {
+    transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+}
+
+.back-btn:hover {
+    transform: translateX(-3px);
+    border-color: var(--polish-orange) !important;
+    box-shadow: 0 0 16px rgba(255,123,0,.2);
+}
+
+/* Fixed full-width Live Drops panel at the bottom. */
+body {
+    padding-bottom: 190px !important;
+}
+
+.live-drops-floating {
+    position: fixed !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    z-index: 1200 !important;
+    padding: 10px 22px 16px !important;
+    border-radius: 22px 22px 0 0 !important;
+    border: 1px solid rgba(255,123,0,.28) !important;
+    border-bottom: 0 !important;
+    background: rgba(13,13,13,.94) !important;
+    backdrop-filter: blur(16px);
+    box-shadow: 0 -12px 40px rgba(0,0,0,.35), 0 -2px 18px rgba(255,123,0,.08);
+}
+
+.live-title {
+    width: 100%;
+    text-align: center !important;
+    padding: 0 !important;
+    margin: 0 0 9px !important;
+    font-size: 18px !important;
+    line-height: 1.2;
+}
+
+.live-container {
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: stretch;
+    gap: 10px;
+    overflow: hidden !important;
+    padding: 2px 0;
+}
+
+.live-drop {
+    --rarity-color: var(--polish-orange);
+    flex: 0 0 150px;
+    width: 150px;
+    min-height: 72px;
+    border: 1px solid var(--rarity-color) !important;
+    border-radius: 14px;
+    box-shadow: 0 0 10px color-mix(in srgb, var(--rarity-color) 22%, transparent);
+    background: rgba(255,255,255,.035);
+    transform: translate3d(-26px,0,0);
+    opacity: 0;
+    transition: transform .5s cubic-bezier(.2,.8,.2,1), opacity .5s ease, border-color .18s ease, box-shadow .18s ease;
+}
+
+.live-drop.live-drop-enter {
+    transform: translate3d(0,0,0);
+    opacity: 1;
+}
+
+.live-drop .live-rarity {
+    color: var(--rarity-color) !important;
+    transition: color .18s ease;
+}
+
+.live-drop .live-emoji {
+    border-color: var(--rarity-color) !important;
+}
+
+.live-drop.legendary {
+    border-color: #ffd000 !important;
+    animation: legendarySparkle 1.7s ease-in-out infinite;
+}
+
+@keyframes legendarySparkle {
+    0%, 100% { box-shadow: 0 0 7px rgba(255,208,0,.15); }
+    50% { box-shadow: 0 0 17px rgba(255,208,0,.5); }
+}
+
+/* Win popup gets a softer entrance without changing its content. */
+.win-box {
+    animation: winBoxIn .22s cubic-bezier(.2,.8,.2,1);
+}
+
+@keyframes winBoxIn {
+    from { transform: scale(.94) translateY(8px); opacity: 0; }
+    to { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+@media (max-width: 760px) {
+    body { padding-bottom: 170px !important; }
+    .live-drops-floating { padding-inline: 10px !important; }
+    .live-drop { flex-basis: 132px; width: 132px; }
+    .case-price-board { min-width: 78px; padding-inline: 10px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
