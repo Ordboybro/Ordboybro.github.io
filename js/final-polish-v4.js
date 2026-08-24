@@ -1,318 +1,256 @@
 (() => {
-    "use strict";
+  "use strict";
 
-    const $ = id => document.getElementById(id);
-    const rarityOrder = Object.freeze({ common:1, rare:2, epic:3, mythical:4, legendary:5 });
-    const rarityColor = rarity => (typeof rarities !== "undefined" && rarities[rarity]?.color) || ({common:"#808080",rare:"#3b82f6",epic:"#a855f7",mythical:"#ef4444",legendary:"#ffd000"}[rarity] || "#ff7b00");
+  const $ = id => document.getElementById(id);
+  const qsa = sel => Array.from(document.querySelectorAll(sel));
+  const rarityOrder = {common:1, rare:2, epic:3, mythical:4, legendary:5};
+  const rarityColor = r => (typeof rarities !== "undefined" && rarities[r]?.color) || ({common:"#808080",rare:"#3b82f6",epic:"#a855f7",mythical:"#ef4444",legendary:"#ffd000"}[r] || "#ff7b00");
 
-    function style(){
-        if ($("finalPolishV4Style")) return;
-        const s = document.createElement("style");
-        s.id = "finalPolishV4Style";
-        s.textContent = `
-/* =========================
-   FINAL POLISH V4
-   Visual-only layer + small compatibility fixes.
-   ========================= */
+  function installStyle(){
+    if ($("emojiDropsFinalPolishV4")) return;
+    const style = document.createElement("style");
+    style.id = "emojiDropsFinalPolishV4";
+    style.textContent = `
+      /* ---------- profile / settings: one scroll owner ---------- */
+      #profilePage{overflow-y:auto!important;overflow-x:hidden!important;overscroll-behavior:contain}
+      #profilePage .profile-content,#profilePage .profile-main{overflow:visible!important}
+      #profilePage .inventory-grid{overflow:visible!important}
+      #profilePage::-webkit-scrollbar,#settingsOverlay::-webkit-scrollbar,#statsOverlay::-webkit-scrollbar{width:8px}
+      #profilePage{scrollbar-gutter:stable}
+      #settingsOverlay.v4-inside-profile,#statsOverlay.v4-inside-profile{position:absolute!important;inset:0!important;overflow:hidden!important;max-height:none!important}
+      #settingsOverlay.v4-inside-profile .settings-box,#statsOverlay.v4-inside-profile .settings-box{max-height:calc(100% - 56px)!important;overflow-y:auto!important;overflow-x:hidden!important}
+      #settingsOverlay.v4-inside-profile .back-btn,#settingsOverlay .settings-back-btn{position:static!important;display:none!important}
+      #settingsOverlay.v4-inside-profile::before{display:none!important}
+      #settingsOverlay .settings-box{border-top:0!important}
+      #settingsOverlay .settings-tabs{overflow-x:auto!important;overflow-y:hidden!important;white-space:nowrap;scrollbar-width:none}
+      #settingsOverlay .settings-tabs::-webkit-scrollbar{display:none}
+      #settingsOverlay .delete-account,#settingsOverlay .danger-zone{width:100%;box-sizing:border-box;overflow:visible!important}
 
-/* LIVE DROPS ---------------------------------------------------------- */
-.live-drops-bar{position:relative;overflow:hidden!important}
-.live-drops-bar::before,.live-container::before{content:none!important;display:none!important}
-.live-drops-bar::after{content:"";position:absolute;right:0;top:0;bottom:0;width:clamp(55px,8vw,120px);z-index:30;pointer-events:none;background:linear-gradient(90deg,transparent,rgba(11,11,11,.12) 20%,rgba(11,11,11,.72) 78%,#0b0b0b 100%)}
-.live-container{position:relative;display:flex!important;align-items:center;gap:10px;padding:0 72px 0 clamp(16px,2.4vw,34px)!important;margin:0!important;overflow:hidden!important;box-sizing:border-box;isolation:isolate}
-.live-drop{position:relative;z-index:2;flex:0 0 auto;will-change:transform,opacity;transform:translate3d(0,0,0);backface-visibility:hidden}
-.live-drop.legendary{border-color:#ffd000!important;color:#ffd000!important;animation:none!important;filter:none!important;background:linear-gradient(145deg,#191600,#111)!important;box-shadow:0 0 7px rgba(255,208,0,.62),0 0 18px rgba(255,208,0,.26),inset 0 0 12px rgba(255,208,0,.08)!important}
-.live-drop.legendary .live-rarity,.live-drop.legendary .live-user{color:#ffd000!important}
-.live-drop.v4-new{animation:liveDropEnterV4 .46s cubic-bezier(.2,.82,.2,1) both}
-@keyframes liveDropEnterV4{from{opacity:0;transform:translate3d(-26px,7px,0) scale(.96)}65%{opacity:1;transform:translate3d(3px,-1px,0) scale(1.01)}to{opacity:1;transform:translate3d(0,0,0) scale(1)}}
-.live-container.v4-motion .live-drop{transition:transform .46s cubic-bezier(.2,.82,.2,1),opacity .28s ease}
+      /* ---------- live drops ---------- */
+      .live-drops-bar{position:relative!important;overflow:hidden!important}
+      .live-drops-bar::before{display:none!important;content:none!important}
+      .live-drops-bar::after{content:"";position:absolute;right:0;top:0;bottom:0;width:clamp(60px,9vw,130px);z-index:30;pointer-events:none;background:linear-gradient(90deg,rgba(11,11,11,0),rgba(11,11,11,.12) 22%,rgba(11,11,11,.58) 68%,#0b0b0b 100%)}
+      .live-container{padding-left:clamp(10px,1.3vw,18px)!important;padding-right:clamp(54px,7vw,90px)!important;overflow:hidden!important;display:flex!important;gap:10px;box-sizing:border-box}
+      .live-drop{flex:0 0 auto;will-change:transform,opacity;backface-visibility:hidden}
+      .live-drop.v4-enter{animation:v4LiveEnter .42s cubic-bezier(.2,.82,.2,1) both}
+      .live-container.v4-moving .live-drop{transition:transform .42s cubic-bezier(.2,.82,.2,1)}
+      .live-drop.legendary{animation:none!important;filter:none!important;color:#ffd000!important;border-color:#ffd000!important;background:linear-gradient(145deg,#191600,#111)!important;box-shadow:0 0 7px rgba(255,208,0,.75),0 0 20px rgba(255,208,0,.34),inset 0 0 12px rgba(255,208,0,.08)!important}
+      .live-drop.legendary *{color:#ffd000!important}
+      @keyframes v4LiveEnter{from{opacity:0;transform:translate3d(-22px,5px,0) scale(.97)}to{opacity:1;transform:translate3d(0,0,0) scale(1)}}
 
-/* CASE PRICES -------------------------------------------------------- */
-.case.price-compact-animous .case-price{width:max-content;min-width:0;padding-left:7px;padding-right:7px}
-.case.price-compact-animous .new-price,.case.price-compact-animous .old-price{font-size:clamp(12px,1.25vw,18px)!important}
-.case.price-compact-transport .case-price{width:max-content;min-width:0;padding-left:6px;padding-right:6px;transform:translate(-6px,3px) scale(.88)!important}
-.case.price-compact-transport .new-price,.case.price-compact-transport .old-price{font-size:clamp(12px,1.22vw,18px)!important}
+      /* ---------- case prices ---------- */
+      .case.price-compact-animous .case-price{width:max-content!important;min-width:0!important;padding-inline:6px!important}
+      .case.price-compact-animous .new-price,.case.price-compact-animous .old-price{font-size:clamp(12px,1.22vw,17px)!important}
+      .case.price-compact-transport .case-price{width:max-content!important;min-width:0!important;padding-inline:5px!important;transform:translate(-5px,3px) scale(.86)!important}
+      .case.price-compact-transport .new-price,.case.price-compact-transport .old-price{font-size:clamp(12px,1.2vw,17px)!important}
 
-/* CASE LANES ---------------------------------------------------------- */
-#openPage .roulette-wrapper{height:auto!important;min-height:0!important;overflow:visible!important;flex:0 0 auto}
-#openPage #multiRouletteContainer{display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:flex-start!important;width:100%!important;height:auto!important;min-height:0!important;gap:14px!important;overflow:visible!important;flex:none!important}
-#openPage .multi-roulette{position:relative!important;width:min(1200px,calc(100% - 32px))!important;height:160px!important;min-height:160px!important;margin:0!important;flex:none!important;overflow:hidden!important;transform:none}
-#openPage .multi-roulette[hidden]{display:none!important}
-#openPage .open-amounts,#openPage .open-buttons,#openPage .case-items-list{position:relative;z-index:2;flex:0 0 auto}
-#openPage .open-amounts{margin-top:18px!important;transition:margin-top .28s ease,transform .28s ease}
-#openPage .open-buttons{margin-top:20px!important;transition:margin-top .28s ease,transform .28s ease}
-#openPage .case-items-list{margin-top:26px!important;transition:margin-top .28s ease,transform .28s ease}
-#openPage #multiRouletteContainer[data-lanes="2"] + *{scroll-margin-top:0}
+      /* ---------- case lanes ---------- */
+      #openPage .roulette-wrapper{height:auto!important;min-height:0!important;overflow:visible!important}
+      #openPage #multiRouletteContainer{display:flex!important;flex-direction:column!important;align-items:center!important;gap:14px!important;height:auto!important;min-height:0!important;overflow:visible!important}
+      #openPage .multi-roulette{position:relative!important;width:min(1200px,calc(100% - 24px))!important;height:160px!important;min-height:160px!important;flex:none!important;margin:0!important;overflow:hidden!important}
+      #openPage .multi-roulette[hidden]{display:none!important}
+      #openPage .multi-track{will-change:transform}
+      #openPage .center-indicator{height:0!important;width:0!important;background:none!important;border:0!important;box-shadow:none!important;z-index:60!important}
+      #openPage .center-indicator::before,#openPage .center-indicator::after{content:"";position:absolute;width:18px;height:18px;border-color:#ff7b00;filter:drop-shadow(0 0 6px rgba(255,123,0,.55));background:transparent}
+      #openPage .center-indicator::before{left:-9px;top:-67px;border-right:3px solid;border-bottom:3px solid;transform:rotate(45deg)}
+      #openPage .center-indicator::after{left:-9px;top:50px;border-left:3px solid;border-top:3px solid;transform:rotate(45deg)}
+      #openPage .new-pointer{display:none!important}
+      #openPage>.back-btn{position:fixed!important;top:12px!important;right:16px!important;left:auto!important;z-index:5000!important}
+      #winPopup{z-index:20000!important}
 
-/* ARROWS ------------------------------------------------------------- */
-#openPage .center-indicator{height:0!important;width:0!important;left:50%!important;top:50%!important;background:none!important;border:0!important;box-shadow:none!important;z-index:60!important}
-#openPage .center-indicator::before,#openPage .center-indicator::after{content:"";position:absolute;display:block;width:15px;height:15px;background:transparent;border:0 solid #ff7b00;filter:drop-shadow(0 0 5px rgba(255,123,0,.55))}
-#openPage .center-indicator::before{left:-8px;top:-63px;border-right-width:3px;border-bottom-width:3px;transform:rotate(45deg)}
-#openPage .center-indicator::after{left:-8px;top:48px;border-left-width:3px;border-top-width:3px;transform:rotate(45deg)}
-#openPage .new-pointer{display:none!important}
+      /* ---------- smooth opening ---------- */
+      #openPage #multiRouletteContainer.v4-opening .multi-track{animation:v4CaseRoll 2.55s cubic-bezier(.08,.68,.12,1) both}
+      #openPage #multiRouletteContainer.v4-opening .multi-roulette{animation:v4LaneAppear .22s ease-out both}
+      @keyframes v4LaneAppear{from{opacity:.45;transform:translateY(7px)}to{opacity:1;transform:none}}
+      @keyframes v4CaseRoll{0%{transform:translate3d(0,0,0)}7%{transform:translate3d(-80px,0,0)}42%{transform:translate3d(-700px,0,0)}68%{transform:translate3d(-1010px,0,0)}83%{transform:translate3d(-1125px,0,0)}92%{transform:translate3d(-1180px,0,0)}97%{transform:translate3d(-1200px,0,0)}100%{transform:translate3d(-1210px,0,0)}}
+      #winPopup.v4-result{animation:v4WinIn .4s cubic-bezier(.2,.8,.2,1) both}
+      @keyframes v4WinIn{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}
 
-/* OPENING ------------------------------------------------------------ */
-#openPage #multiRouletteContainer.v4-opening .multi-track{animation:v4RouletteRoll 2.45s cubic-bezier(.09,.62,.12,1) both}
-#openPage #multiRouletteContainer.v4-opening .multi-roulette{animation:v4LaneIn .22s ease-out both}
-@keyframes v4LaneIn{from{opacity:.35;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-@keyframes v4RouletteRoll{0%{transform:translate3d(0,0,0)}8%{transform:translate3d(-90px,0,0)}48%{transform:translate3d(-760px,0,0)}70%{transform:translate3d(-1050px,0,0)}84%{transform:translate3d(-1160px,0,0)}92%{transform:translate3d(-1210px,0,0)}97%{transform:translate3d(-1230px,0,0)}100%{transform:translate3d(-1240px,0,0)}}
-#winPopup.v4-result-hidden{opacity:0!important;visibility:hidden!important;pointer-events:none!important;transform:translateY(10px) scale(.98)!important}
-#winPopup.v4-result-visible{opacity:1!important;visibility:visible!important;pointer-events:auto!important;transform:translateY(0) scale(1)!important;transition:opacity .32s ease,transform .38s cubic-bezier(.2,.8,.2,1)}
+      /* ---------- upgrade / inventory ---------- */
+      #upgradePage{overflow-y:auto!important;overflow-x:hidden!important;scrollbar-gutter:stable}
+      #upgradePage .profile-main{width:min(860px,100%);box-sizing:border-box}
+      #inventoryGrid{min-height:150px;overflow:visible!important}
+      #inventoryGrid:empty::before{content:"Инвентарь пуст";display:flex;align-items:center;justify-content:center;min-height:150px;width:100%;box-sizing:border-box;padding:28px;border:1px dashed #333;border-radius:20px;color:#888;font-weight:700}
 
-/* BACK BUTTON -------------------------------------------------------- */
-#openPage>.back-btn{position:fixed!important;top:14px!important;right:18px!important;left:auto!important;z-index:5000!important}
+      /* ---------- global motion / long names ---------- */
+      button,.main-btn,.settings-action-btn,.amount-btn,.case,.profile-action-btn,.nav-btn{transition:transform .18s ease,box-shadow .22s ease,border-color .22s ease,background-color .22s ease,opacity .18s ease}
+      button:hover,.main-btn:hover,.settings-action-btn:hover,.amount-btn:hover,.profile-action-btn:hover,.nav-btn:hover{transform:translateY(-1px)}
+      .case-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+      .case{min-width:0}
+      body{overflow-x:hidden!important}
+      #openPage,#profilePage,#upgradePage,#settingsOverlay,#statsOverlay{scrollbar-gutter:stable}
+      @media(max-width:760px){
+        #openPage .multi-roulette{width:calc(100% - 12px)!important;height:132px!important;min-height:132px!important}
+        #openPage>.back-btn{top:8px!important;right:10px!important}
+        .live-container{padding-left:10px!important;padding-right:54px!important}
+      }
+      @media(prefers-reduced-motion:reduce){
+        *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}
+      }
+    `;
+    document.head.appendChild(style);
+  }
 
-/* PROFILE / SETTINGS ------------------------------------------------- */
-#profilePage{overflow-x:hidden!important;overscroll-behavior:contain}
-#profilePage .profile-content{overflow:visible!important;min-height:0}
-#profilePage .inventory-grid{overflow:visible!important}
-#settingsOverlay.v4-profile-settings{position:absolute!important;inset:0!important;z-index:200!important;background:rgba(0,0,0,.48)!important;backdrop-filter:blur(8px);border-radius:inherit}
-#settingsOverlay.v4-profile-settings .settings-box{width:min(850px,calc(100% - 32px));max-height:calc(100% - 90px);overflow:auto}
-#statsOverlay.v4-profile-settings{position:absolute!important;inset:0!important;z-index:200!important}
+  function markPrices(){
+    qsa(".case").forEach(card => {
+      const name=(card.querySelector(".case-name")?.textContent||"").trim().toLowerCase();
+      card.classList.toggle("price-compact-animous",/^(animous|among us|amongus)$/.test(name));
+      card.classList.toggle("price-compact-transport",name==="transport");
+    });
+  }
 
-/* UPGRADE ------------------------------------------------------------ */
-#upgradePage{overflow-y:auto!important;overflow-x:hidden!important;padding:74px 20px 40px}
-#upgradePage .profile-main{width:min(860px,100%);padding:28px;border:1px solid #2b2b2b;border-radius:28px;background:linear-gradient(145deg,#151515,#0e0e0e);box-shadow:0 20px 60px rgba(0,0,0,.3)}
-#upgradePage .profile-box-center{width:100%}
-#upgradePage #upgradeResult{width:min(520px,100%);padding:22px;border:1px solid rgba(255,123,0,.25);border-radius:22px;background:#111;box-shadow:0 10px 35px rgba(0,0,0,.25)}
-#upgradePage .main-btn,#upgradePage .settings-action-btn{transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease}
-#upgradePage .main-btn:hover,#upgradePage .settings-action-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(255,123,0,.15)}
+  function syncLanes(){
+    const c=$("multiRouletteContainer");
+    if(!c||typeof state==="undefined") return;
+    const count=Math.max(1,Number(state.openAmount)||1);
+    c.dataset.lanes=String(count);
+    qsa("#multiRouletteContainer .multi-roulette").forEach((lane,i)=>{
+      lane.hidden=i>=count;
+      lane.setAttribute("aria-hidden",i>=count?"true":"false");
+    });
+    const amounts=$("openAmounts");
+    if(amounts) qsa(".amount-btn",amounts).forEach(b=>b.classList.toggle("active",Number(b.textContent)===count));
+  }
 
-/* INVENTORY ---------------------------------------------------------- */
-#inventoryGrid:empty::before{content:"Инвентарь пуст";display:flex;align-items:center;justify-content:center;min-height:150px;width:100%;padding:28px;border:1px dashed #333;border-radius:20px;color:#888;font-weight:700;letter-spacing:.2px}
-#inventoryGrid{min-height:150px}
-
-/* SCROLL / RESPONSIVE ----------------------------------------------- */
-#openPage,#profilePage,#upgradePage,#settingsOverlay,#statsOverlay{scrollbar-gutter:stable}
-body{overflow-x:hidden!important}
-@media(max-width:760px){
-  #openPage .multi-roulette{width:calc(100% - 20px)!important;height:132px!important;min-height:132px!important}
-  #openPage .multi-track{gap:8px;padding:0 24px}
-  #openPage .center-indicator::before{top:-50px}
-  #openPage .center-indicator::after{top:37px}
-  #openPage>.back-btn{top:10px!important;right:10px!important}
-  .live-container{padding-left:14px!important;padding-right:54px!important}
-}
-@media(prefers-reduced-motion:reduce){
-  .live-drop,.live-container.v4-motion .live-drop,#openPage #multiRouletteContainer.v4-opening .multi-track{animation:none!important;transition:none!important}
-}
-`;
-        document.head.appendChild(s);
+  function patchLanes(){
+    if(typeof window.createRoulettes==="function"&&!window.createRoulettes.__v4){
+      const original=window.createRoulettes;
+      const wrapped=function(){const r=original.apply(this,arguments);requestAnimationFrame(syncLanes);return r};
+      wrapped.__v4=true; window.createRoulettes=wrapped;
     }
-
-    function markPriceCategories(){
-        document.querySelectorAll(".case").forEach(card => {
-            const name = card.querySelector(".case-name")?.textContent?.trim().toLowerCase();
-            card.classList.toggle("price-compact-animous", name === "animous" || name === "among us" || name === "amongus");
-            card.classList.toggle("price-compact-transport", name === "transport");
-        });
+    const amounts=$("openAmounts");
+    if(amounts&&!amounts.__v4){
+      amounts.addEventListener("click",e=>{
+        const b=e.target.closest(".amount-btn");
+        if(!b) return;
+        requestAnimationFrame(syncLanes);
+      });
+      amounts.__v4=true;
     }
+  }
 
-    function setPersistentBestDrop(item){
-        if (!item || typeof state === "undefined") return;
-        const current = state.bestDrop || state.currentUser?.bestDrop || null;
-        if (!current || (rarityOrder[item.rarity] || 0) > (rarityOrder[current.rarity] || 0)) {
-            state.bestDrop = item;
-            if (state.currentUser) state.currentUser.bestDrop = item;
-            if (typeof saveUsers === "function") saveUsers();
+  function patchLive(){
+    const names=["createLiveDrop","addLiveDrop"];
+    names.forEach(name=>{
+      const fn=window[name];
+      if(typeof fn!=="function"||fn.__v4) return;
+      const wrapped=function(){
+        const c=$("liveContainer");
+        const before=c?.firstElementChild;
+        const old=[...(c?.children||[])].map(el=>[el,el.getBoundingClientRect()]);
+        const result=fn.apply(this,arguments);
+        const newest=c?.firstElementChild;
+        if(newest&&newest!==before){
+          newest.classList.add("v4-enter");
+          requestAnimationFrame(()=>{
+            c?.classList.add("v4-moving");
+            old.forEach(([el,rect])=>{
+              if(!el.isConnected) return;
+              const next=el.getBoundingClientRect();
+              const dx=rect.left-next.left;
+              if(Math.abs(dx)>1) el.animate([{transform:`translate3d(${dx}px,0,0)`},{transform:"translate3d(0,0,0)"}],{duration:420,easing:"cubic-bezier(.2,.82,.2,1)"});
+            });
+            setTimeout(()=>{newest.classList.remove("v4-enter");c?.classList.remove("v4-moving")},470);
+          });
         }
-    }
+        return result;
+      };
+      wrapped.__v4=true; window[name]=wrapped;
+    });
+  }
 
-    function restoreBestDrop(){
-        if (typeof state === "undefined") return;
-        const saved = state.currentUser?.bestDrop || state.bestDrop;
-        if (saved) state.bestDrop = saved;
-        if (!state.bestDrop && Array.isArray(state.currentUser?.inventory)) {
-            const best = state.currentUser.inventory.reduce((a,b) => (rarityOrder[b.rarity] || 0) > (rarityOrder[a?.rarity] || 0) ? b : a, null);
-            if (best) setPersistentBestDrop(best);
+  function patchOpening(){
+    if(typeof window.openCase!=="function"||window.openCase.__v4) return;
+    const original=window.openCase;
+    const wrapped=async function(count){
+      const c=$("multiRouletteContainer");
+      if(c){c.classList.remove("v4-opening");void c.offsetWidth;c.classList.add("v4-opening")}
+      try{return await original.apply(this,arguments)}finally{setTimeout(()=>c?.classList.remove("v4-opening"),2750)}
+    };
+    wrapped.__v4=true; window.openCase=wrapped;
+  }
+
+  function moveOverlayInsideProfile(id){
+    const profile=$("profilePage"), overlay=$(id);
+    if(!profile||!overlay) return;
+    if(overlay.parentElement!==profile) profile.appendChild(overlay);
+    overlay.classList.add("v4-inside-profile");
+  }
+
+  function openProfileSettings(){
+    if(typeof state!=="undefined"&&!state.currentUser){alert("Сначала войдите в аккаунт");return}
+    moveOverlayInsideProfile("settingsOverlay");
+    const overlay=$("settingsOverlay");
+    if(overlay){overlay.style.display="flex";overlay.removeAttribute("hidden")}
+  }
+
+  function openProfileStats(){
+    if(typeof state!=="undefined"&&!state.currentUser){alert("Сначала войдите в аккаунт");return}
+    moveOverlayInsideProfile("statsOverlay");
+    const overlay=$("statsOverlay");
+    if(overlay){overlay.style.display="flex";overlay.removeAttribute("hidden")}
+    if(typeof window.updateStatsUI==="function") window.updateStatsUI();
+  }
+
+  function patchProfileNavigation(){
+    const profile=$("profilePage");
+    if(!profile||profile.__v4Nav) return;
+    profile.__v4Nav=true;
+    profile.addEventListener("click",e=>{
+      const button=e.target.closest("button,[role=button]");
+      if(!button) return;
+      const text=(button.textContent||"").trim().toLowerCase();
+      if(text.includes("настрой")){e.preventDefault();e.stopImmediatePropagation();openProfileSettings();return}
+      if(text.includes("статист")){e.preventDefault();e.stopImmediatePropagation();openProfileStats();return}
+    },true);
+  }
+
+  function patchSettings(){
+    const s=$("settingsOverlay");
+    if(!s) return;
+    s.classList.add("v4-settings-clean");
+    const back=s.querySelector(".back-btn,.settings-back-btn,[data-action='back']");
+    if(back) back.remove();
+    const tabs=s.querySelector(".settings-tabs");
+    if(tabs) tabs.scrollLeft=0;
+  }
+
+  function patchBestDrop(){
+    if(typeof state==="undefined") return;
+    const saved=state.currentUser?.bestDrop||state.bestDrop;
+    if(saved) state.bestDrop=saved;
+    if(typeof window.updateBestDrop==="function"&&!window.updateBestDrop.__v4){
+      const original=window.updateBestDrop;
+      const wrapped=function(){
+        const result=original.apply(this,arguments);
+        const best=state.bestDrop||state.currentUser?.bestDrop;
+        if(best&&$("bestDropEmoji")&&$("bestDropRarity")){
+          $("bestDropEmoji").innerText=best.emoji||"🏆";
+          $("bestDropRarity").innerText=String(best.rarity||"").toUpperCase();
+          $("bestDropRarity").style.color=rarityColor(best.rarity);
         }
-        if (state.bestDrop && typeof window.updateBestDrop === "function") {
-            const original = window.updateBestDrop;
-            if (!original.__v4Best) {
-                const wrapped = function(){
-                    const result = original.apply(this, arguments);
-                    const item = state.bestDrop;
-                    if (item && $("bestDropEmoji") && $("bestDropRarity")) {
-                        $("bestDropEmoji").innerText = item.emoji || "🏆";
-                        $("bestDropRarity").innerText = String(item.rarity || "").toUpperCase();
-                        $("bestDropRarity").style.color = rarityColor(item.rarity);
-                    }
-                    return result;
-                };
-                wrapped.__v4Best = true;
-                window.updateBestDrop = wrapped;
-            }
-        }
+        return result;
+      };
+      wrapped.__v4=true;window.updateBestDrop=wrapped;
     }
+  }
 
-    function animateLiveInsert(container, element){
-        if (!container || !element) return;
-        const before = new Map(Array.from(container.children).map(el => [el, el.getBoundingClientRect()]));
-        element.classList.add("v4-new");
-        requestAnimationFrame(() => {
-            container.classList.add("v4-motion");
-            for (const [el, rect] of before) {
-                if (!el.isConnected) continue;
-                const next = el.getBoundingClientRect();
-                const dx = rect.left - next.left;
-                if (Math.abs(dx) < 1) continue;
-                el.animate([{transform:`translate3d(${dx}px,0,0)`},{transform:"translate3d(0,0,0)"}],{duration:460,easing:"cubic-bezier(.2,.82,.2,1)"});
-            }
-            setTimeout(() => { element.classList.remove("v4-new"); container.classList.remove("v4-motion"); }, 520);
-        });
-    }
+  function boot(){
+    installStyle();
+    markPrices();
+    patchLanes();
+    patchLive();
+    patchOpening();
+    patchProfileNavigation();
+    patchSettings();
+    patchBestDrop();
+    syncLanes();
 
-    function patchLiveDrops(){
-        const wrap = name => {
-            const original = window[name];
-            if (typeof original !== "function" || original.__v4Live) return;
-            const wrapped = function(username,item){
-                const container = $("liveContainer");
-                const before = container ? container.firstElementChild : null;
-                const result = original.apply(this, arguments);
-                const newest = container && container.firstElementChild;
-                if (newest && newest !== before) animateLiveInsert(container,newest);
-                return result;
-            };
-            wrapped.__v4Live = true;
-            window[name] = wrapped;
-        };
-        wrap("createLiveDrop");
-        wrap("addLiveDrop");
-    }
+    // Expose the two intended profile navigation actions without replacing core app logic.
+    window.openProfileSettingsV4=openProfileSettings;
+    window.openProfileStatsV4=openProfileStats;
+  }
 
-    function syncLanes(){
-        const container = $("multiRouletteContainer");
-        const amounts = $("openAmounts");
-        if (!container || typeof state === "undefined") return;
-        const selected = Math.max(1, Number(state.openAmount) || 1);
-        container.dataset.lanes = String(selected);
-        container.querySelectorAll(".multi-roulette").forEach((lane,index) => {
-            lane.hidden = index >= selected;
-            lane.setAttribute("aria-hidden", index >= selected ? "true" : "false");
-        });
-        if (amounts) amounts.querySelectorAll(".amount-btn").forEach(btn => btn.classList.toggle("active", Number(btn.textContent) === selected));
-    }
-
-    function patchLaneCreation(){
-        if (typeof window.createRoulettes !== "function" || window.createRoulettes.__v4) return;
-        const original = window.createRoulettes;
-        const wrapped = function(){
-            const result = original.apply(this, arguments);
-            requestAnimationFrame(syncLanes);
-            return result;
-        };
-        wrapped.__v4 = true;
-        window.createRoulettes = wrapped;
-    }
-
-    function openProfileSettings(){
-        const user = typeof state !== "undefined" ? state.currentUser : null;
-        if (!user) { alert("Сначала войдите в аккаунт"); return; }
-        const profile = $("profilePage");
-        const settings = $("settingsOverlay");
-        if (!profile || !settings) return;
-        if (profile.style.display !== "flex") profile.style.display = "flex";
-        if (settings.parentElement !== profile) profile.appendChild(settings);
-        settings.classList.add("v4-profile-settings");
-        settings.style.display = "flex";
-    }
-
-    function closeProfileSettings(){
-        const settings = $("settingsOverlay");
-        if (settings) settings.style.display = "none";
-    }
-
-    function patchSettings(){
-        window.openSettings = openProfileSettings;
-        window.closeSettings = closeProfileSettings;
-    }
-
-    function animateCaseOpening(){
-        const container = $("multiRouletteContainer");
-        const popup = $("winPopup");
-        if (!container) return;
-        syncLanes();
-        container.classList.remove("v4-opening");
-        void container.offsetWidth;
-        container.classList.add("v4-opening");
-        if (popup) {
-            popup.classList.add("v4-result-hidden");
-            popup.classList.remove("v4-result-visible");
-            setTimeout(() => {
-                popup.classList.remove("v4-result-hidden");
-                popup.classList.add("v4-result-visible");
-            }, 2450);
-        }
-        setTimeout(() => container.classList.remove("v4-opening"), 2700);
-    }
-
-    function patchOpenCase(){
-        if (typeof window.openCase !== "function" || window.openCase.__v4Open) return;
-        const original = window.openCase;
-        const wrapped = async function(...args){
-            if (typeof state !== "undefined" && state.isSpinning) return;
-            const result = await original.apply(this,args);
-            if (typeof state !== "undefined") {
-                const wins = [];
-                if (state.currentWin) wins.push(state.currentWin);
-                if (Array.isArray(state.winQueue)) wins.push(...state.winQueue);
-                wins.forEach(setPersistentBestDrop);
-            }
-            syncLanes();
-            animateCaseOpening();
-            return result;
-        };
-        wrapped.__v4Open = true;
-        window.openCase = wrapped;
-    }
-
-    function patchOpenCasePage(){
-        if (typeof window.openCasePage !== "function" || window.openCasePage.__v4Page) return;
-        const original = window.openCasePage;
-        const wrapped = function(...args){
-            const result = original.apply(this,args);
-            requestAnimationFrame(() => syncLanes());
-            return result;
-        };
-        wrapped.__v4Page = true;
-        window.openCasePage = wrapped;
-    }
-
-    function improveInventoryState(){
-        const grid = $("inventoryGrid");
-        if (!grid) return;
-        const hasItems = grid.children.length > 0;
-        grid.classList.toggle("empty-state", !hasItems);
-        if (hasItems) grid.querySelectorAll(".inventory-item").forEach((item,index) => item.style.setProperty("--inventory-index",index));
-    }
-
-    function patchInventory(){
-        if (typeof window.renderInventory !== "function" || window.renderInventory.__v4) return;
-        const original = window.renderInventory;
-        const wrapped = function(...args){
-            const result = original.apply(this,args);
-            requestAnimationFrame(improveInventoryState);
-            return result;
-        };
-        wrapped.__v4 = true;
-        window.renderInventory = wrapped;
-    }
-
-    function boot(){
-        style();
-        markPriceCategories();
-        patchLiveDrops();
-        patchLaneCreation();
-        patchSettings();
-        patchOpenCase();
-        patchOpenCasePage();
-        patchInventory();
-        restoreBestDrop();
-        syncLanes();
-        improveInventoryState();
-    }
-
-    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded",boot,{once:true});
-    else boot();
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",boot,{once:true}); else boot();
+  window.addEventListener("load",()=>{boot();syncLanes()}, {once:true});
 })();
