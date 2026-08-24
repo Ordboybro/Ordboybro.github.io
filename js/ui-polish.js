@@ -71,7 +71,6 @@
         window.createLiveDrop = render;
         window.addLiveDrop = render;
 
-        // Existing 20 entries are kept; only new entries use the polished motion/cap.
         qsa(".live-drop").forEach(drop => {
             const rarity = [...drop.classList].find(c => ["common", "rare", "epic", "mythical", "legendary"].includes(c));
             if (rarity) drop.style.setProperty("--rarity-color", rarityColors[rarity]);
@@ -85,7 +84,6 @@
         tracks.forEach((track, index) => {
             track.classList.remove("roulette-spin");
             track.style.removeProperty("--roulette-distance");
-            // Different distances make simultaneous multi-open reels feel independent.
             track.style.setProperty("--roulette-distance", `${3100 + index * 170}px`);
             void track.offsetWidth;
             track.classList.add("roulette-spin");
@@ -114,7 +112,9 @@
                 }
 
                 if (popup) popup.style.display = "none";
+                state.isSpinning = true;
                 animateRoulette().then(() => {
+                    state.isSpinning = false;
                     originalShowWin(item);
                     updateWinActionLabel();
                 });
