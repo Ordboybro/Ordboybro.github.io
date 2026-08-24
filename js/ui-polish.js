@@ -4,7 +4,7 @@
     const qsa = (s, r = document) => [...r.querySelectorAll(s)];
     const live = document.getElementById("liveContainer");
     const LIMIT = 25;
-    const SPIN_MS = 1450;
+    const SPIN_MS = 2200;
     const COLORS = {common:"#808080",rare:"#3b82f6",epic:"#a855f7",mythical:"#ef4444",legendary:"#ffd000"};
 
     function buttonMotion() {
@@ -55,11 +55,9 @@
         const div = document.createElement("div");
         div.className = `live-drop ${rarity}`;
         div.style.setProperty("--rarity-color", COLORS[rarity] || COLORS.common);
-
         const emoji = document.createElement("div");
         emoji.className = "live-emoji";
         emoji.textContent = item.emoji || "❔";
-
         const info = document.createElement("div");
         info.className = "live-info";
         const user = document.createElement("div");
@@ -71,7 +69,6 @@
         r.style.color = COLORS[rarity] || COLORS.common;
         info.append(user, r);
         div.append(emoji, info);
-
         live.prepend(div);
         colorLive(div);
         trimLive();
@@ -180,8 +177,6 @@
         priceBoards();
         liveDrops();
         opening();
-
-        // Keep the multi-open preview synchronized immediately with the selected amount.
         const amounts = qs("#openAmounts");
         if (amounts && !amounts.dataset.polishSync) {
             amounts.dataset.polishSync = "1";
@@ -193,8 +188,6 @@
                 });
             });
         }
-
-        // Case wins must always appear above the open-case page instead of being hidden behind it.
         const popup = qs("#winPopup");
         if (popup) popup.style.zIndex = "20000";
     }
