@@ -21,8 +21,8 @@ button:focus-visible,a:focus-visible,input:focus-visible,.top-btn:focus-visible,
 .multi-roulette{position:relative!important;width:100%!important;min-height:112px;overflow:hidden!important;border-radius:16px;background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.06)}
 .multi-track{display:flex;align-items:center;width:max-content;min-width:100%;will-change:transform;transform:translate3d(0,0,0)}
 .multi-track .item{flex:0 0 160px;width:160px;height:96px;display:flex;align-items:center;justify-content:center;font-size:46px;background:#101010;border-radius:14px;margin:8px 4px;box-shadow:inset 0 0 18px rgba(255,255,255,.025)}
-.multi-track.roulette-spin{animation:emojiDropsRouletteSpin 1.45s cubic-bezier(.12,.72,.18,1) both}
-@keyframes emojiDropsRouletteSpin{0%{transform:translate3d(0,0,0)}25%{transform:translate3d(calc(var(--roulette-distance)*-.3),0,0)}78%{transform:translate3d(calc(var(--roulette-distance)*-.88),0,0)}100%{transform:translate3d(calc(var(--roulette-distance)*-1),0,0)}}
+.multi-track.roulette-spin{animation:emojiDropsRouletteSpin 2.2s cubic-bezier(.08,.72,.12,1) both}
+@keyframes emojiDropsRouletteSpin{0%{transform:translate3d(0,0,0)}12%{transform:translate3d(calc(var(--roulette-distance)*-.16),0,0)}34%{transform:translate3d(calc(var(--roulette-distance)*-.48),0,0)}62%{transform:translate3d(calc(var(--roulette-distance)*-.77),0,0)}82%{transform:translate3d(calc(var(--roulette-distance)*-.93),0,0)}94%{transform:translate3d(calc(var(--roulette-distance)*-.985),0,0)}100%{transform:translate3d(calc(var(--roulette-distance)*-1),0,0)}}
 .open-amounts{position:relative;z-index:2;display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap;margin:14px auto 0!important}
 .amount-btn{min-width:42px;height:42px;border:1px solid rgba(255,123,0,.28)!important;border-radius:12px}.amount-btn.active,.amount-btn:hover{border-color:var(--polish-orange)!important;box-shadow:0 0 16px rgba(255,123,0,.18)}
 .open-buttons{margin-top:18px!important}.main-btn,.fast-btn{position:relative;overflow:hidden}.main-btn::after,.fast-btn::after{content:"";position:absolute;top:0;left:-120%;width:70%;height:100%;transform:skewX(-18deg);background:linear-gradient(90deg,transparent,rgba(255,255,255,.12),transparent);transition:left .55s ease;pointer-events:none}.main-btn:hover::after,.fast-btn:hover::after{left:150%}
@@ -42,66 +42,9 @@ body{padding-bottom:178px!important}
 input:hover{border-color:rgba(255,123,0,.5)!important}input:focus{border-color:var(--polish-orange)!important;box-shadow:0 0 0 3px rgba(255,123,0,.1),0 0 18px rgba(255,123,0,.08)!important}
 @media(max-width:760px){body{padding-bottom:162px!important}.live-drops-floating{padding-inline:10px!important}.live-drop,.drop-item{flex-basis:126px;width:126px}.case-price-board{min-width:78px;padding-inline:10px}.roulette-wrapper{width:calc(100% - 16px)!important;padding:8px!important}.multi-track .item{flex-basis:132px;width:132px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
-
-
-/* Final interaction polish: keep the original design, improve only behavior and visual rhythm. */
-
-/* Slightly smaller case prices while preserving the existing orange outlined treatment. */
-.case-price-board{
-    transform:scale(.92);
-    transform-origin:center;
-}
-.case-price-board .new-price,
-.case-price-board .old-price{
-    font-size:clamp(13px,1.45vw,17px)!important;
-}
-
-/* The back button belongs to the case screen's top-right corner and stays above roulette content. */
-.open-page .back-btn{
-    position:fixed!important;
-    top:20px!important;
-    right:20px!important;
-    left:auto!important;
-    z-index:15000!important;
-    border:1px solid rgba(255,123,0,.55)!important;
-    background:linear-gradient(145deg,#1b1b1b,#101010)!important;
-    box-shadow:0 8px 22px rgba(0,0,0,.28),0 0 14px rgba(255,123,0,.08);
-}
-.open-page .back-btn:hover{
-    border-color:#ff7b00!important;
-    box-shadow:0 8px 24px rgba(0,0,0,.32),0 0 20px rgba(255,123,0,.2);
-}
-
-/* Make every extra roulette appear immediately and smoothly after selecting 2/3/6/etc. */
-#multiRouletteContainer{
-    transition:height .22s ease;
-}
-.multi-roulette{
-    animation:rouletteSlotIn .26s var(--polish-ease, cubic-bezier(.2,.8,.2,1)) both;
-}
-@keyframes rouletteSlotIn{
-    from{opacity:0;transform:translateY(10px) scale(.985)}
-    to{opacity:1;transform:translateY(0) scale(1)}
-}
-
-/* Wins always render above the case page; the case itself remains open behind the result. */
-.win-popup{
-    z-index:20000!important;
-}
-.open-page{
-    z-index:10000;
-}
-
-/* Smooth live-drop insertion for both legacy and current renderers. */
-.live-drop,.drop-item{
-    transition:transform .38s var(--polish-ease, ease),opacity .38s var(--polish-ease, ease),box-shadow .25s ease;
-}
-.live-container > .live-drop:first-child,
-.live-container > .drop-item:first-child{
-    animation:liveDropArrival .48s var(--polish-ease, cubic-bezier(.2,.8,.2,1)) both;
-}
-@keyframes liveDropArrival{
-    from{opacity:0;transform:translate3d(-28px,8px,0) scale(.97)}
-    65%{opacity:1;transform:translate3d(3px,-1px,0) scale(1.01)}
-    to{opacity:1;transform:translate3d(0,0,0) scale(1)}
-}
+.case-price-board{transform:scale(.92);transform-origin:center}.case-price-board .new-price,.case-price-board .old-price{font-size:clamp(13px,1.45vw,17px)!important}
+.open-page .back-btn{position:fixed!important;top:20px!important;right:20px!important;left:auto!important;z-index:15000!important;border:1px solid rgba(255,123,0,.55)!important;background:linear-gradient(145deg,#1b1b1b,#101010)!important;box-shadow:0 8px 22px rgba(0,0,0,.28),0 0 14px rgba(255,123,0,.08)}
+.open-page .back-btn:hover{border-color:#ff7b00!important;box-shadow:0 8px 24px rgba(0,0,0,.32),0 0 20px rgba(255,123,0,.2)}
+#multiRouletteContainer{transition:height .22s ease}.multi-roulette{animation:rouletteSlotIn .26s var(--polish-ease,cubic-bezier(.2,.8,.2,1)) both}@keyframes rouletteSlotIn{from{opacity:0;transform:translateY(10px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
+.win-popup{z-index:20000!important}.open-page{z-index:10000}
+.live-drop,.drop-item{transition:transform .38s var(--polish-ease,ease),opacity .38s var(--polish-ease,ease),box-shadow .25s ease}.live-container > .live-drop:first-child,.live-container > .drop-item:first-child{animation:liveDropArrival .48s var(--polish-ease,cubic-bezier(.2,.8,.2,1)) both}@keyframes liveDropArrival{from{opacity:0;transform:translate3d(-28px,8px,0) scale(.97)}65%{opacity:1;transform:translate3d(3px,-1px,0) scale(1.01)}to{opacity:1;transform:translate3d(0,0,0) scale(1)}}
