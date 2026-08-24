@@ -46,15 +46,15 @@
         const color = RARITY_COLORS[best.rarity] || "#ff7b00";
         emoji.textContent = best.emoji || "🏆";
         rarity.textContent = String(best.rarity).toUpperCase();
-        emoji.style.borderColor = color;
         rarity.style.color = color;
+        emoji.style.borderColor = color;
     }
 
     function considerBestDrop(item) {
         if (typeof state === "undefined" || !state.currentUser || !item) return;
         const current = getStoredBestDrop(state.currentUser);
         const best = betterDrop(current, item);
-        if (best === current) {
+        if (compareDrops(best, current) <= 0) {
             renderSavedBestDrop();
             return;
         }
@@ -89,6 +89,7 @@
         if (!rarity) return;
         element.classList.add("live-drop", rarity);
         element.dataset.rarity = rarity;
+        element.style.setProperty("--live-rarity-color", RARITY_COLORS[rarity]);
     }
 
     function normalizeLiveDrops() {
@@ -163,11 +164,30 @@
         });
 
         hookFunction("sellWin", original => function (...args) {
-            removeCurrentWinFromInventory();
+            const win = typeof state !== "undefined" ? state.currentWin : null;
             const result = original.apply(this, args);
+            if (win && typeof state !== "undefined" && state.currentUser) {
+                const inventory = state.currentUser.inventory;
+                if (Array.isArray(inventory)) {
+                    const index = inventory.findIndex(item => item === win ||
+                        (item?.emoji === win?.emoji && item?.rarity === win?.rarity && item?.price === win?.price));
+                    if (index !== -1) inventory.splice(index, 1);
+                }
+            }
             if (typeof saveUsers === "function") saveUsers();
             if (typeof renderInventory === "function") renderInventory();
             renderSavedBestDrop();
+            return result;
+        });
+
+        hookFunction("startUpgrade", original => function (...args) {
+            const result = original.apply(this, args);
+            if (typeof state !== "undefined" && state.currentUser) {
+                const inventory = Array.isArray(state.currentUser.inventory) ? state.currentUser.inventory : [];
+                rememberItems(inventory);
+                if (typeof saveUsers === "function") saveUsers();
+                renderSavedBestDrop();
+            }
             return result;
         });
 
