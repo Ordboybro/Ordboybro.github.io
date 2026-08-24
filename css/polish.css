@@ -1,74 +1,85 @@
-/* EmojiDrops visual polish: no layout replacement, only motion, hierarchy and state feedback. */
-
+/* EmojiDrops polish layer: interaction, motion and bottom Live Drops. */
 :root {
     --polish-orange: #ff7b00;
-    --polish-orange-soft: rgba(255, 123, 0, .34);
+    --polish-orange-soft: rgba(255, 123, 0, .28);
+    --polish-panel: rgba(15, 15, 15, .96);
 }
 
+/* One consistent motion language for every interactive control. */
 button,
+a,
+input,
 .top-btn,
 .case,
 .profile-box,
-.fast-open-btn,
 .amount-btn,
 .inventory-item,
 .inventory-btn,
-.open-btn,
 .main-btn,
-.fast-btn {
+.fast-btn,
+.settings-action-btn,
+.settings-close,
+.profile-action-btn,
+.live-drop,
+.drop-item,
+.case-item-card {
     -webkit-tap-highlight-color: transparent;
     transition:
         transform .18s cubic-bezier(.2,.8,.2,1),
         border-color .18s ease,
         box-shadow .18s ease,
         background-color .18s ease,
-        opacity .18s ease,
-        color .18s ease;
+        color .18s ease,
+        opacity .18s ease;
 }
 
 button:not(:disabled):hover,
+a:hover,
 .top-btn:hover,
 .profile-box:hover,
 .amount-btn:hover,
 .inventory-btn:hover,
 .main-btn:hover,
-.fast-btn:hover {
+.fast-btn:hover,
+.settings-action-btn:hover,
+.settings-close:hover {
     transform: translateY(-2px);
 }
 
 button:not(:disabled):active,
+a:active,
 .top-btn.ui-pressed,
 .case.ui-pressed,
 .profile-box.ui-pressed,
 .amount-btn.ui-pressed,
 .inventory-btn.ui-pressed,
 .main-btn.ui-pressed,
-.fast-btn.ui-pressed {
-    transform: translateY(1px) scale(.985);
+.fast-btn.ui-pressed,
+.settings-action-btn.ui-pressed {
+    transform: translateY(1px) scale(.975);
 }
 
 button:focus-visible,
+a:focus-visible,
+input:focus-visible,
 .top-btn:focus-visible,
 .case:focus-visible {
-    outline: 2px solid var(--polish-orange);
+    outline: 2px solid var(--polish-orange) !important;
     outline-offset: 3px;
 }
 
-/* Main case cards: orange interaction state instead of browser/blue-looking focus. */
+/* Orange interaction state instead of browser-blue selection. */
 .case:hover,
-.case:focus-within {
-    border-color: var(--polish-orange) !important;
-    box-shadow: 0 0 0 1px var(--polish-orange), 0 0 24px var(--polish-orange-soft);
-}
-
+.case:focus-within,
 .case-item-card:hover,
 .inventory-item:hover,
-.live-drop:hover {
+.live-drop:hover,
+.drop-item:hover {
     border-color: var(--polish-orange) !important;
-    box-shadow: 0 0 0 1px var(--polish-orange-soft), 0 8px 28px rgba(0,0,0,.25);
+    box-shadow: 0 0 0 1px var(--polish-orange-soft), 0 8px 28px rgba(0,0,0,.28);
 }
 
-/* Price board: a clean compact orange frame, no heavy filled block. */
+/* Case prices: transparent orange framed board. */
 .case-price {
     background: transparent !important;
     padding: 5px 0 !important;
@@ -77,21 +88,37 @@ button:focus-visible,
 }
 
 .case-price-board {
-    min-width: 86px;
-    padding: 7px 14px;
+    min-width: 92px;
+    padding: 7px 15px;
     border: 1px solid var(--polish-orange);
     border-radius: 11px;
-    background: rgba(255, 123, 0, .055);
-    box-shadow: 0 0 12px rgba(255,123,0,.12), inset 0 0 10px rgba(255,123,0,.035);
+    background: rgba(255,123,0,.035);
+    box-shadow: 0 0 10px rgba(255,123,0,.10), inset 0 0 10px rgba(255,123,0,.025);
     text-align: center;
-    transition: .2s ease;
 }
 
 .case:hover .case-price-board {
-    box-shadow: 0 0 18px rgba(255,123,0,.25), inset 0 0 12px rgba(255,123,0,.06);
+    box-shadow: 0 0 20px rgba(255,123,0,.28), inset 0 0 12px rgba(255,123,0,.05);
 }
 
-/* Opening page: keep the original structure, but make every selected reel occupy the same panel. */
+/* Opening page alignment. */
+.open-page .back-btn {
+    margin-top: 4px !important;
+    position: relative;
+    z-index: 3;
+}
+
+.roulette-wrapper {
+    position: relative;
+    width: min(1180px, calc(100% - 32px)) !important;
+    margin: 16px auto 0 !important;
+    padding: 14px !important;
+    border: 1px solid rgba(255,123,0,.22);
+    border-radius: 20px;
+    background: rgba(255,255,255,.018);
+    box-shadow: inset 0 0 30px rgba(255,123,0,.025);
+}
+
 #multiRouletteContainer {
     width: 100%;
     display: flex;
@@ -100,16 +127,35 @@ button:focus-visible,
 }
 
 .multi-roulette {
-    width: 100%;
+    position: relative !important;
+    width: 100% !important;
     min-height: 112px;
     overflow: hidden !important;
-    border-radius: 18px;
-    background: rgba(255,255,255,.018);
+    border-radius: 16px;
+    background: rgba(0,0,0,.18);
+    border: 1px solid rgba(255,255,255,.06);
 }
 
 .multi-track {
+    display: flex;
+    align-items: center;
+    width: max-content;
+    min-width: 100%;
     will-change: transform;
     transform: translate3d(0,0,0);
+}
+
+.multi-track .item {
+    flex: 0 0 160px;
+    width: 160px;
+    height: 96px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 46px;
+    background: #101010;
+    border-radius: 14px;
+    margin: 8px 4px;
 }
 
 .multi-track.roulette-spin {
@@ -118,29 +164,49 @@ button:focus-visible,
 
 @keyframes emojiDropsRouletteSpin {
     0% { transform: translate3d(0,0,0); }
-    18% { transform: translate3d(calc(var(--roulette-distance) * -.22),0,0); }
-    78% { transform: translate3d(calc(var(--roulette-distance) * -.92),0,0); }
+    25% { transform: translate3d(calc(var(--roulette-distance) * -.30),0,0); }
+    78% { transform: translate3d(calc(var(--roulette-distance) * -.88),0,0); }
     100% { transform: translate3d(calc(var(--roulette-distance) * -1),0,0); }
 }
 
-.new-pointer,
-.roulette-marker {
-    pointer-events: none;
-}
-
-.back-btn {
-    transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
-}
-
 .back-btn:hover {
-    transform: translateX(-3px);
+    transform: translateX(-4px) !important;
     border-color: var(--polish-orange) !important;
-    box-shadow: 0 0 16px rgba(255,123,0,.2);
+    box-shadow: 0 0 18px rgba(255,123,0,.22);
 }
 
-/* Fixed full-width Live Drops panel at the bottom. */
+/* Amount selector sits directly under the roulette, not below unrelated content. */
+.open-amounts {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 14px auto 0 !important;
+}
+
+.amount-btn {
+    min-width: 42px;
+    height: 42px;
+    border: 1px solid rgba(255,123,0,.28) !important;
+    border-radius: 12px;
+}
+
+.amount-btn.active,
+.amount-btn:hover {
+    border-color: var(--polish-orange) !important;
+    box-shadow: 0 0 16px rgba(255,123,0,.18);
+}
+
+.open-buttons {
+    margin-top: 18px !important;
+}
+
+/* Fixed full-width Live Drops panel. */
 body {
-    padding-bottom: 190px !important;
+    padding-bottom: 178px !important;
 }
 
 .live-drops-floating {
@@ -148,25 +214,28 @@ body {
     left: 0 !important;
     right: 0 !important;
     bottom: 0 !important;
-    width: 100% !important;
+    width: 100vw !important;
     margin: 0 !important;
     z-index: 1200 !important;
-    padding: 10px 22px 16px !important;
-    border-radius: 22px 22px 0 0 !important;
-    border: 1px solid rgba(255,123,0,.28) !important;
+    padding: 10px 20px 15px !important;
+    border-radius: 20px 20px 0 0 !important;
+    border: 1px solid rgba(255,123,0,.34) !important;
     border-bottom: 0 !important;
-    background: rgba(13,13,13,.94) !important;
-    backdrop-filter: blur(16px);
-    box-shadow: 0 -12px 40px rgba(0,0,0,.35), 0 -2px 18px rgba(255,123,0,.08);
+    background: var(--polish-panel) !important;
+    backdrop-filter: blur(18px);
+    box-shadow: 0 -12px 40px rgba(0,0,0,.40), 0 -2px 22px rgba(255,123,0,.10);
 }
 
 .live-title {
-    width: 100%;
+    width: 100% !important;
     text-align: center !important;
     padding: 0 !important;
     margin: 0 0 9px !important;
     font-size: 18px !important;
     line-height: 1.2;
+    color: var(--polish-orange) !important;
+    letter-spacing: 1.2px;
+    text-shadow: 0 0 12px rgba(255,123,0,.35);
 }
 
 .live-container {
@@ -177,20 +246,27 @@ body {
     gap: 10px;
     overflow: hidden !important;
     padding: 2px 0;
+    scroll-behavior: smooth;
 }
 
-.live-drop {
+/* Both old and new live-drop markup are styled, so legacy creation cannot bypass the redesign. */
+.live-drop,
+.drop-item {
     --rarity-color: var(--polish-orange);
+    position: relative;
     flex: 0 0 150px;
     width: 150px;
     min-height: 72px;
     border: 1px solid var(--rarity-color) !important;
     border-radius: 14px;
-    box-shadow: 0 0 10px color-mix(in srgb, var(--rarity-color) 22%, transparent);
     background: rgba(255,255,255,.035);
-    transform: translate3d(-26px,0,0);
+    box-shadow: 0 0 10px rgba(255,123,0,.08);
+    overflow: hidden;
+}
+
+.live-drop {
+    transform: translate3d(-38px,0,0);
     opacity: 0;
-    transition: transform .5s cubic-bezier(.2,.8,.2,1), opacity .5s ease, border-color .18s ease, box-shadow .18s ease;
 }
 
 .live-drop.live-drop-enter {
@@ -198,27 +274,40 @@ body {
     opacity: 1;
 }
 
-.live-drop .live-rarity {
-    color: var(--rarity-color) !important;
-    transition: color .18s ease;
+.drop-item {
+    animation: liveDropLegacyEnter .45s cubic-bezier(.2,.8,.2,1) both;
 }
 
-.live-drop .live-emoji {
+@keyframes liveDropLegacyEnter {
+    from { transform: translate3d(-38px,0,0); opacity: 0; }
+    to { transform: translate3d(0,0,0); opacity: 1; }
+}
+
+.live-drop .live-rarity,
+.drop-item .drop-rarity {
+    color: var(--rarity-color) !important;
+    font-weight: 800;
+}
+
+.live-drop .live-emoji,
+.drop-item .drop-emoji {
     border-color: var(--rarity-color) !important;
 }
 
-.live-drop.legendary {
+.live-drop.legendary,
+.drop-item.legendary-drop {
+    --rarity-color: #ffd000;
     border-color: #ffd000 !important;
     animation: legendarySparkle 1.7s ease-in-out infinite;
 }
 
 @keyframes legendarySparkle {
     0%, 100% { box-shadow: 0 0 7px rgba(255,208,0,.15); }
-    50% { box-shadow: 0 0 17px rgba(255,208,0,.5); }
+    50% { box-shadow: 0 0 19px rgba(255,208,0,.52); }
 }
 
-/* Win popup gets a softer entrance without changing its content. */
-.win-box {
+/* Result popup: clean entrance, preserving its existing content and buttons. */
+.win-popup .win-box {
     animation: winBoxIn .22s cubic-bezier(.2,.8,.2,1);
 }
 
@@ -228,10 +317,12 @@ body {
 }
 
 @media (max-width: 760px) {
-    body { padding-bottom: 170px !important; }
+    body { padding-bottom: 162px !important; }
     .live-drops-floating { padding-inline: 10px !important; }
-    .live-drop { flex-basis: 132px; width: 132px; }
+    .live-drop, .drop-item { flex-basis: 126px; width: 126px; }
     .case-price-board { min-width: 78px; padding-inline: 10px; }
+    .roulette-wrapper { width: calc(100% - 16px) !important; padding: 8px !important; }
+    .multi-track .item { flex-basis: 132px; width: 132px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
