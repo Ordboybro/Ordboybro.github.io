@@ -1421,7 +1421,9 @@ window.addEventListener("load", () => {
     }
 
     updateBalanceUI();
-    updateProfileUI(false);
+    // Do not overwrite the logged-in UI after auto-login.
+    // If a saved session was restored above, loginUser() already configured the profile menu.
+    updateProfileUI(!!state.currentUser);
 });
 
 /* SAVE BALANCE */
