@@ -23,9 +23,7 @@
 
     function getStoredBestDrop(user) {
         if (!user) return null;
-        const stored = user.bestDrop;
-        if (stored && RARITY_ORDER[stored.rarity]) return cloneDrop(stored);
-
+        if (user.bestDrop && RARITY_ORDER[user.bestDrop.rarity]) return cloneDrop(user.bestDrop);
         const inventory = Array.isArray(user.inventory) ? user.inventory : [];
         return inventory.reduce((best, item) => betterDrop(best, item), null);
     }
@@ -75,13 +73,11 @@
         if (typeof state === "undefined" || !state.currentUser || !state.currentWin) return;
         const inventory = state.currentUser.inventory;
         if (!Array.isArray(inventory)) return;
-
         const current = state.currentWin;
         const index = inventory.findIndex(item =>
             item === current ||
             (item?.emoji === current?.emoji && item?.rarity === current?.rarity && item?.price === current?.price)
         );
-
         if (index !== -1) inventory.splice(index, 1);
     }
 
@@ -98,11 +94,8 @@
     function normalizeLiveDrops() {
         const container = document.getElementById("liveContainer");
         if (!container) return;
-
         for (const child of container.children) normalizeLiveDrop(child);
-        while (container.children.length > MAX_LIVE_DROPS) {
-            container.lastElementChild?.remove();
-        }
+        while (container.children.length > MAX_LIVE_DROPS) container.lastElementChild?.remove();
     }
 
     function hookFunction(name, wrapperFactory) {
@@ -121,7 +114,7 @@
             if (typeof state !== "undefined") {
                 rememberItems(state.winQueue);
                 if (state.currentWin) considerBestDrop(state.currentWin);
-                if (state.currentUser) renderSavedBestDrop();
+                renderSavedBestDrop();
             }
             return result;
         });
@@ -139,10 +132,34 @@
             return result;
         });
 
+        hookFunction("logout", original => function (...args) {
+            const result = original.apply(this, args);
+            const emoji = document.getElementById("bestDropEmoji");
+            const rarity = document.getElementById("bestDropRarity");
+            if (emoji) {
+                emoji.textContent = "🏆";
+                emoji.style.borderColor = "";
+            }
+            if (rarity) {
+                rarity.textContent = "Нет дропа";
+                rarity.style.color = "";
+            }
+            return result;
+        });
+
         hookFunction("renderInventory", original => function (...args) {
             const result = original.apply(this, args);
             renderSavedBestDrop();
             return result;
+        });
+
+        hookFunction("selectAmount", () => function (amount, event) {
+            const numericAmount = Number(amount);
+            if (!Number.isInteger(numericAmount) || numericAmount < 1 || numericAmount > 10) return;
+            if (typeof state !== "undefined") state.openAmount = numericAmount;
+            document.querySelectorAll(".amount-btn").forEach(button => button.classList.remove("active"));
+            if (event?.target) event.target.classList.add("active");
+            if (typeof updateOpenPrice === "function") updateOpenPrice();
         });
 
         hookFunction("sellWin", original => function (...args) {
@@ -170,8 +187,7 @@
     function observeLiveDrops() {
         const container = document.getElementById("liveContainer");
         if (!container || container.__emojiDropsObserver) return;
-
-        const observer = new MutationObserver(() => normalizeLiveDrops());
+        const observer = new MutationObserver(normalizeLiveDrops);
         observer.observe(container, { childList: true });
         container.__emojiDropsObserver = observer;
     }
