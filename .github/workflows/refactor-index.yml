@@ -1,0 +1,86 @@
+name: Finalize EmojiDrops refactor
+
+on:
+  push:
+    branches:
+      - refactor/emoji-drops
+
+permissions:
+  contents: write
+
+jobs:
+  refactor:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          ref: refactor/emoji-drops
+
+      - name: Refactor index and data modules
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+
+          root = Path('.')
+          index = root / 'index.html'
+          text = index.read_text(encoding='utf-8')
+
+          # Keep the EmailJS CDN script and its tiny initializer; remove only the
+          # large application script that starts after the stylesheet links.
+          marker = '<script>\n\nfunction updateOnline(){'
+          start = text.find(marker)
+          if start == -1:
+              raise SystemExit('Application inline script marker not found; refusing to modify index.html')
+
+          end = text.rfind('</script>')
+          if end == -1 or end <= start:
+              raise SystemExit('Application inline script end not found; refusing to modify index.html')
+          end += len('</script>')
+
+          before = text[:start]
+          after = text[end:]
+          external = '''<script src="js/data.js"></script>\n<script src="js/app.js"></script>\n<script src="js/updates.js"></script>'''
+
+          new_text = before + external + after
+          index.write_text(new_text, encoding='utf-8')
+
+          # data.js must contain data only. The current extracted file accidentally
+          # retained the old online counter helper, so remove that helper if present.
+          data = root / 'js' / 'data.js'
+          d = data.read_text(encoding='utf-8')
+          d = re.sub(r'^function updateOnline\(\)\{.*?^\}\n\nupdateOnline\(\);\n\n', '', d, count=1, flags=re.S | re.M)
+          data.write_text(d, encoding='utf-8')
+
+      - name: Validate structure
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          text = Path('index.html').read_text(encoding='utf-8')
+          required = ['js/data.js', 'js/app.js', 'js/updates.js']
+          for item in required:
+              assert item in text, f'missing {item}'
+          assert 'function updateOnline()' not in text
+          assert 'const cases = {' not in text
+          assert text.count('src="js/data.js"') == 1
+          assert text.count('src="js/app.js"') == 1
+          assert text.count('src="js/updates.js"') == 1
+          print('index structure OK')
+          PY
+
+      - name: Commit refactor
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html js/data.js
+          git diff --cached --quiet || git commit -m 'refactor: finish index module split'
+          git push
+          rm -f .github/workflows/refactor-index.yml
+          git add -u .github/workflows/refactor-index.yml
+          git diff --cached --quiet || git commit -m 'chore: remove one-shot refactor workflow'
+          git push
