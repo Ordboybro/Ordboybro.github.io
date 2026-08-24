@@ -9,11 +9,11 @@
 
     function buttonMotion() {
         document.addEventListener("pointerdown", e => {
-            const el = e.target.closest("button,a,.top-btn,.case,.profile-box");
+            const el = e.target.closest("button,a,.top-btn,.case,.profile-box,.amount-btn,.inventory-item,.main-btn,.fast-btn");
             if (el && !el.disabled) el.classList.add("ui-pressed");
-        });
+        }, {passive:true});
         const clear = () => qsa(".ui-pressed").forEach(el => el.classList.remove("ui-pressed"));
-        ["pointerup","pointercancel","pointerleave"].forEach(e => document.addEventListener(e, clear));
+        ["pointerup","pointercancel","blur"].forEach(e => window.addEventListener(e, clear, {passive:true}));
     }
 
     function priceBoards() {
@@ -27,9 +27,13 @@
         });
     }
 
+    function rarityFrom(el) {
+        return [...el.classList].find(c => Object.prototype.hasOwnProperty.call(COLORS, c)) || "common";
+    }
+
     function colorLive(el) {
-        const rarity = [...el.classList].find(c => COLORS[c]);
-        if (!rarity) return;
+        if (!(el instanceof HTMLElement)) return;
+        const rarity = rarityFrom(el);
         el.style.setProperty("--rarity-color", COLORS[rarity]);
         if (rarity === "legendary") el.classList.add("legendary");
     }
@@ -39,15 +43,23 @@
         while (live.children.length > LIMIT) live.removeChild(live.lastElementChild);
     }
 
+    function animateLive(el) {
+        if (!el) return;
+        el.classList.remove("live-drop-enter");
+        requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add("live-drop-enter")));
+    }
+
     function addLive(username, item) {
         if (!live || !item) return;
         const rarity = String(item.rarity || "common").toLowerCase();
         const div = document.createElement("div");
         div.className = `live-drop ${rarity}`;
         div.style.setProperty("--rarity-color", COLORS[rarity] || COLORS.common);
+
         const emoji = document.createElement("div");
         emoji.className = "live-emoji";
         emoji.textContent = item.emoji || "❔";
+
         const info = document.createElement("div");
         info.className = "live-info";
         const user = document.createElement("div");
@@ -59,9 +71,11 @@
         r.style.color = COLORS[rarity] || COLORS.common;
         info.append(user, r);
         div.append(emoji, info);
+
         live.prepend(div);
-        requestAnimationFrame(() => div.classList.add("live-drop-enter"));
+        colorLive(div);
         trimLive();
+        animateLive(div);
     }
 
     function liveDrops() {
@@ -70,17 +84,21 @@
         window.addLiveDrop = addLive;
         qsa(".live-drop,.drop-item", live).forEach(colorLive);
         trimLive();
-        new MutationObserver(records => {
+        if (live.dataset.polishObserver) return;
+        const observer = new MutationObserver(records => {
             let changed = false;
             records.forEach(record => record.addedNodes.forEach(node => {
                 if (!(node instanceof HTMLElement)) return;
                 if (node.classList.contains("live-drop") || node.classList.contains("drop-item")) {
                     colorLive(node);
+                    if (node.classList.contains("live-drop")) animateLive(node);
                     changed = true;
                 }
             }));
             if (changed) trimLive();
-        }).observe(live, {childList:true});
+        });
+        observer.observe(live, {childList:true});
+        live.dataset.polishObserver = "1";
     }
 
     function spin() {
@@ -150,7 +168,10 @@
             window.sellWin = wrapped;
         }
         const popup = qs("#winPopup");
-        if (popup) new MutationObserver(winLabel).observe(popup,{attributes:true,attributeFilter:["style"]});
+        if (popup && !popup.dataset.polishObserver) {
+            new MutationObserver(winLabel).observe(popup,{attributes:true,attributeFilter:["style"]});
+            popup.dataset.polishObserver = "1";
+        }
         winLabel();
     }
 
