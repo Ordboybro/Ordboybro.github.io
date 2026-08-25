@@ -19,7 +19,7 @@
 </div>
 </header>
 <div class="top-line"></div>
-<div class="search-wrap"><input class="search" id="searchInput" name="case-search" type="search" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Поиск кейсов..." onkeyup="searchCases()"></div>
+<div class="search-wrap" role="search" aria-label="Поиск кейсов"><input class="search" id="searchInput" name="case_search_query" type="search" inputmode="search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" aria-label="Поиск кейсов" placeholder="Поиск кейсов..."></div>
 <div class="cases">
 <div class="case" onclick="openCasePage('smile')"><div class="case-emoji">😀</div><div class="case-name">Smile</div><div class="case-price"><div class="old-price">200₽</div><div class="new-price">100₽</div></div></div>
 <div class="case" onclick="openCasePage('moves')"><div class="case-emoji">🕺</div><div class="case-name">Moves</div><div class="case-price"><div class="new-price">80₽</div></div></div>
@@ -33,7 +33,7 @@
 <div class="open-page" id="openPage"><button class="back-btn" onclick="closePage()">← Назад</button><div class="open-header"><div class="logo"><img src="logo.png" class="logo-img"><div class="logo-text"><span>Emoji</span><p>Drops</p></div></div></div><div class="roulette-wrapper"><div class="roulette"><div class="center-indicator"></div><div id="multiRouletteContainer"></div></div></div><div class="open-amounts" id="openAmounts"></div><div class="open-buttons"><button class="main-btn" onclick="openCase()">Открыть кейс<div class="btn-subtext">100₽</div></button><button class="main-btn fast-btn">Быстро</button></div><div class="case-items-list" id="caseItemsList"></div></div>
 <div class="win-popup" id="winPopup"><div class="win-box"><div class="confetti">🎉 🎊 ✨ 🎉</div><div class="win-emoji" id="winEmoji">😀</div><div class="win-rarity" id="winRarity">COMMON</div><div class="win-price" id="winPrice">10₽</div><button onclick="takeWin()">ЗАБРАТЬ</button><button onclick="sellWin()" style="margin-top:15px;background:#242424;">ПРОДАТЬ</button></div></div>
 <div class="live-drops-bar live-drops-floating"><div class="live-title">🔥 LIVE DROPS</div><div class="live-container" id="liveContainer"></div></div>
-<div class="auth-popup" id="authPopup"><div class="auth-box"><div class="auth-title" id="authTitle">Вход</div><input type="email" id="authEmail" class="auth-input" placeholder="Почта"><input type="password" id="authPassword" class="auth-input" placeholder="Пароль"><button class="auth-btn" onclick="submitAuth()">Продолжить</button><button class="auth-btn close-auth" onclick="closeAuth()">Закрыть</button></div></div>
+<div class="auth-popup" id="authPopup"><div class="auth-box"><div class="auth-title" id="authTitle">Вход</div><input type="email" id="authEmail" name="auth_email" autocomplete="username" class="auth-input" placeholder="Почта"><input type="password" id="authPassword" name="auth_password" autocomplete="current-password" class="auth-input" placeholder="Пароль"><button class="auth-btn" onclick="submitAuth()">Продолжить</button><button class="auth-btn close-auth" onclick="closeAuth()">Закрыть</button></div></div>
 <script src="js/bootstrap.js"></script>
 <script src="js/data.js"></script>
 <script src="js/app.js"></script>
