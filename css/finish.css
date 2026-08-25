@@ -1,0 +1,30 @@
+:root{--ed-orange:#ff7a18;--ed-orange-hi:#ff9b4a;--ed-bg:#08090c;--ed-panel:#111319;--ed-line:rgba(255,255,255,.08);--ed-text:#f7f7fa;--ed-muted:#8e929d;--ed-ease:cubic-bezier(.22,1,.36,1)}
+*{box-sizing:border-box}
+html{background:var(--ed-bg)}
+body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;text-rendering:optimizeLegibility;-webkit-font-smoothing:antialiased}
+button,a,.case,input{transition:transform .22s var(--ed-ease),background .22s var(--ed-ease),border-color .22s var(--ed-ease),box-shadow .22s var(--ed-ease),color .22s var(--ed-ease),opacity .22s var(--ed-ease)}
+button{font:inherit}
+.case{border:1px solid var(--ed-line);box-shadow:0 14px 40px rgba(0,0,0,.24),inset 0 1px rgba(255,255,255,.035)}
+.case:hover{transform:translateY(-5px);border-color:rgba(255,122,24,.42);box-shadow:0 20px 55px rgba(0,0,0,.36),0 0 26px rgba(255,122,24,.09)}
+.case:active{transform:translateY(-1px) scale(.985)}
+.case-emoji{filter:drop-shadow(0 10px 18px rgba(0,0,0,.42));transition:transform .35s var(--ed-ease),filter .35s var(--ed-ease)}
+.case:hover .case-emoji{transform:translateY(-5px) scale(1.07);filter:drop-shadow(0 14px 25px rgba(0,0,0,.5))}
+.case-price{border:1px solid rgba(255,122,24,.34)!important;background:rgba(14,15,19,.94)!important;box-shadow:0 8px 22px rgba(0,0,0,.25),inset 0 1px rgba(255,255,255,.035)!important;border-radius:11px!important}
+.case-price .new-price{color:#fff!important;font-weight:900!important;letter-spacing:-.2px}
+.main-btn,.amount-btn,.auth-btn,.settings-action-btn,.profile-mini-btn,.back-btn{border-color:rgba(255,122,24,.48)!important;box-shadow:0 8px 25px rgba(0,0,0,.2),inset 0 1px rgba(255,255,255,.05)}
+.main-btn:hover,.auth-btn:hover,.settings-action-btn:hover,.profile-mini-btn:hover,.back-btn:hover{transform:translateY(-2px);border-color:rgba(255,155,74,.82)!important;box-shadow:0 13px 32px rgba(0,0,0,.3),0 0 20px rgba(255,122,24,.12)}
+.main-btn:active,.auth-btn:active,.settings-action-btn:active,.profile-mini-btn:active,.back-btn:active{transform:translateY(0) scale(.985)}
+.amount-btn:hover{transform:translateY(-2px)}
+.amount-btn.active{background:linear-gradient(135deg,#ff8b2b,#f2600b)!important;color:#fff!important;border-color:#ff9b4a!important;box-shadow:0 8px 25px rgba(255,98,0,.24)!important}
+.search:focus{border-color:rgba(255,122,24,.7)!important;box-shadow:0 0 0 4px rgba(255,122,24,.08),0 12px 30px rgba(0,0,0,.25)!important;outline:none}
+.live-drops-bar{backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px)}
+.live-drop{border-color:rgba(255,255,255,.1)!important;background:linear-gradient(145deg,rgba(25,27,32,.96),rgba(12,13,17,.96))!important}
+.live-drop.legendary{border-color:#ffd000!important;box-shadow:0 0 16px rgba(255,208,0,.28),inset 0 0 14px rgba(255,208,0,.05)!important}
+.live-drop.ed-live-enter{animation:edLiveIn .68s var(--ed-ease) both}
+@keyframes edLiveIn{from{opacity:0;transform:translate3d(-44px,0,0) scale(.9)}55%{opacity:1;transform:translate3d(7px,0,0) scale(1.025)}to{opacity:1;transform:none}}
+.win-box{border:1px solid rgba(255,122,24,.42)!important;background:linear-gradient(145deg,rgba(22,24,29,.98),rgba(10,11,14,.99))!important;box-shadow:0 35px 110px rgba(0,0,0,.62),0 0 50px rgba(255,122,24,.1)!important}
+.win-emoji{font-size:clamp(70px,9vw,110px);filter:drop-shadow(0 18px 28px rgba(0,0,0,.48))}
+.multi-roulette{border:1px solid rgba(255,255,255,.07);background:linear-gradient(180deg,#111318,#0b0c10);box-shadow:inset 0 0 45px rgba(0,0,0,.35),0 12px 35px rgba(0,0,0,.28)}
+.new-pointer{filter:drop-shadow(0 0 9px rgba(255,122,24,.7))}
+@media(max-width:700px){body{padding-bottom:calc(118px + env(safe-area-inset-bottom,0px))}.case{min-height:190px}.case-price{right:9px!important;bottom:9px!important}.main-btn{min-height:52px}.live-drops-bar{padding-left:10px!important;padding-right:10px!important}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
