@@ -27,6 +27,7 @@
             }
             button:disabled { cursor:not-allowed; }
             button:focus-visible,input:focus-visible { outline:2px solid #ff7b00; outline-offset:2px; }
+            .ui-action-pending { pointer-events:none!important; }
             .ui-screen-enter { animation:uiScreenEnter .24s var(--ui-ease) both; }
             @keyframes uiScreenEnter { from{opacity:0;transform:translate3d(0,7px,0) scale(.995)} to{opacity:1;transform:none} }
             #liveContainer>.ui-drop-enter { animation:uiDropEnter .42s var(--ui-ease) both; }
@@ -35,6 +36,14 @@
             #liveContainer { contain:layout paint; }
             .ui-roulette-running .multi-track { will-change:transform; }
             .ui-roulette-target { box-shadow:0 0 0 2px #ff7b00,0 0 24px #ff7b0066; }
+            .ui-lane-enter { animation:uiLaneEnter .32s var(--ui-ease) both; }
+            @keyframes uiLaneEnter { from{opacity:0;transform:translate3d(0,12px,0)} to{opacity:1;transform:none} }
+            .ui-result-pop { animation:uiResultPop .42s var(--ui-ease) both; }
+            @keyframes uiResultPop { 0%{opacity:0;transform:translate3d(0,8px,0) scale(.96)} 65%{opacity:1;transform:translate3d(0,-1px,0) scale(1.01)} 100%{opacity:1;transform:none} }
+            @media (max-width:900px) {
+                #liveContainer { max-width:100%; overflow:hidden; }
+                .multi-roulette { max-width:100%; }
+            }
             @media (prefers-reduced-motion:reduce) {
                 *,*::before,*::after { animation-duration:.001ms!important;transition-duration:.001ms!important;scroll-behavior:auto!important; }
             }
@@ -64,7 +73,7 @@
         container.dataset.motionReady = "1";
         let previous = new Map();
         let raf = 0;
-        let added = new Set();
+        const added = new Set();
 
         const snapshot = () => {
             const result = new Map();
@@ -96,7 +105,7 @@
                 window.setTimeout(() => {
                     element.classList.remove("ui-drop-moving");
                     element.style.removeProperty("transform");
-                },480);
+                },500);
             }
             for (const element of added) {
                 if (!container.contains(element)) continue;
@@ -121,6 +130,12 @@
         observer.observe(container,{childList:true});
     };
 
+    const enforceLiveDropLimit = () => {
+        const container = byId("liveContainer");
+        if (!container) return;
+        while (container.children.length > 25) container.removeChild(container.lastElementChild);
+    };
+
     const installLiveDropLimit = () => {
         if (window.__emojiDropsLiveLimitInstalled) return;
         window.__emojiDropsLiveLimitInstalled=true;
@@ -128,26 +143,24 @@
             const original=window[name];
             if(typeof original!=="function" || original.__emojiDropsWrapped) return;
             const wrapped=function(...args){
-                const container=byId("liveContainer");
-                if(!container) return original.apply(this,args);
-                const removeChild=container.removeChild;
-                container.removeChild=function(child){
-                    if(container.children.length<=25) return child;
-                    return removeChild.call(container,child);
-                };
-                try{return original.apply(this,args);}finally{container.removeChild=removeChild;}
+                const result=original.apply(this,args);
+                requestAnimationFrame(enforceLiveDropLimit);
+                return result;
             };
             wrapped.__emojiDropsWrapped=true;
             window[name]=wrapped;
         };
         patch("addLiveDrop");
         patch("createLiveDrop");
+        requestAnimationFrame(enforceLiveDropLimit);
     };
 
     const wait = ms => new Promise(resolve => window.setTimeout(resolve,ms));
 
     const itemMatches = (element, item) => {
         if (!element || !item) return false;
+        const id = element.dataset.itemId || element.dataset.id;
+        if (id && item.id != null && String(id) === String(item.id)) return true;
         const text = (element.textContent || "").trim();
         return Boolean(item.emoji && text.includes(item.emoji));
     };
@@ -161,37 +174,41 @@
         const duration=reduced ? 1 : 1250;
         const laneItems=Array.isArray(items) ? items : [items];
 
-        roulettes.forEach((roulette,index)=>{
+        const animations=roulettes.map((roulette,index)=>new Promise(resolve=>{
             const track=roulette.querySelector(".multi-track");
-            if(!track || !track.children.length) return;
-            roulette.classList.add("ui-roulette-running");
+            if(!track || !track.children.length){ resolve(); return; }
+            roulette.classList.add("ui-roulette-running","ui-lane-enter");
             [...track.children].forEach(el=>el.classList.remove("ui-roulette-target"));
             const wanted=laneItems[index] || laneItems[0];
             let target=[...track.children].find(el=>itemMatches(el,wanted));
-            if(!target) target=track.children[Math.min(30,track.children.length-1)];
-            if(!target) return;
+            if(!target){ resolve(); return; }
 
             const center=roulette.clientWidth/2;
             const targetCenter=target.offsetLeft+target.offsetWidth/2;
             const finalX=center-targetCenter;
             track.style.transition=`transform ${duration}ms cubic-bezier(.08,.72,.12,1)`;
             track.style.transform=`translate3d(${finalX}px,0,0)`;
-            target.classList.add("ui-roulette-target");
-        });
 
-        await wait(duration+90);
+            window.setTimeout(()=>{
+                target.classList.add("ui-roulette-target");
+                roulette.classList.remove("ui-roulette-running");
+                resolve();
+            },duration);
+        }));
+        await Promise.all(animations);
+        await wait(reduced ? 0 : 70);
     };
 
     const resetRoulette = () => {
         const container=byId("multiRouletteContainer");
         if(!container) return;
         container.querySelectorAll(".multi-roulette").forEach(roulette=>{
-            roulette.classList.remove("ui-roulette-running");
+            roulette.classList.remove("ui-roulette-running","ui-lane-enter");
             const track=roulette.querySelector(".multi-track");
             if(!track) return;
             track.style.transition="none";
             track.style.transform="";
-            requestAnimationFrame(()=>{ track.style.removeProperty("transition"); });
+            requestAnimationFrame(()=>track.style.removeProperty("transition"));
         });
     };
 
@@ -204,10 +221,17 @@
             const queue=window.state?.winQueue;
             const items=Array.isArray(queue) ? queue.slice(0,10) : [];
             if(!items.length) return original.apply(this,arguments);
+            if(window.state?.isSpinning) return;
             if(window.state) window.state.isSpinning=true;
             try {
                 await animateRoulette(items);
-                return original.apply(this,arguments);
+                const result=original.apply(this,arguments);
+                const resultNode=byId("winOverlay") || byId("winResult") || document.querySelector(".win-overlay,.win-result,.result-card");
+                if(resultNode){
+                    resultNode.classList.remove("ui-result-pop");
+                    requestAnimationFrame(()=>resultNode.classList.add("ui-result-pop"));
+                }
+                return result;
             } finally {
                 if(window.state) window.state.isSpinning=false;
                 window.setTimeout(resetRoulette,420);
