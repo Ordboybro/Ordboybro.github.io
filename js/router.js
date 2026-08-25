@@ -1,15 +1,10 @@
 (() => {
   'use strict';
-
-  const normalize = (path = location.pathname) => {
-    const clean = path.replace(/\/+/g, '/').replace(/\/$/, '') || '/';
-    return clean;
-  };
-
+  const normalize = (path = location.pathname) => (path.replace(/\/+/g, '/').replace(/\/$/, '') || '/');
   const route = () => {
     const path = normalize();
-    const caseMatch = path.match(/^\/case\/([a-z0-9_-]+)$/i);
-    if (caseMatch) return { name: 'case', id: caseMatch[1].toLowerCase() };
+    const m = path.match(/^\/case\/([a-z0-9_-]+)$/i);
+    if (m) return { name: 'case', id: m[1].toLowerCase() };
     if (path === '/cases') return { name: 'cases' };
     if (path === '/profile') return { name: 'profile' };
     if (path === '/profile/statistics') return { name: 'statistics' };
@@ -19,142 +14,70 @@
     if (path === '/battle') return { name: 'battle' };
     return { name: 'home' };
   };
-
-  const hide = (selector) => {
-    document.querySelectorAll(selector).forEach(el => {
-      el.dataset.routerHidden = '1';
-      el.style.display = 'none';
-    });
-  };
-
-  const show = (el, display = 'flex') => {
-    if (!el) return;
-    el.dataset.routerHidden = '0';
-    el.style.display = display;
-    el.setAttribute('aria-hidden', 'false');
-  };
-
-  function ensurePageRoot() {
-    let root = document.getElementById('routeRoot');
-    if (root) return root;
-    root = document.createElement('main');
-    root.id = 'routeRoot';
-    root.className = 'route-root';
-    root.setAttribute('aria-live', 'polite');
-    document.body.appendChild(root);
-    return root;
-  }
-
-  function navigate(path, replace = false) {
+  const navigate = (path, replace = false) => {
     const target = path.startsWith('/') ? path : `/${path}`;
-    if (replace) history.replaceState({}, '', target);
-    else history.pushState({}, '', target);
+    (replace ? history.replaceState : history.pushState).call(history, {}, '', target);
     render();
-  }
-
-  function pageTransition() {
-    const root = ensurePageRoot();
-    root.classList.remove('route-enter');
-    void root.offsetWidth;
-    root.classList.add('route-enter');
-  }
+  };
+  const root = () => {
+    let el = document.getElementById('routeRoot');
+    if (!el) { el = document.createElement('main'); el.id = 'routeRoot'; el.className = 'route-root'; document.body.appendChild(el); }
+    return el;
+  };
+  const hide = (sel) => document.querySelectorAll(sel).forEach(el => { el.style.display = 'none'; el.setAttribute('aria-hidden', 'true'); });
+  const show = (el, display = 'flex') => { if (el) { el.style.display = display; el.setAttribute('aria-hidden', 'false'); } };
+  const animate = () => { const el = root(); el.classList.remove('route-enter'); void el.offsetWidth; el.classList.add('route-enter'); };
 
   function render() {
     const r = route();
-    const root = ensurePageRoot();
-
-    hide('#openPage, #profilePage, #upgradePage, #settingsOverlay, #statsOverlay, #historyOverlay, #routeRoot');
+    const rr = root();
+    hide('#routeRoot, #openPage, #profilePage, #upgradePage, #settingsOverlay, #statsOverlay, #historyOverlay');
+    document.body.classList.remove('case-route');
+    rr.innerHTML = '';
+    rr.style.display = 'none';
     document.querySelectorAll('body > header, body > .top-line, body > .search-wrap, body > main, body > .live-drops-bar').forEach(el => el.style.display = 'none');
-    root.style.display = 'block';
-    root.innerHTML = '';
-
     if (r.name === 'home' || r.name === 'cases') {
-      const header = document.querySelector('body > header');
-      const line = document.querySelector('body > .top-line');
-      const search = document.querySelector('body > .search-wrap');
-      const main = document.querySelector('body > main');
-      const live = document.querySelector('body > .live-drops-bar');
-      if (header) header.style.display = '';
-      if (line) line.style.display = '';
-      if (search) search.style.display = '';
-      if (main) main.style.display = '';
-      if (live) live.style.display = '';
-      if (r.name === 'cases') {
-        document.querySelectorAll('.case').forEach(c => c.style.display = 'flex');
-        document.getElementById('searchInput')?.focus({ preventScroll: true });
-      }
-      pageTransition();
+      ['header','.top-line','.search-wrap','main','.live-drops-bar'].forEach(sel => { const el = document.querySelector(`body > ${sel}`); if (el) el.style.display = ''; });
+      animate();
       return;
     }
-
     if (r.name === 'case') {
-      if (typeof openCasePage === 'function') openCasePage(r.id);
-      const page = document.getElementById('openPage');
-      show(page);
       document.body.classList.add('case-route');
-      pageTransition();
+      window.__edOpenCasePage?.(r.id);
+      show(document.getElementById('openPage'));
+      animate();
       return;
     }
-
     if (r.name === 'profile') {
-      if (typeof openProfile === 'function') openProfile();
-      const page = document.getElementById('profilePage');
-      show(page);
-      pageTransition();
-      return;
+      if (!window.state?.currentUser) { navigate('/'); setTimeout(() => window.openAuth?.('login'), 0); return; }
+      window.__edOpenProfile?.(); show(document.getElementById('profilePage')); animate(); return;
     }
-
-    if (r.name === 'statistics') {
-      if (!state.currentUser) return navigate('/profile');
-      if (typeof openStats === 'function') openStats();
-      show(document.getElementById('statsOverlay'));
-      pageTransition();
-      return;
-    }
-
-    if (r.name === 'history') {
-      if (!state.currentUser) return navigate('/profile');
-      if (typeof openHistory === 'function') openHistory();
-      show(document.getElementById('historyOverlay'));
-      pageTransition();
-      return;
-    }
-
-    if (r.name === 'settings') {
-      if (!state.currentUser) return navigate('/profile');
-      if (typeof openSettings === 'function') openSettings();
-      show(document.getElementById('settingsOverlay'));
-      pageTransition();
-      return;
-    }
-
-    if (r.name === 'upgrade') {
-      if (typeof openUpgradeMenu === 'function') openUpgradeMenu();
-      const page = document.getElementById('upgradePage');
-      show(page);
-      pageTransition();
-      return;
-    }
-
+    if (['statistics','history','settings'].includes(r.name) && !window.state?.currentUser) { navigate('/'); setTimeout(() => window.openAuth?.('login'), 0); return; }
+    if (r.name === 'statistics') { window.__edOpenStats?.(); show(document.getElementById('statsOverlay')); animate(); return; }
+    if (r.name === 'history') { window.__edOpenHistory?.(); show(document.getElementById('historyOverlay')); animate(); return; }
+    if (r.name === 'settings') { window.__edOpenSettings?.(); show(document.getElementById('settingsOverlay')); animate(); return; }
+    if (r.name === 'upgrade') { window.__edOpenUpgrade?.(); show(document.getElementById('upgradePage')); animate(); return; }
     if (r.name === 'battle') {
-      root.innerHTML = `<section class="route-page"><div class="route-page-head"><button class="ed-route-back" data-back>← Назад</button><div><div class="route-kicker">EMOJI DROPS</div><h1>Case Battle</h1></div></div><div class="route-empty"><div class="route-empty-icon">⚔️</div><h2>Case Battle</h2><p>Боевой режим готовится к отдельному экрану.</p></div></section>`;
-      pageTransition();
+      rr.style.display = 'block';
+      rr.innerHTML = `<section class="route-page"><div class="route-page-head"><button class="ed-route-back" data-back>← Назад</button><div><div class="route-kicker">EMOJI DROPS</div><h1>Case Battle</h1></div></div><div class="route-empty"><div class="route-empty-icon">⚔️</div><h2>Case Battle</h2><p>Боевой режим подготовлен как отдельный экран.</p></div></section>`;
+      animate();
     }
   }
 
   document.addEventListener('click', e => {
+    const profile = e.target.closest('#profileBtn, .profile-box');
+    if (profile && window.state?.currentUser) { e.preventDefault(); e.stopPropagation(); navigate('/profile'); return; }
+    const card = e.target.closest('.case');
+    if (card && !e.target.closest('button,input')) {
+      const name = card.querySelector('.case-name')?.textContent?.trim().toLowerCase();
+      if (name && window.cases?.[name]) { e.preventDefault(); e.stopPropagation(); navigate(`/case/${encodeURIComponent(name)}`); return; }
+    }
+  }, true);
+  document.addEventListener('click', e => {
     const link = e.target.closest('[data-route]');
-    if (link) {
-      e.preventDefault();
-      navigate(link.dataset.route);
-      return;
-    }
-    if (e.target.closest('[data-back]')) {
-      e.preventDefault();
-      if (history.length > 1) history.back(); else navigate('/');
-    }
+    if (link) { e.preventDefault(); navigate(link.dataset.route); return; }
+    if (e.target.closest('[data-back]')) { e.preventDefault(); history.length > 1 ? history.back() : navigate('/'); }
   });
-
   window.addEventListener('popstate', render);
   window.EmojiDropsRouter = { navigate, render, route };
   window.openProfileRoute = () => navigate('/profile');
@@ -164,8 +87,13 @@
   window.openStatsRoute = () => navigate('/profile/statistics');
   window.openHistoryRoute = () => navigate('/profile/history');
   window.openSettingsRoute = () => navigate('/profile/settings');
-
   document.addEventListener('DOMContentLoaded', () => {
-    setTimeout(render, 0);
+    window.__edOpenCasePage = window.openCasePage;
+    window.__edOpenProfile = window.openProfile;
+    window.__edOpenStats = window.openStats;
+    window.__edOpenHistory = window.openHistory;
+    window.__edOpenSettings = window.openSettings;
+    window.__edOpenUpgrade = window.openUpgradeMenu;
+    render();
   });
 })();
