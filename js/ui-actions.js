@@ -142,45 +142,56 @@
         };
         patch("addLiveDrop");
         patch("createLiveDrop");
-        const fill=()=>{
-            const container=byId("liveContainer");
-            if(container && typeof window.randomLiveDrop==="function") {
-                while(container.children.length<25) window.randomLiveDrop();
-            }
-        };
-        requestAnimationFrame(fill);
     };
 
     const wait = ms => new Promise(resolve => window.setTimeout(resolve,ms));
 
-    const animateRoulette = async (item) => {
+    const itemMatches = (element, item) => {
+        if (!element || !item) return false;
+        const text = (element.textContent || "").trim();
+        return Boolean(item.emoji && text.includes(item.emoji));
+    };
+
+    const animateRoulette = async items => {
         const container=byId("multiRouletteContainer");
-        if(!container || !item) return;
+        if(!container) return;
         const roulettes=[...container.querySelectorAll(".multi-roulette")];
         if(!roulettes.length) return;
-        const duration=1050;
+        const reduced=window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+        const duration=reduced ? 1 : 1250;
+        const laneItems=Array.isArray(items) ? items : [items];
+
         roulettes.forEach((roulette,index)=>{
             const track=roulette.querySelector(".multi-track");
             if(!track || !track.children.length) return;
             roulette.classList.add("ui-roulette-running");
             [...track.children].forEach(el=>el.classList.remove("ui-roulette-target"));
-            const targetIndex=Math.min(30,track.children.length-1);
-            const target=track.children[targetIndex];
+            const wanted=laneItems[index] || laneItems[0];
+            let target=[...track.children].find(el=>itemMatches(el,wanted));
+            if(!target) target=track.children[Math.min(30,track.children.length-1)];
             if(!target) return;
-            target.textContent=item.emoji;
-            target.style.border=`3px solid ${rarities[item.rarity]?.color || "#ff7b00"}`;
-            target.classList.add("ui-roulette-target");
+
             const center=roulette.clientWidth/2;
             const targetCenter=target.offsetLeft+target.offsetWidth/2;
             const finalX=center-targetCenter;
             track.style.transition=`transform ${duration}ms cubic-bezier(.08,.72,.12,1)`;
             track.style.transform=`translate3d(${finalX}px,0,0)`;
+            target.classList.add("ui-roulette-target");
         });
-        await wait(duration+80);
-        roulettes.forEach(roulette=>{
+
+        await wait(duration+90);
+    };
+
+    const resetRoulette = () => {
+        const container=byId("multiRouletteContainer");
+        if(!container) return;
+        container.querySelectorAll(".multi-roulette").forEach(roulette=>{
             roulette.classList.remove("ui-roulette-running");
             const track=roulette.querySelector(".multi-track");
-            if(track){ track.style.transition="none"; track.style.transform=""; }
+            if(!track) return;
+            track.style.transition="none";
+            track.style.transform="";
+            requestAnimationFrame(()=>{ track.style.removeProperty("transition"); });
         });
     };
 
@@ -191,13 +202,16 @@
         if(typeof original!=="function") return;
         const wrapped=async function(){
             const queue=window.state?.winQueue;
-            const item=queue?.[0];
-            if(!item){ return original.apply(this,arguments); }
+            const items=Array.isArray(queue) ? queue.slice(0,10) : [];
+            if(!items.length) return original.apply(this,arguments);
             if(window.state) window.state.isSpinning=true;
-            await animateRoulette(item);
-            const result=original.apply(this,arguments);
-            if(window.state) window.state.isSpinning=false;
-            return result;
+            try {
+                await animateRoulette(items);
+                return original.apply(this,arguments);
+            } finally {
+                if(window.state) window.state.isSpinning=false;
+                window.setTimeout(resetRoulette,420);
+            }
         };
         wrapped.__emojiDropsWrapped=true;
         window.showNextWin=wrapped;
