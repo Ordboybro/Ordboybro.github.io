@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Emoji Drops</title>
 <script defer src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-<script>window.addEventListener("DOMContentLoaded", () => { emailjs.init({ publicKey:"aevTrSnp2VVPi1u3_" }); });</script>
+<script>window.addEventListener("DOMContentLoaded", () => { if (window.emailjs) emailjs.init({ publicKey:"aevTrSnp2VVPi1u3_" }); });</script>
 <link rel="stylesheet" href="css/style.css">
 <link rel="stylesheet" href="css/updates.css">
 <link rel="stylesheet" href="css/polish.css">
@@ -20,7 +20,7 @@
 </div>
 </header>
 <div class="top-line"></div>
-<div class="search-wrap"><input class="search" id="searchInput" placeholder="Поиск кейсов..." onkeyup="searchCases()"></div>
+<div class="search-wrap"><input class="search" id="searchInput" name="case-search" type="search" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Поиск кейсов..." onkeyup="searchCases()"></div>
 <div class="cases">
 <div class="case" onclick="openCasePage('smile')"><div class="case-emoji">😀</div><div class="case-name">Smile</div><div class="case-price"><div class="old-price">200₽</div><div class="new-price">100₽</div></div></div>
 <div class="case" onclick="openCasePage('moves')"><div class="case-emoji">🕺</div><div class="case-name">Moves</div><div class="case-price"><div class="new-price">80₽</div></div></div>
@@ -41,9 +41,5 @@
 <script src="js/ui-shell.js"></script>
 <script src="js/ui-actions.js"></script>
 <script src="js/updates.js"></script>
-<script src="js/final-fixes.js"></script>
-<script src="js/ui-polish.js"></script>
-<script src="js/final-polish-v9.js"></script>
-<script src="js/final-polish-v10.js"></script>
 </body>
 </html>
