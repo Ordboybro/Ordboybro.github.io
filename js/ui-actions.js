@@ -14,7 +14,7 @@
         const style = document.createElement("style");
         style.id = "emojiDropsMotionStyle";
         style.textContent = `
-            :root { --ui-ease: cubic-bezier(.22,1,.36,1); }
+            :root { --ui-ease: cubic-bezier(.22,1,.36,1); --ui-fast: cubic-bezier(.4,0,.2,1); }
             button,.top-btn,.case-card,.case-item-card,.settings-action-btn,.settings-close,
             .main-btn,.open-btn,.fast-btn,.fast-open-btn,.profile-btn,.upgrade-btn,.amount-btn {
                 -webkit-tap-highlight-color:transparent;
@@ -40,9 +40,15 @@
             @keyframes uiLaneEnter { from{opacity:0;transform:translate3d(0,12px,0)} to{opacity:1;transform:none} }
             .ui-result-pop { animation:uiResultPop .42s var(--ui-ease) both; }
             @keyframes uiResultPop { 0%{opacity:0;transform:translate3d(0,8px,0) scale(.96)} 65%{opacity:1;transform:translate3d(0,-1px,0) scale(1.01)} 100%{opacity:1;transform:none} }
+            .ui-empty-state { padding:28px 20px; text-align:center; opacity:.82; border:1px solid rgba(255,123,0,.18); border-radius:14px; }
+            .ui-error-state { padding:14px 16px; text-align:center; border:1px solid rgba(255,80,80,.28); border-radius:12px; }
             @media (max-width:900px) {
                 #liveContainer { max-width:100%; overflow:hidden; }
                 .multi-roulette { max-width:100%; }
+            }
+            @media (max-width:600px) {
+                button,.top-btn,.open-btn,.fast-open-btn,.profile-btn,.upgrade-btn { min-height:42px; }
+                .case-card,.case-item-card { touch-action:manipulation; }
             }
             @media (prefers-reduced-motion:reduce) {
                 *,*::before,*::after { animation-duration:.001ms!important;transition-duration:.001ms!important;scroll-behavior:auto!important; }
@@ -74,7 +80,6 @@
         let previous = new Map();
         let raf = 0;
         const added = new Set();
-
         const snapshot = () => {
             const result = new Map();
             for (const element of container.children) {
@@ -84,7 +89,6 @@
             previous = result;
         };
         snapshot();
-
         const animate = () => {
             raf = 0;
             const next = new Map();
@@ -116,7 +120,6 @@
             previous = new Map([...next].map(([key,value])=>[key,value.rect]));
             added.clear();
         };
-
         const observer = new MutationObserver(records => {
             let changed=false;
             for (const record of records) {
@@ -156,7 +159,6 @@
     };
 
     const wait = ms => new Promise(resolve => window.setTimeout(resolve,ms));
-
     const itemMatches = (element, item) => {
         if (!element || !item) return false;
         const id = element.dataset.itemId || element.dataset.id;
@@ -171,24 +173,21 @@
         const roulettes=[...container.querySelectorAll(".multi-roulette")];
         if(!roulettes.length) return;
         const reduced=window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
-        const duration=reduced ? 1 : 1250;
+        const duration=reduced ? 1 : 1350;
         const laneItems=Array.isArray(items) ? items : [items];
-
         const animations=roulettes.map((roulette,index)=>new Promise(resolve=>{
             const track=roulette.querySelector(".multi-track");
             if(!track || !track.children.length){ resolve(); return; }
             roulette.classList.add("ui-roulette-running","ui-lane-enter");
             [...track.children].forEach(el=>el.classList.remove("ui-roulette-target"));
             const wanted=laneItems[index] || laneItems[0];
-            let target=[...track.children].find(el=>itemMatches(el,wanted));
+            const target=[...track.children].find(el=>itemMatches(el,wanted));
             if(!target){ resolve(); return; }
-
             const center=roulette.clientWidth/2;
             const targetCenter=target.offsetLeft+target.offsetWidth/2;
             const finalX=center-targetCenter;
             track.style.transition=`transform ${duration}ms cubic-bezier(.08,.72,.12,1)`;
             track.style.transform=`translate3d(${finalX}px,0,0)`;
-
             window.setTimeout(()=>{
                 target.classList.add("ui-roulette-target");
                 roulette.classList.remove("ui-roulette-running");
@@ -241,6 +240,22 @@
         window.showNextWin=wrapped;
     };
 
+    const installActionGuard = () => {
+        document.addEventListener("click", event => {
+            const button=event.target.closest("button,[role=button]");
+            if(!button || button.disabled || button.dataset.noGuard!==undefined) return;
+            if(button.dataset.guardBusy==="1") { event.preventDefault(); event.stopImmediatePropagation(); return; }
+            const label=(button.textContent||"").toLowerCase();
+            if(!/открыть|upgrade|улучш|купить|продать|выбрать/.test(label)) return;
+            button.dataset.guardBusy="1";
+            button.classList.add("ui-action-pending");
+            window.setTimeout(()=>{
+                button.dataset.guardBusy="0";
+                button.classList.remove("ui-action-pending");
+            },500);
+        },true);
+    };
+
     window.openSettings=()=>{
         if(!requireUser()) return;
         const overlay=byId("settingsOverlay");
@@ -276,6 +291,7 @@
         setupLiveDrops();
         installLiveDropLimit();
         installRevealFlow();
+        installActionGuard();
         const retry=new MutationObserver(()=>{
             setupLiveDrops();
             installLiveDropLimit();
