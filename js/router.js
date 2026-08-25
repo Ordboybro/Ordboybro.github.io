@@ -19,6 +19,7 @@
   const navigate = (path, replace = false) => {
     const target = path.startsWith('/') ? path : `/${path}`;
     if (normalize() !== normalize(target)) (replace ? history.replaceState : history.pushState).call(history, {}, '', target);
+    window.scrollTo({ top: 0, behavior: 'instant' });
     render();
   };
 
@@ -30,9 +31,10 @@
     el.setAttribute('aria-hidden', visible ? 'false' : 'true');
   };
   const call = (name, ...args) => typeof window[name] === 'function' ? window[name](...args) : undefined;
+  let nativeOpenCasePage = null;
 
   function closeTransient() {
-    ['profilePage','settingsOverlay','statsOverlay','historyOverlay','upgradePage'].forEach(id => setVisible(document.getElementById(id), false));
+    ['profilePage','settingsOverlay','statsOverlay','historyOverlay','upgradePage','routeRoot'].forEach(id => setVisible(document.getElementById(id), false));
     const open = document.getElementById('openPage');
     if (open) setVisible(open, false);
     document.body.classList.remove('case-route');
@@ -43,6 +45,24 @@
     setVisible(q('body > .top-line'), true);
     setVisible(q('body > .search-wrap'), true);
     setVisible(q('body > .live-drops-bar'), true);
+  }
+
+  function showCaseRoute(id) {
+    const main = q('body > main');
+    const casesGrid = q('main > .cases');
+    const page = document.getElementById('openPage');
+    setVisible(main, true);
+    setVisible(casesGrid, false);
+    setVisible(q('body > .search-wrap'), false);
+    setVisible(q('body > .live-drops-bar'), false);
+    setVisible(q('body > header'), false);
+    setVisible(q('body > .top-line'), false);
+    document.body.classList.add('case-route');
+    setVisible(page, true, 'flex');
+    window.__edRouteRenderingCase = true;
+    try { (nativeOpenCasePage || window.openCasePage)?.(id); }
+    finally { window.__edRouteRenderingCase = false; }
+    setVisible(page, true, 'flex');
   }
 
   function render() {
@@ -58,31 +78,15 @@
       setVisible(main, true);
       setVisible(casesGrid, true);
       if (r.name === 'cases') {
-        // Dedicated catalogue route: no stale case filters from the home search.
         const input = document.getElementById('searchInput');
         if (input) input.value = '';
         qa('.case').forEach(card => card.style.display = 'flex');
       }
-      document.body.classList.remove('case-route');
       return;
     }
 
-    if (r.name === 'case') {
-      // Keep the real main container visible. The opening page lives inside it,
-      // so hiding main was the root cause of the broken case screen.
-      setVisible(main, true);
-      setVisible(casesGrid, false);
-      setVisible(search, false);
-      setVisible(q('body > .live-drops-bar'), false);
-      document.body.classList.add('case-route');
-      const page = document.getElementById('openPage');
-      setVisible(page, true, 'flex');
-      call('openCasePage', r.id);
-      setVisible(page, true, 'flex');
-      return;
-    }
+    if (r.name === 'case') { showCaseRoute(r.id); return; }
 
-    // Full-screen application sections. They no longer sit on top of the home UI.
     setVisible(main, false);
     setVisible(search, false);
     setVisible(q('body > .live-drops-bar'), false);
@@ -102,8 +106,6 @@
     if (r.name === 'history') { call('openHistory'); setVisible(document.getElementById('historyOverlay'), true, 'flex'); return; }
     if (r.name === 'settings') { call('openSettings'); setVisible(document.getElementById('settingsOverlay'), true, 'flex'); return; }
     if (r.name === 'upgrade') { call('openUpgradeMenu'); setVisible(document.getElementById('upgradePage'), true, 'flex'); return; }
-
-    // Battle remains a route instead of an overlay, even while its full game mode evolves.
     if (r.name === 'battle') {
       let root = document.getElementById('routeRoot');
       if (!root) { root = document.createElement('main'); root.id = 'routeRoot'; document.body.appendChild(root); }
@@ -112,18 +114,32 @@
     }
   }
 
+  function installCaseBridge() {
+    if (nativeOpenCasePage || typeof window.openCasePage !== 'function') return;
+    nativeOpenCasePage = window.openCasePage;
+    window.openCasePage = function(id) {
+      if (window.__edRouteRenderingCase) return nativeOpenCasePage.call(this, id);
+      navigate(`/case/${encodeURIComponent(id)}`);
+    };
+    const nativeClose = window.closePage;
+    if (typeof nativeClose === 'function') {
+      window.closePage = function() {
+        if (route().name === 'case') { navigate('/'); return; }
+        return nativeClose.apply(this, arguments);
+      };
+    }
+  }
+
   document.addEventListener('click', e => {
     const link = e.target.closest('[data-route]');
-    if (link) { e.preventDefault(); e.stopPropagation(); navigate(link.dataset.route); return; }
-    if (e.target.closest('[data-back]')) { e.preventDefault(); history.length > 1 ? history.back() : navigate('/'); return; }
-
+    if (link) { e.preventDefault(); e.stopImmediatePropagation(); navigate(link.dataset.route); return; }
+    if (e.target.closest('[data-back]')) { e.preventDefault(); e.stopImmediatePropagation(); history.length > 1 ? history.back() : navigate('/'); return; }
     const profile = e.target.closest('#profileBtn,.profile-box');
-    if (profile && window.state?.currentUser) { e.preventDefault(); e.stopPropagation(); navigate('/profile'); return; }
-
+    if (profile && window.state?.currentUser) { e.preventDefault(); e.stopImmediatePropagation(); navigate('/profile'); return; }
     const card = e.target.closest('.case');
     if (card && !e.target.closest('button,input')) {
       const id = card.getAttribute('data-case') || card.querySelector('.case-name')?.textContent?.trim().toLowerCase();
-      if (id && window.cases?.[id]) { e.preventDefault(); e.stopPropagation(); navigate(`/case/${encodeURIComponent(id)}`); }
+      if (id && window.cases?.[id]) { e.preventDefault(); e.stopImmediatePropagation(); navigate(`/case/${encodeURIComponent(id)}`); }
     }
   }, true);
 
@@ -138,9 +154,8 @@
   window.openSettingsRoute = () => navigate('/profile/settings');
 
   const init = () => {
-    // Router is dynamically injected by ui-shell. DOMContentLoaded may already
-    // have fired, so initialize immediately when that happens.
-    setTimeout(render, 0);
+    installCaseBridge();
+    setTimeout(() => { installCaseBridge(); render(); }, 0);
   };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });
   else init();
