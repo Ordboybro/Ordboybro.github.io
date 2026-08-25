@@ -3,7 +3,7 @@
 create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   nickname text not null default 'Player',
-  balance numeric not null default 1000,
+  balance numeric not null default 100,
   inventory jsonb not null default '[]'::jsonb,
   stats jsonb not null default '{}'::jsonb,
   best_drop jsonb,
@@ -26,7 +26,7 @@ language plpgsql
 security definer set search_path = public
 as $$
 begin
-  insert into public.profiles (id, nickname) values (new.id, coalesce(new.raw_user_meta_data->>'nickname', split_part(new.email, '@', 1)))
+  insert into public.profiles (id, nickname, balance) values (new.id, coalesce(new.raw_user_meta_data->>'nickname', split_part(new.email, '@', 1)), 100)
   on conflict (id) do nothing;
   return new;
 end;
