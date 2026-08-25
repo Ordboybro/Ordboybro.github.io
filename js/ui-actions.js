@@ -2,11 +2,11 @@
     "use strict";
 
     const byId = id => document.getElementById(id);
-    const user = () => (typeof state !== "undefined" ? state.currentUser : null);
+    const currentUser = () => (typeof state !== "undefined" ? state.currentUser : null);
     const requireUser = () => {
-        const current = user();
-        if (!current) alert("Сначала войдите в аккаунт");
-        return current;
+        const user = currentUser();
+        if (!user) alert("Сначала войдите в аккаунт");
+        return user;
     };
 
     const installMotion = () => {
@@ -42,30 +42,22 @@
                 transition-duration: .07s;
             }
 
-            button:disabled {
-                cursor: not-allowed;
-            }
-
+            button:disabled { cursor: not-allowed; }
             button:focus-visible, input:focus-visible {
                 outline: 2px solid #ff7b00;
                 outline-offset: 2px;
             }
 
-            .ui-screen-enter {
-                animation: uiScreenEnter .22s var(--ui-ease) both;
-            }
-
+            .ui-screen-enter { animation: uiScreenEnter .22s var(--ui-ease) both; }
             @keyframes uiScreenEnter {
                 from { opacity: 0; transform: translate3d(0,7px,0) scale(.995); }
                 to { opacity: 1; transform: translate3d(0,0,0) scale(1); }
             }
 
-            /* Live Drops: new cards enter separately, old cards move through FLIP. */
             #liveContainer > .drop-item.ui-drop-enter,
             #liveContainer > .live-drop.ui-drop-enter {
                 animation: uiDropEnter .42s var(--ui-ease) both;
             }
-
             @keyframes uiDropEnter {
                 from { opacity: 0; transform: translate3d(-20px,0,0) scale(.97); }
                 to { opacity: 1; transform: translate3d(0,0,0) scale(1); }
@@ -74,6 +66,10 @@
             #liveContainer > .ui-drop-moving {
                 will-change: transform;
                 transition: transform .46s var(--ui-ease);
+            }
+
+            #liveContainer {
+                contain: layout paint;
             }
 
             @media (prefers-reduced-motion: reduce) {
@@ -97,7 +93,6 @@
         if (!element || element.nodeType !== 1) return "";
         const explicit = element.dataset.liveId || element.dataset.id || element.dataset.dropId;
         if (explicit) return explicit;
-
         const emoji = element.querySelector(".drop-emoji, .live-emoji, img")?.getAttribute("src")
             || element.querySelector(".drop-emoji, .live-emoji")?.textContent
             || "";
@@ -134,7 +129,6 @@
                 if (key) next.set(key, { element, rect: element.getBoundingClientRect() });
             }
 
-            /* FLIP: invert the old position, then let CSS animate to the new one. */
             for (const [key, value] of next) {
                 const first = previous.get(key);
                 if (!first) continue;
@@ -146,7 +140,6 @@
                 const element = value.element;
                 element.classList.add("ui-drop-moving");
                 element.style.transform = `translate3d(${dx}px,${dy}px,0)`;
-
                 requestAnimationFrame(() => {
                     element.style.transform = "translate3d(0,0,0)";
                 });
@@ -170,7 +163,6 @@
 
         const observer = new MutationObserver(records => {
             let changed = false;
-
             for (const record of records) {
                 if (record.type !== "childList") continue;
                 if (record.addedNodes.length || record.removedNodes.length) changed = true;
@@ -178,12 +170,46 @@
                     if (node.nodeType === 1) added.add(node);
                 }
             }
-
             if (!changed || raf) return;
             raf = requestAnimationFrame(animate);
         });
 
         observer.observe(container, { childList: true });
+    };
+
+    /* app.js currently caps the feed at 20. Keep the existing renderer,
+       but let the UI retain 25 entries without replacing its game logic. */
+    const installLiveDropLimit = () => {
+        if (window.__emojiDropsLiveLimitInstalled) return;
+        window.__emojiDropsLiveLimitInstalled = true;
+
+        const patch = name => {
+            const original = window[name];
+            if (typeof original !== "function" || original.__emojiDropsWrapped) return;
+
+            const wrapped = function(...args) {
+                const container = byId("liveContainer");
+                if (!container) return original.apply(this, args);
+
+                const removeChild = container.removeChild;
+                container.removeChild = function(child) {
+                    /* app.js tries to trim at 20; retain up to 25 instead. */
+                    if (container.children.length <= 25) return child;
+                    return removeChild.call(container, child);
+                };
+
+                try {
+                    return original.apply(this, args);
+                } finally {
+                    container.removeChild = removeChild;
+                }
+            };
+            wrapped.__emojiDropsWrapped = true;
+            window[name] = wrapped;
+        };
+
+        patch("addLiveDrop");
+        patch("createLiveDrop");
     };
 
     window.openSettings = () => {
@@ -230,9 +256,12 @@
     const boot = () => {
         installMotion();
         setupLiveDrops();
+        installLiveDropLimit();
 
-        /* The container is created by app.js, so retry only briefly. */
-        const retry = new MutationObserver(() => setupLiveDrops());
+        const retry = new MutationObserver(() => {
+            setupLiveDrops();
+            installLiveDropLimit();
+        });
         retry.observe(document.body, { childList: true, subtree: true });
         window.setTimeout(() => retry.disconnect(), 8000);
     };
