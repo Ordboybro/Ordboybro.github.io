@@ -1,88 +1,50 @@
 (() => {
   'use strict';
+  const $ = id => document.getElementById(id);
+  const readUsers = () => { try { const v = JSON.parse(localStorage.getItem('users') || '[]'); return Array.isArray(v) ? v : []; } catch { return []; } };
+  const writeUsers = users => localStorage.setItem('users', JSON.stringify(users));
+  const normalizeEmail = v => String(v || '').trim().toLowerCase();
 
-  const $ = (id) => document.getElementById(id);
-  const users = () => {
-    try { return JSON.parse(localStorage.getItem('users') || '[]'); }
-    catch { return []; }
-  };
-
-  // The old login flow incorrectly sent an email code even when 2FA was disabled,
-  // then tried to open a verification popup that was not present in the page.
-  // Keep email verification only for accounts that explicitly enabled 2FA.
   window.submitAuth = function () {
-    const email = ($('authEmail')?.value || '').trim().toLowerCase();
-    const password = ($('authPassword')?.value || '').trim();
+    const email = normalizeEmail($('authEmail')?.value);
+    const password = String($('authPassword')?.value || '');
     const state = window.state;
     if (!state) return alert('Приложение ещё загружается. Повторите попытку.');
-    if (!email || !password) return alert('Заполните поля');
-    if (password.length < 8) return alert('Минимум 8 символов');
+    if (!email || !password) return alert('Заполните почту и пароль');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return alert('Введите корректную почту');
+    if (password.length < 8) return alert('Пароль должен содержать минимум 8 символов');
 
-    const list = users();
-
+    const users = readUsers();
     if (state.authMode === 'login') {
-      const user = list.find(u => String(u.email || '').toLowerCase() === email && u.password === password);
+      const user = users.find(u => normalizeEmail(u.email) === email && u.password === password);
       if (!user) return alert('Неверная почта или пароль');
-
-      state.pendingUser = user;
-      if (user.twofa) return window.sendVerificationCode?.(email);
-
-      window.loginUser?.(user);
-      state.pendingUser = null;
-      window.closeAuth?.();
-      return;
+      window.loginUser?.(user); window.closeAuth?.(); return;
     }
 
-    if (list.some(u => String(u.email || '').toLowerCase() === email)) {
-      return alert('Аккаунт уже существует');
-    }
-
-    state.pendingUser = {
-      twofa: false,
-      email,
-      password,
-      nickname: 'user' + Math.floor(Math.random() * 1000),
-      balance: 1000,
-      inventory: [],
-      stats: { opened: 0, upgrades: 0, deposited: 0, withdrawn: 0, withdrawnItems: 0 },
-      history: []
+    if (users.some(u => normalizeEmail(u.email) === email)) return alert('Аккаунт уже существует');
+    const user = {
+      id: 'local_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8), twofa: false, email, password,
+      nickname: 'user' + Math.floor(1000 + Math.random() * 9000), balance: 1000, inventory: [],
+      stats: { opened: 0, upgrades: 0, deposited: 0, withdrawn: 0, withdrawnItems: 0, spent: 0, received: 0 }, history: []
     };
-
-    // Registration still uses email verification, but the popup is guaranteed below.
-    if (typeof window.sendVerificationCode === 'function') {
-      window.sendVerificationCode(email);
-    } else {
-      alert('Сервис подтверждения почты недоступен');
-    }
+    users.push(user); writeUsers(users); window.loginUser?.(user); window.closeAuth?.();
   };
 
-  window.confirmCode = function () {
-    const state = window.state;
-    const code = ($('verifyCode')?.value || '').trim();
-    if (!state?.pendingUser) return alert('Сессия регистрации истекла');
-    if (!code || Number(code) !== Number(state.generatedCode)) return alert('Неверный код');
-
-    const list = users();
-    const user = state.pendingUser;
-    if (state.authMode === 'register') {
-      list.push(user);
-      localStorage.setItem('users', JSON.stringify(list));
-    }
-    window.loginUser?.(user);
-    state.pendingUser = null;
-    window.saveUsers?.();
-    window.closeAuth?.();
-    if ($('verifyPopup')) $('verifyPopup').style.display = 'none';
-    if ($('verifyCode')) $('verifyCode').value = '';
+  // Browser-local reset. It cannot delete a remote Supabase user from a static frontend.
+  window.resetLocalAccount = function () {
+    ['currentUser','emojiDropsSession','current_user','authUser','users'].forEach(k => localStorage.removeItem(k));
+    if (window.state) { window.state.currentUser = null; window.state.pendingUser = null; window.state.balance = 1000; }
+    window.updateProfileUI?.(false); window.updateBalanceUI?.(); window.closeAuth?.();
   };
 
-  // Recover a previously saved local session without overwriting its data.
   window.addEventListener('load', () => {
     const state = window.state;
     if (!state || state.currentUser) return;
-    const email = localStorage.getItem('currentUser');
-    if (!email) return;
-    const user = users().find(u => String(u.email || '').toLowerCase() === String(email).toLowerCase());
+    const stored = localStorage.getItem('currentUser') || localStorage.getItem('emojiDropsSession');
+    if (!stored) return;
+    let email = stored;
+    try { const parsed = JSON.parse(stored); email = parsed.email || parsed.user?.email || stored; } catch {}
+    const user = readUsers().find(u => normalizeEmail(u.email) === normalizeEmail(email));
     if (user) window.loginUser?.(user);
   }, { once: true });
 })();
