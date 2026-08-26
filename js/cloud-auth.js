@@ -1,6 +1,7 @@
 (() => {
   'use strict';
   const getCfg=()=>window.EMOJI_DROPS_SUPABASE||{url:'',publishableKey:''};
+  const toMoney=value=>{const n=Number(value);return Number.isFinite(n)?Math.round(n):0;};
   const boot=()=>{
     const cfg=getCfg(); if(!cfg.url||!cfg.publishableKey){window.EmojiDropsCloudAuth={configured:false};return;}
     if(!window.supabase?.createClient)return;
@@ -9,12 +10,20 @@
     const applyProfile=async user=>{
       if(!user||!window.state)return;
       const {data}=await client.from('profiles').select('*').eq('id',user.id).maybeSingle(); if(!data)return;
-      window.state.currentUser={id:user.id,email:user.email,nickname:data.nickname||user.email?.split('@')[0]||'Player',balance:Number(data.balance??1000),inventory:Array.isArray(data.inventory)?data.inventory:[],stats:data.stats||{},bestDrop:data.best_drop||null};
-      window.state.balance=window.state.currentUser.balance;window.state.bestDrop=window.state.currentUser.bestDrop;window.updateBalanceUI?.();window.updateProfileUI?.(true);
+      const cloudStats=data.stats&&typeof data.stats==='object'?data.stats:{};
+      const balance=toMoney(data.balance??1000);
+      window.state.currentUser={id:user.id,email:user.email,nickname:data.nickname||user.email?.split('@')[0]||'Player',balance,inventory:Array.isArray(data.inventory)?data.inventory:[],stats:cloudStats,bestDrop:data.best_drop||null};
+      window.state.balance=balance;
+      window.state.stats={opened:toMoney(cloudStats.opened),upgrades:toMoney(cloudStats.upgrades),deposited:toMoney(cloudStats.deposited),withdrawn:toMoney(cloudStats.withdrawn),withdrawnItems:toMoney(cloudStats.withdrawnItems),spent:toMoney(cloudStats.spent),received:toMoney(cloudStats.received)};
+      window.state.currentUser.stats=window.state.stats;
+      window.state.bestDrop=window.state.currentUser.bestDrop;
+      window.updateBalanceUI?.();window.updateProfileUI?.(true);window.updateStatsUI?.();window.renderInventory?.();
     };
     const sync=async()=>{
       const u=window.state?.currentUser;if(!u?.id)return;
-      await client.from('profiles').upsert({id:u.id,nickname:u.nickname||'Player',balance:Number(u.balance??window.state.balance??1000),inventory:Array.isArray(u.inventory)?u.inventory:[],stats:u.stats||{},best_drop:u.bestDrop||null,updated_at:new Date().toISOString()},{onConflict:'id'});
+      const stats=window.state.stats||u.stats||{};
+      u.balance=toMoney(window.state.balance);u.stats=stats;
+      await client.from('profiles').upsert({id:u.id,nickname:u.nickname||'Player',balance:u.balance,inventory:Array.isArray(u.inventory)?u.inventory:[],stats,best_drop:u.bestDrop||window.state.bestDrop||null,updated_at:new Date().toISOString()},{onConflict:'id'});
     };
     window.syncEmojiDropsCloud=sync;
     client.auth.onAuthStateChange((event,session)=>{if(session?.user)applyProfile(session.user);if(event==='SIGNED_OUT'&&window.state){window.state.currentUser=null;window.updateProfileUI?.(false);}});
