@@ -1,0 +1,44 @@
+/* Stable visual polish — deliberately isolated from the application runtime. */
+:root{--ed-orange:#ff7b00;--ed-bg:#0b0c10;--ed-card:#14161c}
+html{scrollbar-color:var(--ed-orange) #111318}
+body{overflow-x:hidden;-webkit-font-smoothing:antialiased}
+button{font:inherit;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+/* Main case cards: compact, centered and never stretched by emoji glyphs. */
+.cases{width:min(1180px,calc(100% - 32px));margin:30px auto 120px;display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));gap:22px;align-items:start}
+.case{width:100%!important;min-width:0!important;display:flex!important;flex-direction:column!important;align-items:center!important;text-align:center!important;box-sizing:border-box}
+.case-emoji{width:clamp(92px,10vw,138px)!important;height:clamp(92px,10vw,138px)!important;display:grid!important;place-items:center!important;font-size:clamp(48px,6vw,76px)!important;line-height:1!important;overflow:hidden!important;flex:none!important;border-radius:24px}
+.case-name{width:100%!important;margin:12px 0 0!important;text-align:center!important;line-height:1.15!important}
+.case-price{width:100%!important;min-height:28px;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;text-align:center!important;margin:7px 0 0!important;line-height:1.15!important}
+.case-price>*{margin:0 auto!important;text-align:center!important}
+/* Case opening header: logo left, balance then back on the right. */
+#openPage .open-header{width:min(1180px,calc(100% - 40px))!important;margin:0 auto!important;display:flex!important;align-items:center!important;justify-content:flex-start!important;gap:14px;box-sizing:border-box}
+#openPage .open-header .logo{margin-right:auto!important}
+#openPage .open-header .open-balance{position:static!important;margin-left:auto!important;white-space:nowrap}
+#openPage .open-header .back-btn{position:static!important;transform:none!important;margin:0!important;white-space:nowrap}
+/* Each multi-open lane gets its own full-width row. */
+#multiRouletteContainer{display:flex;flex-direction:column;gap:14px;width:100%}
+.multi-roulette{width:100%;min-height:120px;overflow:hidden;position:relative;contain:layout paint}
+.multi-track{will-change:transform;display:flex;width:max-content;height:100%;align-items:center}
+/* Restore a clean Live Drops strip without edge masks or giant cards. */
+.live-drops-bar:before,.live-drops-bar:after{display:none!important}
+.live-container{display:flex!important;align-items:stretch;gap:10px;overflow-x:auto!important;overflow-y:hidden!important;scrollbar-width:none!important;mask-image:none!important;-webkit-mask-image:none!important;padding:8px 12px}
+.live-container::-webkit-scrollbar{display:none}
+.live-drop{flex:0 0 150px!important;min-height:72px;box-sizing:border-box;position:relative;overflow:hidden;border-radius:14px;transition:transform .25s ease,box-shadow .25s ease}
+.live-drop:hover{transform:translateY(-2px)}
+.live-drop.legendary{background:linear-gradient(135deg,#18130a,#2b210d)!important;border-color:#ffd000!important;box-shadow:0 0 20px rgba(255,208,0,.16)!important}
+.live-drop.legendary:before{content:'✦';position:absolute;left:8px;top:4px;color:#ffe88a;text-shadow:0 0 10px #ffd000;z-index:2}
+/* Profile: one scroll container, settings left and back right. */
+.profile-page{position:fixed!important;inset:0!important;z-index:9000!important;overflow-y:auto!important;overflow-x:hidden!important;background:radial-gradient(800px 350px at 50% 0,rgba(255,123,0,.13),transparent 65%),#08090d!important}
+.profile-page .ed-page-head{width:min(1120px,calc(100% - 40px))!important;height:82px;margin:0 auto;display:flex!important;align-items:center!important}
+.profile-settings-btn{order:1!important;margin-right:auto!important;width:54px!important;height:54px!important;padding:0!important;display:grid!important;place-items:center!important;font-size:28px!important;border-radius:15px!important;background:#15171d!important;border:1px solid rgba(255,123,0,.35)!important}
+.profile-page .back-btn{order:2!important;margin-left:auto!important}
+.ed-profile-wrap{width:min(980px,calc(100% - 40px))!important;margin:20px auto 70px!important}
+.ed-section-title{margin:28px 0 14px!important}
+.ed-profile-actions{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:26px!important}
+.inventory-rarity{font-weight:900!important;text-transform:uppercase!important}
+/* The profile must not carry Live Drops with it. */
+.profile-page~.live-drops-bar{display:none!important}
+.settings-overlay{z-index:10000!important}
+@media(max-width:1000px){.cases{grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}.ed-profile-actions{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:650px){.cases{width:calc(100% - 24px);grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.case-emoji{width:96px!important;height:96px!important;font-size:52px!important}.profile-page .ed-page-head,#openPage .open-header{width:calc(100% - 24px)!important}.ed-profile-wrap{width:calc(100% - 24px)!important}.live-drop{flex-basis:142px!important}.ed-profile-actions{grid-template-columns:1fr 1fr!important}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
