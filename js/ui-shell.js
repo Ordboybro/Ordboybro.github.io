@@ -7,5 +7,5 @@
   ensure('historyOverlay',`<div class="settings-overlay" id="historyOverlay" style="display:none"><div class="settings-box"><div class="settings-header"><div class="settings-title">История</div><button class="settings-close" data-back>✕</button></div><div class="settings-list" id="historyList"></div></div></div>`);
   [['ed-router-css','css/router.css?v=20260826d'],['ed-unified-css','css/unified.css?v=20260826d'],['ed-quality-css','css/quality-pass.css?v=20260826a']].forEach(([id,href])=>{if(!document.getElementById(id)){const l=document.createElement('link');l.id=id;l.rel='stylesheet';l.href=href;document.head.appendChild(l);}});
   const load=src=>{if(document.querySelector(`script[data-ed-src="${src}"]`))return;const s=document.createElement('script');s.src=src;s.dataset.edSrc=src;s.async=false;document.body.appendChild(s);};
-  load('js/cloud-config.js?v=20260826a');load('js/router.js?v=20260826d');load('js/cloud-auth.js?v=20260826a');load('js/final-fixes.js?v=20260826d');load('js/quality-pass.js?v=20260826a');
+  load('js/cloud-config.js?v=20260826a');load('js/router.js?v=20260826d');load('js/cloud-auth.js?v=20260826a');load('js/final-fixes.js?v=20260826d');load('js/quality-pass.js?v=20260826a');load('js/economy-sync.js?v=20260826a');
 })();
