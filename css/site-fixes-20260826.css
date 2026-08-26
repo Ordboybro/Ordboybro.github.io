@@ -1,0 +1,39 @@
+/* EmojiDrops final UI fixes — 2026-08-26 */
+.search-wrap{width:min(430px,calc(100% - 32px))!important;margin:10px auto 18px!important;transform:translateY(-3px)!important}
+.search{height:46px!important;line-height:46px!important;overflow:hidden!important;text-overflow:clip!important;white-space:nowrap!important}
+
+/* Home scrollbar */
+html::-webkit-scrollbar,body::-webkit-scrollbar{width:9px!important}
+html::-webkit-scrollbar-track,body::-webkit-scrollbar-track{background:#101114!important}
+html::-webkit-scrollbar-thumb,body::-webkit-scrollbar-thumb{background:#ff7b00!important;border-radius:999px!important;border:2px solid #101114!important}
+html::-webkit-scrollbar-thumb:hover,body::-webkit-scrollbar-thumb:hover{background:#ff9b3d!important}
+
+/* Live Drops: clean, contained cards and a restrained legendary treatment. */
+.live-drops-bar{overflow:hidden!important;clip-path:inset(0 0 0 0 round 18px 18px 0 0)!important}
+.live-container{overflow:hidden!important;mask-image:none!important;-webkit-mask-image:none!important}
+.live-drop{overflow:hidden!important;border-radius:14px!important;box-sizing:border-box!important}
+.live-drop.legendary{box-shadow:0 0 8px rgba(255,208,0,.30),inset 0 0 8px rgba(255,214,0,.06)!important}
+.live-drop.legendary:after{inset:1px!important;border:1px solid rgba(255,208,0,.58)!important;box-shadow:0 0 7px rgba(255,208,0,.25)!important;border-radius:inherit!important}
+.live-drop.own{outline:1px solid rgba(255,123,0,.52);box-shadow:0 0 12px rgba(255,123,0,.16)!important}
+.live-drop.own:before{content:'ТВОЙ';position:absolute;right:5px;top:4px;z-index:3;font-size:7px;font-weight:900;letter-spacing:.08em;color:#ff9b3d;background:rgba(8,9,12,.82);padding:2px 4px;border-radius:5px}
+
+/* Case header: logo left, Back right. */
+.open-header{justify-content:flex-start!important;padding:0 130px 0 18px!important}
+.open-header .logo{margin:0!important}
+.open-header .back-btn{right:18px!important;left:auto!important}
+
+/* Profile: clean banner + requested corners. */
+.profile-page{background:radial-gradient(900px 420px at 50% -80px,rgba(255,123,0,.16),transparent 68%),linear-gradient(180deg,#0a0b0e 0%,#08090c 100%)!important}
+.profile-page:before{height:230px!important;background:linear-gradient(110deg,rgba(255,123,0,.20),rgba(255,151,64,.08) 42%,rgba(255,123,0,.16))!important;filter:blur(30px)!important;opacity:.8!important}
+.profile-page:after{height:150px!important;background:linear-gradient(180deg,rgba(255,123,0,.10),transparent)!important}
+.ed-page-head .back-btn{left:auto!important;right:clamp(18px,3vw,42px)!important;top:18px!important}
+.ed-page-head .profile-settings-btn{left:clamp(18px,3vw,42px)!important;right:auto!important;top:18px!important;width:54px!important;height:54px!important}
+
+@media(max-width:640px){
+ .search-wrap{width:calc(100% - 24px)!important;margin:8px auto 12px!important}
+ .search{height:44px!important;line-height:44px!important}
+ .open-header{padding:0 92px 0 12px!important}
+ .open-header .back-btn{right:8px!important}
+ .ed-page-head .back-btn{right:12px!important;left:auto!important}
+ .ed-page-head .profile-settings-btn{left:12px!important;right:auto!important;width:52px!important;height:52px!important}
+}
