@@ -1,1 +1,0 @@
-EmojiDrops visual baseline: 5d1e216 (final visual system). Preserve this visual direction; functional fixes must not replace it with later UI layers.
