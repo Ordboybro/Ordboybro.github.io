@@ -3,7 +3,6 @@
   'use strict';
   const money = value => Number(String(value ?? 0).replace(/[^0-9.,]/g, '').replace(',', '.')) || 0;
   const color = item => window.rarities?.[item?.rarity]?.color || '#ff7b00';
-
   window.renderCaseItems = function renderCaseItems() {
     const container = document.getElementById('caseItemsList');
     const items = window.state?.currentCase || [];
@@ -12,20 +11,19 @@
     for (const item of items) {
       const card = document.createElement('div');
       card.className = 'case-item-card';
-      card.innerHTML = `<div class="case-item-emoji"></div><div class="case-item-rarity"></div><div class="case-item-price"></div><div class="case-item-chance"></div>`;
+      card.innerHTML = '<div class="case-item-emoji"></div><div class="case-item-rarity"></div><div class="case-item-price"></div><div class="case-item-chance"></div>';
       const emoji = card.querySelector('.case-item-emoji');
       emoji.textContent = item.emoji || '❔';
       emoji.style.border = `3px solid ${color(item)}`;
       const rarity = card.querySelector('.case-item-rarity');
       rarity.textContent = String(item.rarity || 'common').toUpperCase();
       rarity.style.color = color(item);
-      card.querySelector('.case-item-price').textContent = item.price || `${money(item.price)}₽`;
+      card.querySelector('.case-item-price').textContent = item.price || '—';
       const chance = Number(item.dropChance);
       card.querySelector('.case-item-chance').textContent = Number.isFinite(chance) ? `${chance < 0.01 ? chance.toFixed(3) : chance.toFixed(2)}%` : '—';
       container.appendChild(card);
     }
   };
-
   window.startUpgrade = function startUpgrade(sourceValue, targetValue, item) {
     const source = money(sourceValue ?? item?.price);
     const target = money(targetValue);

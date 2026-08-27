@@ -1,1 +1,0 @@
-EmojiDrops quality pass: restore the 5d1e216 visual baseline, keep only verified functional fixes, add one motion layer, add device-aware visual quality, and rebalance economy transparently. No stacking of versioned UI layers.
