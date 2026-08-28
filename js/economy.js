@@ -37,6 +37,8 @@
     return { pool, groups };
   }
 
+  // Expensive items remain rarer inside the same rarity tier without making
+  // cheap items deterministic. This keeps the case economy readable and stable.
   const priceWeight = item => 1 / Math.sqrt(parsePrice(item));
 
   function chooseWeighted(source) {
@@ -80,15 +82,21 @@
     return Math.max(1, Math.min(95, (source / target) * 96));
   }
 
-  window.getRandomByChance = function getRandomByChance(items) {
+  function getRandomByChance(items) {
     const built = buildItemWeights(items);
     if (!built) return null;
     const rarity = chooseRarity();
     return chooseWeighted(built.groups.get(rarity)?.length ? built.groups.get(rarity) : built.pool);
-  };
+  }
+
+  // app.js is legacy code loaded as a classic browser script. Top-level
+  // function declarations are global bindings, so replacing the corresponding
+  // global property here also makes legacy callers use the canonical economy.
+  window.getRandomByChance = getRandomByChance;
   window.getItemChance = itemChance;
   window.getRarityChance = rarityWeight;
   window.getUpgradeChance = upgradeChance;
+  window.getCasePrice = caseKey => Number(CASE_PRICES[caseKey] ?? 0);
 
   window.getCaseEconomy = function getCaseEconomy(items, caseKey) {
     const built = buildItemWeights(items);
@@ -99,7 +107,15 @@
     return { price, expectedValue, rtp: price > 0 ? (expectedValue / price) * 100 : 0, items: rows };
   };
 
-  window.EMOJI_DROPS_ECONOMY = Object.freeze({ STARTING_BALANCE, RARITY_ODDS, CASE_PRICES, getItemChance: itemChance, getRarityChance: rarityWeight, getUpgradeChance: upgradeChance, getCaseEconomy: window.getCaseEconomy });
+  window.EMOJI_DROPS_ECONOMY = Object.freeze({
+    STARTING_BALANCE,
+    RARITY_ODDS,
+    CASE_PRICES,
+    getItemChance: itemChance,
+    getRarityChance: rarityWeight,
+    getUpgradeChance: upgradeChance,
+    getCaseEconomy: window.getCaseEconomy
+  });
 
   const applyStartingBalance = () => {
     let appState = window.state;
