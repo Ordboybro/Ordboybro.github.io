@@ -46,7 +46,6 @@
   function buildItemWeights(items) {
     const pool = Array.isArray(items) ? items.filter(Boolean) : [];
     if (!pool.length) return null;
-
     const groups = new Map();
     for (const item of pool) {
       const rarity = normalizeRarity(item.rarity);
@@ -57,8 +56,6 @@
   }
 
   function priceWeight(item) {
-    // Expensive items remain possible, but are naturally less frequent inside
-    // the same rarity. sqrt keeps the curve useful instead of brutally steep.
     return 1 / Math.sqrt(parsePrice(item));
   }
 
@@ -67,7 +64,6 @@
     const weights = source.map(priceWeight);
     const total = weights.reduce((sum, weight) => sum + weight, 0);
     if (!total) return source[0];
-
     let roll = secureUnit() * total;
     for (let index = 0; index < source.length; index += 1) {
       roll -= weights[index];
@@ -89,15 +85,21 @@
   function itemChance(items, target) {
     const built = buildItemWeights(items);
     if (!built || !target) return 0;
-
     const rarity = normalizeRarity(target.rarity);
     const candidates = built.groups.get(rarity) || [];
-    const targetIndex = candidates.indexOf(target);
-    if (targetIndex < 0) return 0;
-
+    if (!candidates.includes(target)) return 0;
     const total = candidates.reduce((sum, item) => sum + priceWeight(item), 0);
     if (!total) return 0;
     return rarityWeight(rarity) * (priceWeight(target) / total);
+  }
+
+  function upgradeChance(sourceValue, targetValue) {
+    const source = Number(sourceValue) || 0;
+    const target = Number(targetValue) || 0;
+    if (source <= 0 || target <= 0) return 0;
+    if (target <= source) return 95;
+    // 4% house edge relative to the fair source/target ratio.
+    return Math.max(1, Math.min(95, (source / target) * 96));
   }
 
   window.getRandomByChance = function getRandomByChance(items) {
@@ -110,16 +112,14 @@
 
   window.getItemChance = itemChance;
   window.getRarityChance = rarityWeight;
+  window.getUpgradeChance = upgradeChance;
 
   window.getCaseEconomy = function getCaseEconomy(items, caseKey) {
     const built = buildItemWeights(items);
     const price = Number(CASE_PRICES[caseKey] ?? window.casePrices?.[caseKey] ?? 0);
     if (!built) return { price, expectedValue: 0, rtp: 0, items: [] };
 
-    const rows = built.pool.map(item => ({
-      item,
-      chance: itemChance(built.pool, item)
-    }));
+    const rows = built.pool.map(item => ({ item, chance: itemChance(built.pool, item) }));
     const expectedValue = rows.reduce((sum, row) => sum + parsePrice(row.item) * (row.chance / 100), 0);
     return {
       price,
@@ -132,7 +132,11 @@
   window.EMOJI_DROPS_ECONOMY = Object.freeze({
     STARTING_BALANCE,
     RARITY_ODDS,
-    CASE_PRICES
+    CASE_PRICES,
+    getItemChance: itemChance,
+    getRarityChance: rarityWeight,
+    getUpgradeChance: upgradeChance,
+    getCaseEconomy: window.getCaseEconomy
   });
 
   const applyStartingBalance = () => {
