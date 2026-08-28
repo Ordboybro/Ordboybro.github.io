@@ -50,15 +50,9 @@
         pointer-events: none;
         isolation: isolate;
       }
-      .live-drops > *, #liveDrops > *, #liveContainer > *, #liveDropsContainer > *, .live-drops-container > * {
-        pointer-events: auto;
-      }
-      .live-drops, #liveDrops, #liveContainer, #liveDropsContainer, .live-drops-container {
-        --live-drop-in-x: -72px;
-      }
-      .emoji-drop-live-enter {
-        animation: emoji-drop-live-enter .62s cubic-bezier(.16,1,.3,1) both;
-      }
+      .live-drops > *, #liveDrops > *, #liveContainer > *, #liveDropsContainer > *, .live-drops-container > * { pointer-events: auto; }
+      .live-drops, #liveDrops, #liveContainer, #liveDropsContainer, .live-drops-container { --live-drop-in-x: -72px; }
+      .emoji-drop-live-enter { animation: emoji-drop-live-enter .62s cubic-bezier(.16,1,.3,1) both; }
       @keyframes emoji-drop-live-enter {
         from { transform: translate3d(var(--live-drop-in-x), 0, 0); opacity: 0; }
         70% { opacity: 1; }
@@ -68,10 +62,7 @@
       .multi-roulette, #multiRouletteContainer { overflow-x: hidden !important; }
       .roulette-marker, .new-pointer { pointer-events: none !important; }
       .open-page, #openPage { overscroll-behavior: contain; }
-
-      #winPopup, #upgradeResult {
-        will-change: auto;
-      }
+      #winPopup, #upgradeResult { will-change: auto; }
 
       @media (prefers-reduced-motion: reduce) {
         *, *::before, *::after {
@@ -106,6 +97,37 @@
     if (balance && state) balance.textContent = String(state.balance ?? 0);
   }
 
+  const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+  async function playCaseReveal() {
+    if (prefersReduced()) return;
+
+    const tracks = [...document.querySelectorAll("#multiRouletteContainer .multi-track, .multi-roulette .multi-track")];
+    if (!tracks.length) return;
+
+    const animations = tracks.map((track, index) => {
+      const distance = index % 2 ? "-68%" : "-72%";
+      return track.animate(
+        [
+          { transform: "translate3d(0,0,0)" },
+          { transform: `translate3d(${distance},0,0)`, offset: .78 },
+          { transform: `translate3d(calc(${distance} + 18px),0,0)`, offset: .9 },
+          { transform: `translate3d(calc(${distance} + 8px),0,0)`, offset: .96 },
+          { transform: `translate3d(${distance},0,0)" }
+        ],
+        {
+          duration: 1850 + index * 90,
+          delay: index * 45,
+          easing: "cubic-bezier(.08,.72,.18,1)",
+          fill: "forwards"
+        }
+      );
+    });
+
+    await Promise.all(animations.map(animation => animation.finished.catch(() => undefined)));
+    animations.forEach(animation => animation.cancel());
+  }
+
   function decorateHandlers() {
     if (window.__emojiDropsPolishHandlers) return;
 
@@ -117,12 +139,7 @@
         Promise.resolve(result).then(() => {
           after();
           if (duration) {
-            const selectors = {
-              openCasePage: "#openPage",
-              openProfile: "#profilePage",
-              openUpgradeMenu: "#upgradePage",
-              showWin: "#winPopup"
-            };
+            const selectors = { openCasePage: "#openPage", openProfile: "#profilePage", openUpgradeMenu: "#upgradePage", showWin: "#winPopup" };
             const element = document.querySelector(selectors[name] || "");
             if (element && getComputedStyle(element).display !== "none") animateIn(element, { duration });
           }
@@ -163,6 +180,15 @@
       window.openCase = async function polishedOpenCase(...args) {
         const state = appState();
         if (state?.isSpinning) return;
+        if (!state || !state.selectedCase || !state.currentUser) return originalOpenCase.apply(this, args);
+
+        state.isSpinning = true;
+        try {
+          await playCaseReveal();
+        } finally {
+          state.isSpinning = false;
+        }
+
         const result = await originalOpenCase.apply(this, args);
         syncBalance();
         return result;
@@ -194,11 +220,9 @@
     roots.forEach(root => {
       if (root.dataset.qualityObserver === "1") return;
       root.dataset.qualityObserver = "1";
-      new MutationObserver(mutations => {
-        mutations.forEach(mutation => mutation.addedNodes.forEach(node => {
-          if (node instanceof HTMLElement) animateLiveDrop(node);
-        }));
-      }).observe(root, { childList: true });
+      new MutationObserver(mutations => mutations.forEach(mutation => mutation.addedNodes.forEach(node => {
+        if (node instanceof HTMLElement) animateLiveDrop(node);
+      }))).observe(root, { childList: true });
       [...root.children].forEach(animateLiveDrop);
     });
   }
@@ -207,9 +231,7 @@
     document.querySelectorAll("button, .top-btn, .amount-btn").forEach(button => {
       if (!(button instanceof HTMLElement) || button.dataset.motionButton === "1") return;
       button.dataset.motionButton = "1";
-      button.addEventListener("pointerdown", () => {
-        if (!prefersReduced()) button.style.willChange = "transform";
-      }, { passive: true });
+      button.addEventListener("pointerdown", () => { if (!prefersReduced()) button.style.willChange = "transform"; }, { passive: true });
       const release = () => { button.style.willChange = "auto"; };
       button.addEventListener("pointerup", release, { passive: true });
       button.addEventListener("pointercancel", release, { passive: true });
