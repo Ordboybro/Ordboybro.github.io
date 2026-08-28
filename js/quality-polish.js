@@ -4,6 +4,11 @@
   const STYLE_ID = "emoji-drops-quality-polish";
   const prefersReduced = () => window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches === true;
   const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+  const appState = () => {
+    if (window.state) return window.state;
+    try { if (typeof state !== "undefined") return state; } catch (_) {}
+    return null;
+  };
 
   function injectStyles() {
     if (document.getElementById(STYLE_ID)) return;
@@ -64,16 +69,17 @@
 
   function syncBalance() {
     if (typeof window.updateBalanceUI === "function") window.updateBalanceUI();
+    const state = appState();
     const balance = document.getElementById("balance");
-    if (balance && window.state) balance.textContent = String(window.state.balance ?? 0);
+    if (balance && state) balance.textContent = String(state.balance ?? 0);
   }
 
-  // The old design remains intact; only the hard-coded 48% upgrade calculation is replaced.
   function installUpgrade() {
     if (typeof window.startUpgrade !== "function") return;
     window.startUpgrade = function polishedUpgrade() {
-      const source = Number(window.state?.upgradeSourceValue ?? document.getElementById("upgradeSourceValue")?.value ?? 0);
-      const target = Number(window.state?.upgradeTargetValue ?? document.getElementById("upgradeTargetValue")?.value ?? 0);
+      const state = appState();
+      const source = Number(state?.upgradeSourceValue ?? document.getElementById("upgradeSourceValue")?.value ?? 0);
+      const target = Number(state?.upgradeTargetValue ?? document.getElementById("upgradeTargetValue")?.value ?? 0);
       const chance = typeof window.getUpgradeChance === "function" ? window.getUpgradeChance(source, target) : 48;
       const success = secureRoll() * 100 < chance;
       const result = document.getElementById("upgradeResult");
@@ -82,16 +88,15 @@
       if (result) result.style.display = "flex";
       if (emoji) emoji.textContent = success ? "👑" : "💥";
       if (text) text.textContent = `${success ? "АПГРЕЙД УСПЕШЕН" : "НЕ УДАЛОСЬ"} · ${chance.toFixed(1)}%`;
-      if (success && window.state?.stats) window.state.stats.upgrades = Number(window.state.stats.upgrades || 0) + 1;
+      if (success && state?.stats) state.stats.upgrades = Number(state.stats.upgrades || 0) + 1;
       if (typeof window.saveStats === "function") window.saveStats();
     };
   }
 
-  // Public handler used by the old inline UI. Results are decided before animation and charged once.
   function installCaseOpening() {
     if (typeof window.openCase !== "function") return;
     window.openCase = async function polishedOpenCase(count) {
-      const state = window.state;
+      const state = appState();
       if (!state || state.isSpinning) return;
       if (!state.selectedCase) return alert("Выберите кейс");
       if (!state.currentUser) return typeof window.openAuth === "function" ? window.openAuth("login") : null;
@@ -141,10 +146,7 @@
     if (prefersReduced()) return;
     node.style.willChange = "transform, opacity";
     node.animate(
-      [
-        { transform: "translate3d(-48px,0,0)", opacity: 0 },
-        { transform: "translate3d(0,0,0)", opacity: 1 }
-      ],
+      [{ transform: "translate3d(-48px,0,0)", opacity: 0 }, { transform: "translate3d(0,0,0)", opacity: 1 }],
       { duration: 560, easing: "cubic-bezier(.16,1,.3,1)", fill: "both" }
     ).finished.finally(() => { node.style.willChange = "auto"; });
   }
@@ -154,8 +156,7 @@
     roots.forEach(root => {
       if (root.dataset.qualityObserver === "1") return;
       root.dataset.qualityObserver = "1";
-      new MutationObserver(mutations => mutations.forEach(m => m.addedNodes.forEach(animateLiveDrop)))
-        .observe(root, { childList: true, subtree: true });
+      new MutationObserver(mutations => mutations.forEach(m => m.addedNodes.forEach(animateLiveDrop))).observe(root, { childList: true, subtree: true });
       [...root.children].forEach(animateLiveDrop);
     });
   }
