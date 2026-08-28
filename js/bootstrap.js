@@ -12,4 +12,21 @@
             }
         };
     }
+
+    // Keep the old visual baseline intact while consolidating non-destructive
+    // interaction/motion fixes into one runtime layer.
+    const loadQualityPolish = () => {
+        if (document.querySelector('script[data-quality-polish="1"]')) return;
+        const script = document.createElement("script");
+        script.src = "js/quality-polish.js";
+        script.defer = true;
+        script.dataset.qualityPolish = "1";
+        document.head.appendChild(script);
+    };
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", loadQualityPolish, { once: true });
+    } else {
+        loadQualityPolish();
+    }
 })();
