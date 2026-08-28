@@ -93,17 +93,14 @@
   filter:saturate(.75)!important;
 }
 
-.live-drops-bar{
-  isolation:isolate;
-}
+.live-drops-bar{isolation:isolate}
 
 .live-container{
   contain:layout paint;
   overflow:visible!important;
 }
 
-/* Do not reserve a GPU layer for every Live Drop permanently. Layers are
-   promoted only while an item is actually entering/moving. */
+/* Promote only active animated drops; don't reserve a GPU layer for every card. */
 .live-drop{
   contain:layout paint;
   will-change:auto;
@@ -121,16 +118,23 @@
   transform:translateZ(0);
 }
 
-/* Keep expensive glow/backdrop work proportional to the detected quality. */
 .ed-quality-low .live-drop.legendary{box-shadow:none!important}
 .ed-quality-low .case:hover,.ed-quality-low .live-drop:hover{box-shadow:none!important}
 .ed-quality-low .win-box{box-shadow:0 20px 50px #0009!important}
 .ed-quality-low .top-btn,.ed-quality-low header{backdrop-filter:none!important}
 .ed-quality-low .live-drops-bar{box-shadow:0 10px 24px #0005!important}
-
 .ed-quality-medium header{backdrop-filter:blur(8px)!important}
 .ed-quality-medium .win-box{box-shadow:0 24px 70px #000a!important}
 .ed-quality-high .win-box{box-shadow:0 30px 100px #000b!important}
+
+/* Don't keep motion layers alive while the document is hidden. */
+@media (prefers-reduced-motion:no-preference){
+  html.ed-page-hidden .live-drop,
+  html.ed-page-hidden .multi-track{
+    animation-play-state:paused!important;
+    will-change:auto!important;
+  }
+}
 
 @media(max-width:650px){
   .live-drops-bar{overflow:visible!important}
