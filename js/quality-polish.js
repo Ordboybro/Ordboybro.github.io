@@ -44,7 +44,6 @@
       .case-items-list::-webkit-scrollbar-track, .ed-u-items::-webkit-scrollbar-track { background: #111; }
       .case-items-list::-webkit-scrollbar-thumb, .ed-u-items::-webkit-scrollbar-thumb { background: #303030; border: 0; }
 
-      /* Live Drops: fixed bottom rail. New cards enter from the left and push the feed to the right. */
       .live-drops, #liveDrops, #liveContainer, #liveDropsContainer, .live-drops-container {
         position: fixed !important; left: 0 !important; right: 0 !important; bottom: 0 !important; width: 100% !important;
         min-height: 86px; padding: 8px 12px 10px !important; z-index: 1100 !important;
@@ -52,9 +51,7 @@
         display: flex !important; flex-direction: row !important; align-items: center !important; justify-content: flex-start !important;
         gap: 10px; white-space: nowrap;
       }
-      .live-drops > *, #liveDrops > *, #liveContainer > *, #liveDropsContainer > *, .live-drops-container > * {
-        pointer-events: auto; flex: 0 0 auto; position: relative; overflow: visible !important;
-      }
+      .live-drops > *, #liveDrops > *, #liveContainer > *, #liveDropsContainer > *, .live-drops-container > * { pointer-events: auto; flex: 0 0 auto; position: relative; overflow: visible !important; }
       .emoji-drop-live-enter { animation: emoji-drop-live-enter .62s cubic-bezier(.16,1,.3,1) both; }
       @keyframes emoji-drop-live-enter { from { transform: translate3d(-110px,0,0) scale(.96); opacity: 0; } 70% { opacity: 1; } to { transform: translate3d(0,0,0) scale(1); opacity: 1; } }
       .live-drops *, #liveDrops *, #liveContainer *, #liveDropsContainer *, .live-drops-container * { overflow: visible; }
@@ -148,11 +145,17 @@
     if (typeof originalOpenCase === "function") {
       window.openCase = async function polishedOpenCase(...args) {
         const state = appState();
-        if (state?.isSpinning) return;
-        if (!state || !state.selectedCase || !state.currentUser) return originalOpenCase.apply(this, args);
-        state.isSpinning = true;
-        try { await playCaseReveal(); return await originalOpenCase.apply(this, args); }
-        finally { state.isSpinning = false; syncBalance(); }
+        if (!state || state.__emojiDropsRevealRunning) return;
+        if (state.isSpinning) return;
+        if (!state.selectedCase || !state.currentUser) return originalOpenCase.apply(this, args);
+        state.__emojiDropsRevealRunning = true;
+        try {
+          await playCaseReveal();
+          return await originalOpenCase.apply(this, args);
+        } finally {
+          state.__emojiDropsRevealRunning = false;
+          syncBalance();
+        }
       };
     }
 
