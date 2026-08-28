@@ -77,15 +77,6 @@
     });
   }
 
-  function secureRoll() {
-    if (window.crypto?.getRandomValues) {
-      const b = new Uint32Array(1);
-      window.crypto.getRandomValues(b);
-      return b[0] / 4294967296;
-    }
-    return Math.random();
-  }
-
   function syncBalance() {
     if (typeof window.updateBalanceUI === "function") window.updateBalanceUI();
     const state = appState();
@@ -93,9 +84,7 @@
     if (balance && state) balance.textContent = String(state.balance ?? 0);
   }
 
-  // Decorate the existing game handlers instead of replacing them. This keeps
-  // the old-design gameplay implementation as the source of truth and avoids
-  // a second case/upgrade engine silently fighting with app.js.
+  // Decorate existing handlers instead of replacing gameplay implementations.
   function decorateHandlers() {
     if (window.__emojiDropsPolishHandlers) return;
     const openCase = window.openCase;
@@ -134,12 +123,12 @@
       root.dataset.qualityObserver = "1";
       new MutationObserver(mutations => {
         mutations.forEach(mutation => mutation.addedNodes.forEach(node => {
-          if (node instanceof HTMLElement) {
-            animateLiveDrop(node);
-            node.querySelectorAll?.("*").forEach(child => animateLiveDrop(child));
-          }
+          // Animate the drop card itself, never every child element inside it.
+          // This prevents emoji/text from independently sliding and keeps one
+          // coherent left-to-right Live Drop motion.
+          if (node instanceof HTMLElement) animateLiveDrop(node);
         }));
-      }).observe(root, { childList: true, subtree: true });
+      }).observe(root, { childList: true });
       [...root.children].forEach(animateLiveDrop);
     });
   }
