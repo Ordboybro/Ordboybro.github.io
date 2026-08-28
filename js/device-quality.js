@@ -1,6 +1,6 @@
 /* EmojiDrops Device Quality Manager.
  * Adapts visual effects to the device/browser without changing game logic.
- * Uses a short, passive frame probe to catch devices that look capable on paper
+ * Uses a short passive frame probe to catch devices that look capable on paper
  * but cannot sustain the visual workload. No identifying device data is stored.
  */
 (() => {
@@ -35,6 +35,8 @@
 
   const baseQuality = score >= 6 ? 'high' : score >= 3 ? 'medium' : 'low';
   let quality = baseQuality;
+  let measuredFps = null;
+  let probeStarted = false;
 
   function setQuality(nextQuality) {
     if (quality === nextQuality && root.classList.contains(`ed-quality-${nextQuality}`)) return;
@@ -51,20 +53,21 @@
   setQuality(quality);
   if (reduceMotion) root.classList.add('ed-reduced-motion');
 
-  // Keep only non-identifying capability information available to the app.
   window.emojiDropsQuality = Object.freeze({
     get quality() { return quality; },
+    get fps() { return measuredFps; },
     reducedMotion: reduceMotion,
     memory,
     cores,
-    dpr
+    dpr,
+    saveData,
+    effectiveType
   });
 
-  // A short real-frame probe catches thermal throttling, low-power devices and
-  // browser conditions that static hardware hints cannot describe reliably.
-  // It runs once, only while the page is visible, and stops immediately when
-  // enough samples are collected.
-  if (!reduceMotion && document.visibilityState === 'visible') {
+  function startFrameProbe() {
+    if (probeStarted || reduceMotion || document.visibilityState !== 'visible') return;
+    probeStarted = true;
+
     let frames = 0;
     let start = 0;
     let rafId = 0;
@@ -80,25 +83,35 @@
       }
 
       const elapsed = Math.max(1, timestamp - start);
-      const fps = (frames * 1000) / elapsed;
+      measuredFps = Math.round((frames * 1000) / elapsed);
 
-      if (fps < 42) setQuality('low');
-      else if (fps < 54 && quality === 'high') setQuality('medium');
+      if (measuredFps < 42) setQuality('low');
+      else if (measuredFps < 54 && quality === 'high') setQuality('medium');
 
       window.dispatchEvent(new CustomEvent('emojiDropsQualityReady', {
-        detail: Object.freeze({ quality, fps: Math.round(fps) })
+        detail: Object.freeze({ quality, fps: measuredFps })
       }));
+
+      if (rafId) cancelAnimationFrame(rafId);
     };
 
     rafId = requestAnimationFrame(sample);
+  }
 
-    const stopProbe = () => {
-      if (rafId) cancelAnimationFrame(rafId);
-      document.removeEventListener('visibilitychange', stopProbe);
-    };
-
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState !== 'visible') stopProbe();
-    }, { once: true, passive: true });
+  if (!reduceMotion) {
+    if (document.visibilityState === 'visible') {
+      startFrameProbe();
+    } else {
+      const onVisibility = () => {
+        if (document.visibilityState !== 'visible') return;
+        document.removeEventListener('visibilitychange', onVisibility);
+        startFrameProbe();
+      };
+      document.addEventListener('visibilitychange', onVisibility, { passive: true });
+    }
+  } else {
+    window.dispatchEvent(new CustomEvent('emojiDropsQualityReady', {
+      detail: Object.freeze({ quality: 'low', fps: null })
+    }));
   }
 })();
