@@ -1,36 +1,18 @@
 (() => {
   'use strict';
 
-  // Single source of truth for the virtual economy.
   const STARTING_BALANCE = 100;
-  const RARITY_ODDS = Object.freeze({
-    common: 55,
-    rare: 28,
-    epic: 11,
-    mythical: 5,
-    legendary: 1
-  });
-  const CASE_PRICES = Object.freeze({
-    transport: 15,
-    animals: 25,
-    food: 40,
-    nature: 60,
-    moves: 85,
-    smile: 120,
-    sport: 250,
-    games: 500
-  });
+  const RARITY_ODDS = Object.freeze({ common: 55, rare: 28, epic: 11, mythical: 5, legendary: 1 });
+  const CASE_PRICES = Object.freeze({ transport: 15, animals: 25, food: 40, nature: 60, moves: 85, smile: 120, sport: 250, games: 500 });
 
   const oddsTotal = Object.values(RARITY_ODDS).reduce((sum, value) => sum + value, 0);
   if (oddsTotal !== 100) console.warn('[EmojiDrops] Rarity odds must total 100%, got', oddsTotal);
-
   if (window.casePrices) Object.assign(window.casePrices, CASE_PRICES);
 
   const parsePrice = item => {
     const value = Number.parseFloat(String(item?.price ?? 0).replace(',', '.'));
     return Number.isFinite(value) && value > 0 ? value : 1;
   };
-
   const normalizeRarity = rarity => RARITY_ODDS[rarity] != null ? rarity : 'common';
   const rarityWeight = rarity => Number(RARITY_ODDS[normalizeRarity(rarity)] || 0);
 
@@ -55,9 +37,7 @@
     return { pool, groups };
   }
 
-  function priceWeight(item) {
-    return 1 / Math.sqrt(parsePrice(item));
-  }
+  const priceWeight = item => 1 / Math.sqrt(parsePrice(item));
 
   function chooseWeighted(source) {
     if (!source?.length) return null;
@@ -89,8 +69,7 @@
     const candidates = built.groups.get(rarity) || [];
     if (!candidates.includes(target)) return 0;
     const total = candidates.reduce((sum, item) => sum + priceWeight(item), 0);
-    if (!total) return 0;
-    return rarityWeight(rarity) * (priceWeight(target) / total);
+    return total ? rarityWeight(rarity) * (priceWeight(target) / total) : 0;
   }
 
   function upgradeChance(sourceValue, targetValue) {
@@ -98,7 +77,6 @@
     const target = Number(targetValue) || 0;
     if (source <= 0 || target <= 0) return 0;
     if (target <= source) return 95;
-    // 4% house edge relative to the fair source/target ratio.
     return Math.max(1, Math.min(95, (source / target) * 96));
   }
 
@@ -106,10 +84,8 @@
     const built = buildItemWeights(items);
     if (!built) return null;
     const rarity = chooseRarity();
-    const candidates = built.groups.get(rarity);
-    return chooseWeighted(candidates?.length ? candidates : built.pool);
+    return chooseWeighted(built.groups.get(rarity)?.length ? built.groups.get(rarity) : built.pool);
   };
-
   window.getItemChance = itemChance;
   window.getRarityChance = rarityWeight;
   window.getUpgradeChance = upgradeChance;
@@ -118,38 +94,22 @@
     const built = buildItemWeights(items);
     const price = Number(CASE_PRICES[caseKey] ?? window.casePrices?.[caseKey] ?? 0);
     if (!built) return { price, expectedValue: 0, rtp: 0, items: [] };
-
     const rows = built.pool.map(item => ({ item, chance: itemChance(built.pool, item) }));
     const expectedValue = rows.reduce((sum, row) => sum + parsePrice(row.item) * (row.chance / 100), 0);
-    return {
-      price,
-      expectedValue,
-      rtp: price > 0 ? (expectedValue / price) * 100 : 0,
-      items: rows
-    };
+    return { price, expectedValue, rtp: price > 0 ? (expectedValue / price) * 100 : 0, items: rows };
   };
 
-  window.EMOJI_DROPS_ECONOMY = Object.freeze({
-    STARTING_BALANCE,
-    RARITY_ODDS,
-    CASE_PRICES,
-    getItemChance: itemChance,
-    getRarityChance: rarityWeight,
-    getUpgradeChance: upgradeChance,
-    getCaseEconomy: window.getCaseEconomy
-  });
+  window.EMOJI_DROPS_ECONOMY = Object.freeze({ STARTING_BALANCE, RARITY_ODDS, CASE_PRICES, getItemChance: itemChance, getRarityChance: rarityWeight, getUpgradeChance: upgradeChance, getCaseEconomy: window.getCaseEconomy });
 
   const applyStartingBalance = () => {
-    const state = window.state;
-    if (!state || state.currentUser) return;
-    if (state.balance === 1000 || state.balance == null) state.balance = STARTING_BALANCE;
+    let appState = window.state;
+    try { if (typeof state !== 'undefined') appState = state; } catch (_) {}
+    if (!appState || appState.currentUser) return;
+    if (appState.balance === 1000 || appState.balance == null) appState.balance = STARTING_BALANCE;
     const balance = document.getElementById('balance');
-    if (balance) balance.textContent = String(state.balance);
+    if (balance) balance.textContent = String(appState.balance);
   };
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', applyStartingBalance, { once: true });
-  } else {
-    applyStartingBalance();
-  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', applyStartingBalance, { once: true });
+  else applyStartingBalance();
 })();
