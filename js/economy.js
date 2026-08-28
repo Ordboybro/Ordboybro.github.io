@@ -37,8 +37,9 @@
     return { pool, groups };
   }
 
-  // Expensive items remain rarer inside the same rarity tier without making
-  // cheap items deterministic. This keeps the case economy readable and stable.
+  // Price weighting makes expensive items rarer inside one rarity tier while
+  // keeping every valid item obtainable. A square-root curve avoids extreme
+  // suppression of high-value items.
   const priceWeight = item => 1 / Math.sqrt(parsePrice(item));
 
   function chooseWeighted(source) {
@@ -79,7 +80,10 @@
     const target = Number(targetValue) || 0;
     if (source <= 0 || target <= 0) return 0;
     if (target <= source) return 95;
-    return Math.max(1, Math.min(95, (source / target) * 96));
+    // Keep the probability monotonic and capped. This is intentionally based
+    // only on the value ratio, so displayed and actual chances can share one
+    // formula across every Upgrade UI.
+    return Math.max(1, Math.min(95, (source / target) * 100));
   }
 
   function getRandomByChance(items) {
@@ -89,9 +93,6 @@
     return chooseWeighted(built.groups.get(rarity)?.length ? built.groups.get(rarity) : built.pool);
   }
 
-  // app.js is legacy code loaded as a classic browser script. Top-level
-  // function declarations are global bindings, so replacing the corresponding
-  // global property here also makes legacy callers use the canonical economy.
   window.getRandomByChance = getRandomByChance;
   window.getItemChance = itemChance;
   window.getRarityChance = rarityWeight;
@@ -107,6 +108,16 @@
     return { price, expectedValue, rtp: price > 0 ? (expectedValue / price) * 100 : 0, items: rows };
   };
 
+  // Useful for the UI and QA: one canonical snapshot of every item chance.
+  window.getCaseItemChances = function getCaseItemChances(items, caseKey) {
+    const economy = window.getCaseEconomy(items, caseKey);
+    return economy.items.map(({ item, chance }) => ({
+      item,
+      chance,
+      rarityChance: rarityWeight(item?.rarity)
+    }));
+  };
+
   window.EMOJI_DROPS_ECONOMY = Object.freeze({
     STARTING_BALANCE,
     RARITY_ODDS,
@@ -114,7 +125,8 @@
     getItemChance: itemChance,
     getRarityChance: rarityWeight,
     getUpgradeChance: upgradeChance,
-    getCaseEconomy: window.getCaseEconomy
+    getCaseEconomy: window.getCaseEconomy,
+    getCaseItemChances: window.getCaseItemChances
   });
 
   const applyStartingBalance = () => {
