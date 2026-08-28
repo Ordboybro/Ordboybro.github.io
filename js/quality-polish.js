@@ -9,6 +9,23 @@
     return null;
   };
 
+  const animateIn = (element, options = {}) => {
+    if (!(element instanceof HTMLElement) || prefersReduced()) return null;
+    const animation = element.animate(
+      [
+        { opacity: 0, transform: options.from || "translate3d(0, 10px, 0) scale(.985)" },
+        { opacity: 1, transform: "translate3d(0, 0, 0) scale(1)" }
+      ],
+      {
+        duration: options.duration ?? 260,
+        easing: options.easing || "cubic-bezier(.16,1,.3,1)",
+        fill: "both"
+      }
+    );
+    animation.addEventListener?.("finish", () => animation.cancel(), { once: true });
+    return animation;
+  };
+
   function injectStyles() {
     if (document.getElementById(STYLE_ID)) return;
     const style = document.createElement("style");
@@ -44,12 +61,17 @@
       }
       @keyframes emoji-drop-live-enter {
         from { transform: translate3d(var(--live-drop-in-x), 0, 0); opacity: 0; }
+        70% { opacity: 1; }
         to { transform: translate3d(0, 0, 0); opacity: 1; }
       }
 
       .multi-roulette, #multiRouletteContainer { overflow-x: hidden !important; }
       .roulette-marker, .new-pointer { pointer-events: none !important; }
       .open-page, #openPage { overscroll-behavior: contain; }
+
+      #winPopup, #upgradeResult {
+        will-change: auto;
+      }
 
       @media (prefers-reduced-motion: reduce) {
         *, *::before, *::after {
@@ -84,27 +106,78 @@
     if (balance && state) balance.textContent = String(state.balance ?? 0);
   }
 
-  // Decorate existing handlers instead of replacing gameplay implementations.
   function decorateHandlers() {
     if (window.__emojiDropsPolishHandlers) return;
-    const openCase = window.openCase;
-    const startUpgrade = window.startUpgrade;
-    if (typeof openCase === "function") {
+
+    const decorate = (name, after, duration = 260) => {
+      const original = window[name];
+      if (typeof original !== "function") return;
+      window[name] = function polishedHandler(...args) {
+        const result = original.apply(this, args);
+        Promise.resolve(result).then(() => {
+          after();
+          if (duration) {
+            const selectors = {
+              openCasePage: "#openPage",
+              openProfile: "#profilePage",
+              openUpgradeMenu: "#upgradePage",
+              showWin: "#winPopup"
+            };
+            const element = document.querySelector(selectors[name] || "");
+            if (element && getComputedStyle(element).display !== "none") animateIn(element, { duration });
+          }
+        });
+        return result;
+      };
+    };
+
+    decorate("openCasePage", () => {}, 280);
+    decorate("openProfile", () => {}, 240);
+    decorate("openUpgradeMenu", () => {}, 220);
+
+    const originalShowWin = window.showWin;
+    if (typeof originalShowWin === "function") {
+      window.showWin = function polishedShowWin(...args) {
+        const result = originalShowWin.apply(this, args);
+        const popup = document.getElementById("winPopup");
+        if (popup) {
+          animateIn(popup, { duration: 320, from: "translate3d(0, 14px, 0) scale(.94)" });
+          const emoji = document.getElementById("winEmoji");
+          if (emoji && !prefersReduced()) {
+            emoji.animate(
+              [
+                { transform: "scale(.72) rotate(-5deg)", opacity: .2 },
+                { transform: "scale(1.12) rotate(2deg)", opacity: 1, offset: .68 },
+                { transform: "scale(1) rotate(0deg)", opacity: 1 }
+              ],
+              { duration: 520, easing: "cubic-bezier(.16,1,.3,1)" }
+            );
+          }
+        }
+        return result;
+      };
+    }
+
+    const originalOpenCase = window.openCase;
+    if (typeof originalOpenCase === "function") {
       window.openCase = async function polishedOpenCase(...args) {
         const state = appState();
         if (state?.isSpinning) return;
-        const result = await openCase.apply(this, args);
+        const result = await originalOpenCase.apply(this, args);
         syncBalance();
         return result;
       };
     }
-    if (typeof startUpgrade === "function") {
+
+    const originalStartUpgrade = window.startUpgrade;
+    if (typeof originalStartUpgrade === "function") {
       window.startUpgrade = function polishedUpgrade(...args) {
-        const result = startUpgrade.apply(this, args);
+        const result = originalStartUpgrade.apply(this, args);
         syncBalance();
         return result;
       };
     }
+
     window.__emojiDropsPolishHandlers = true;
   }
 
@@ -123,9 +196,6 @@
       root.dataset.qualityObserver = "1";
       new MutationObserver(mutations => {
         mutations.forEach(mutation => mutation.addedNodes.forEach(node => {
-          // Animate the drop card itself, never every child element inside it.
-          // This prevents emoji/text from independently sliding and keeps one
-          // coherent left-to-right Live Drop motion.
           if (node instanceof HTMLElement) animateLiveDrop(node);
         }));
       }).observe(root, { childList: true });
