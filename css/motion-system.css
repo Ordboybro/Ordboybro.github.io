@@ -1,152 +1,53 @@
 /* EmojiDrops Motion System — dedicated, compositor-friendly animation layer. */
-:root{
-  --ed-motion-fast:160ms;
-  --ed-motion-ui:220ms;
-  --ed-motion-smooth:420ms;
-  --ed-motion-spring:cubic-bezier(.22,1,.36,1);
-  --ed-motion-enter:cubic-bezier(.16,1,.3,1);
-}
+:root{--ed-motion-fast:160ms;--ed-motion-ui:220ms;--ed-motion-smooth:420ms;--ed-motion-spring:cubic-bezier(.22,1,.36,1);--ed-motion-enter:cubic-bezier(.16,1,.3,1);--ed-content-max:1440px;--ed-space-3:14px}
+
+/* One shared alignment rhythm for the whole site. */
+main,.main-content,.cases-section,.cases-container,.profile-content,.open-content,.stats-content{width:min(100% - 48px,var(--ed-content-max));margin-inline:auto}
+.top-right,.profile-actions,.profile-buttons,.case-controls,.case-search,.open-actions,.open-amounts,.stats-actions,.inventory-actions{display:flex;align-items:center;gap:var(--ed-space-3)}
+.top-right>*{margin:0!important}
+.top-btn,.main-btn,.fast-btn,.amount-btn,.multi-open-btn,.profile-mini-btn,.back-btn,.settings-action-btn,.settings-close,.auth-btn{min-height:42px;display:inline-flex;align-items:center;justify-content:center;line-height:1;white-space:nowrap;box-sizing:border-box}
+
+/* Real grid alignment: cards no longer drift because of individual margins. */
+.cases-grid,.cases-list,.case-grid,.inventory-grid,.stats-grid{display:grid!important;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px!important;align-items:stretch;justify-items:stretch}
+.case,.case-card,.inventory-item,.case-item-card,.stat-card{width:100%!important;margin:0!important;min-width:0}
+.case{display:flex;flex-direction:column;align-items:stretch}
+.case .case-name,.case .case-title{min-height:42px;display:flex;align-items:center;justify-content:center;text-align:center}
+.case .case-price,.case .price{margin-top:6px!important;text-align:center}
+.case button,.case .case-button{margin-top:auto}
+
+/* Search is one complete control instead of an artificially clipped field. */
+.case-search,.search-wrap{width:min(100%,520px);margin-inline:auto}
+.case-search input,.search-input,#searchInput{width:100%!important;min-width:0!important;box-sizing:border-box}
+
+/* Corner controls share the same inset. */
+.back-btn-profile,.profile-back,.back-btn{top:18px!important;right:18px!important;left:auto!important;margin:0!important}
+.settings-button,.profile-settings{top:18px!important;right:18px!important;left:auto!important;margin:0!important}
+.profile-header,.profile-banner{width:100%;margin-inline:auto}.profile-top-line{width:100%!important}.profile-content{padding-inline:0!important}.profile-actions,.profile-buttons{justify-content:center;flex-wrap:wrap}.profile-stats,.stats-grid{align-items:stretch}
+
+.inventory-item{display:flex;flex-direction:column;align-items:stretch}.inventory-emoji{align-self:center}.inventory-rarity{text-align:center;min-height:20px}.inventory-bottom{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:10px}.inventory-actions{justify-content:flex-end;gap:8px}.inventory-btn{width:42px;height:42px;display:inline-flex;align-items:center;justify-content:center}
+.open-page .open-content,.open-page .case-open-panel{display:flex;flex-direction:column;align-items:stretch}.openAmounts,.open-amounts,#openAmounts{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:8px}.open-actions,.open-buttons{justify-content:center;flex-wrap:wrap}.multi-open-btn{min-width:46px}
+.multi-roulette{width:100%!important;overflow:hidden!important;position:relative}.multi-track{display:flex;align-items:center;gap:0;min-width:max-content;will-change:transform;backface-visibility:hidden;transform:translateZ(0)}.new-pointer,.roulette-marker{left:50%!important;right:auto!important;transform:translateX(-50%)!important}
+.settings-box,.auth-box,.win-box,.upgrade-box{margin:auto!important;max-width:min(92vw,900px)}
 
 @media (prefers-reduced-motion:no-preference){
-  .case,.top-btn,.profile-box,.main-btn,.fast-btn,.amount-btn,.multi-open-btn,
-  .profile-mini-btn,.back-btn,.settings-action-btn,.settings-close,.auth-btn,
-  .live-drop,.case-item-card{
-    transition:
-      transform var(--ed-motion-ui) var(--ed-motion-spring),
-      opacity var(--ed-motion-ui) ease,
-      border-color var(--ed-motion-ui) ease,
-      background-color var(--ed-motion-ui) ease,
-      box-shadow var(--ed-motion-ui) ease!important;
-  }
-
-  .case:hover,.live-drop:hover,.profile-mini-btn:hover{
-    transform:translate3d(0,-4px,0)!important;
-  }
-
-  .main-btn:active,.fast-btn:active,.amount-btn:active,.multi-open-btn:active,
-  .profile-mini-btn:active,.back-btn:active,.settings-action-btn:active,.auth-btn:active{
-    transform:translate3d(0,1px,0) scale(.985)!important;
-  }
-
-  .win-popup[style*="display: flex"],
-  .win-popup[style*="display:flex"],
-  .auth-popup[style*="display: flex"],
-  .auth-popup[style*="display:flex"]{
-    animation:ed-modal-in var(--ed-motion-smooth) var(--ed-motion-enter) both;
-  }
-
-  .win-box,.auth-box{
-    animation:ed-panel-in var(--ed-motion-smooth) var(--ed-motion-enter) both;
-  }
-
-  .ed-winning-item,.winner-item{
-    animation:ed-winner-pulse 900ms var(--ed-motion-spring) both;
-  }
-
-  .live-drop.ed-live-enter{
-    animation:ed-live-enter 520ms var(--ed-motion-enter) both;
-  }
-
-  .live-drop.ed-live-move{
-    animation:ed-live-move 420ms var(--ed-motion-spring) both;
-  }
-
-  .case-route .open-page{
-    animation:ed-page-in 300ms var(--ed-motion-enter) both;
-  }
+.case,.top-btn,.profile-box,.main-btn,.fast-btn,.amount-btn,.multi-open-btn,.profile-mini-btn,.back-btn,.settings-action-btn,.settings-close,.auth-btn,.live-drop,.case-item-card,.inventory-item,.stat-card,.search-input,#searchInput{transition:transform var(--ed-motion-ui) var(--ed-motion-spring),opacity var(--ed-motion-ui) ease,border-color var(--ed-motion-ui) ease,background-color var(--ed-motion-ui) ease,box-shadow var(--ed-motion-ui) ease!important}
+.case:hover,.live-drop:hover,.profile-mini-btn:hover,.inventory-item:hover,.stat-card:hover{transform:translate3d(0,-4px,0)!important}
+.main-btn:active,.fast-btn:active,.amount-btn:active,.multi-open-btn:active,.profile-mini-btn:active,.back-btn:active,.settings-action-btn:active,.auth-btn:active,.inventory-btn:active{transform:translate3d(0,1px,0) scale(.985)!important}
+.case,.inventory-item,.stat-card{animation:ed-card-enter 360ms var(--ed-motion-enter) both}
+.win-popup[style*="display: flex"],.win-popup[style*="display:flex"],.auth-popup[style*="display: flex"],.auth-popup[style*="display:flex"]{animation:ed-modal-in var(--ed-motion-smooth) var(--ed-motion-enter) both}.win-box,.auth-box{animation:ed-panel-in var(--ed-motion-smooth) var(--ed-motion-enter) both}.ed-winning-item,.winner-item{animation:ed-winner-pulse 900ms var(--ed-motion-spring) both}.live-drop.ed-live-enter{animation:ed-live-enter 520ms var(--ed-motion-enter) both}.live-drop.ed-live-move{animation:ed-live-move 420ms var(--ed-motion-spring) both}.case-route .open-page{animation:ed-page-in 300ms var(--ed-motion-enter) both}
 }
+@keyframes ed-card-enter{from{opacity:0;transform:translate3d(0,8px,0)}to{opacity:1;transform:none}}
+@keyframes ed-modal-in{from{opacity:0}to{opacity:1}}
+@keyframes ed-panel-in{from{opacity:0;transform:translate3d(0,18px,0) scale(.97)}to{opacity:1;transform:none}}
+@keyframes ed-page-in{from{opacity:0;transform:translate3d(0,10px,0)}to{opacity:1;transform:none}}
+@keyframes ed-winner-pulse{0%{transform:scale(.92);filter:brightness(1)}55%{transform:scale(1.08);filter:brightness(1.25)}100%{transform:scale(1);filter:brightness(1.1)}}
+@keyframes ed-live-enter{from{opacity:0;transform:translate3d(-48px,0,0) scale(.96)}to{opacity:1;transform:none}}
+@keyframes ed-live-move{from{transform:translate3d(-18px,0,0)}to{transform:none}}
 
-@keyframes ed-modal-in{
-  from{opacity:0}
-  to{opacity:1}
-}
-
-@keyframes ed-panel-in{
-  from{opacity:0;transform:translate3d(0,18px,0) scale(.97)}
-  to{opacity:1;transform:none}
-}
-
-@keyframes ed-page-in{
-  from{opacity:0;transform:translate3d(0,10px,0)}
-  to{opacity:1;transform:none}
-}
-
-@keyframes ed-winner-pulse{
-  0%{transform:scale(.92);filter:brightness(1)}
-  55%{transform:scale(1.08);filter:brightness(1.25)}
-  100%{transform:scale(1);filter:brightness(1.1)}
-}
-
-@keyframes ed-live-enter{
-  from{opacity:0;transform:translate3d(-48px,0,0) scale(.96)}
-  to{opacity:1;transform:none}
-}
-
-@keyframes ed-live-move{
-  from{transform:translate3d(-18px,0,0)}
-  to{transform:none}
-}
-
-.ed-spin-lock{
-  cursor:wait!important;
-  pointer-events:none!important;
-  filter:saturate(.75)!important;
-}
-
-.live-drops-bar{isolation:isolate}
-
-.live-container{
-  contain:layout paint;
-  overflow:visible!important;
-}
-
-/* Promote only active animated drops; don't reserve a GPU layer for every card. */
-.live-drop{
-  contain:layout paint;
-  will-change:auto;
-}
-
-.live-drop.ed-live-enter,
-.live-drop.ed-live-move,
-.ed-spin-lock{
-  will-change:transform,opacity;
-}
-
-.multi-track{
-  will-change:transform;
-  backface-visibility:hidden;
-  transform:translateZ(0);
-}
-
-.ed-quality-low .live-drop.legendary{box-shadow:none!important}
-.ed-quality-low .case:hover,.ed-quality-low .live-drop:hover{box-shadow:none!important}
-.ed-quality-low .win-box{box-shadow:0 20px 50px #0009!important}
-.ed-quality-low .top-btn,.ed-quality-low header{backdrop-filter:none!important}
-.ed-quality-low .live-drops-bar{box-shadow:0 10px 24px #0005!important}
-.ed-quality-medium header{backdrop-filter:blur(8px)!important}
-.ed-quality-medium .win-box{box-shadow:0 24px 70px #000a!important}
-.ed-quality-high .win-box{box-shadow:0 30px 100px #000b!important}
-
-/* Don't keep motion layers alive while the document is hidden. */
-@media (prefers-reduced-motion:no-preference){
-  html.ed-page-hidden .live-drop,
-  html.ed-page-hidden .multi-track{
-    animation-play-state:paused!important;
-    will-change:auto!important;
-  }
-}
-
-@media(max-width:650px){
-  .live-drops-bar{overflow:visible!important}
-  .live-container{overflow:hidden!important}
-  .live-drop.legendary{box-shadow:0 0 18px rgba(255,207,56,.16)!important}
-}
-
-@media(prefers-reduced-motion:reduce){
-  *,*::before,*::after{
-    animation-duration:.001ms!important;
-    animation-iteration-count:1!important;
-    scroll-behavior:auto!important;
-    transition-duration:.001ms!important;
-  }
-}
+.ed-spin-lock{cursor:wait!important;pointer-events:none!important;filter:saturate(.75)!important}.live-drops-bar{isolation:isolate}.live-container{contain:layout paint;overflow:visible!important}.live-drop{contain:layout paint;will-change:auto}.live-drop.ed-live-enter,.live-drop.ed-live-move,.ed-spin-lock{will-change:transform,opacity}.multi-track{will-change:transform;backface-visibility:hidden;transform:translateZ(0)}
+.ed-quality-low .live-drop.legendary{box-shadow:none!important}.ed-quality-low .case:hover,.ed-quality-low .live-drop:hover{box-shadow:none!important}.ed-quality-low .win-box{box-shadow:0 20px 50px #0009!important}.ed-quality-low .top-btn,.ed-quality-low header{backdrop-filter:none!important}.ed-quality-low .live-drops-bar{box-shadow:0 10px 24px #0005!important}.ed-quality-medium header{backdrop-filter:blur(8px)!important}.ed-quality-medium .win-box{box-shadow:0 24px 70px #000a!important}.ed-quality-high .win-box{box-shadow:0 30px 100px #000b!important}
+@media (prefers-reduced-motion:no-preference){html.ed-page-hidden .live-drop,html.ed-page-hidden .multi-track{animation-play-state:paused!important;will-change:auto!important}}
+@media(max-width:900px){main,.main-content,.cases-section,.cases-container,.profile-content,.open-content,.stats-content{width:min(100% - 32px,var(--ed-content-max))}.cases-grid,.cases-list,.case-grid,.inventory-grid,.stats-grid{grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px!important}.top-right{gap:10px}}
+@media(max-width:650px){main,.main-content,.cases-section,.cases-container,.profile-content,.open-content,.stats-content{width:calc(100% - 20px)}.cases-grid,.cases-list,.case-grid,.inventory-grid,.stats-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px!important}.top-right{gap:6px}.top-btn{padding-inline:12px}.live-drops-bar{overflow:visible!important}.live-container{overflow:hidden!important}.live-drop.legendary{box-shadow:0 0 18px rgba(255,207,56,.16)!important}.back-btn-profile,.profile-back,.back-btn,.settings-button,.profile-settings{top:12px!important;right:12px!important}}
+@media(max-width:390px){.cases-grid,.cases-list,.case-grid,.inventory-grid,.stats-grid{grid-template-columns:1fr!important}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.001ms!important}}
