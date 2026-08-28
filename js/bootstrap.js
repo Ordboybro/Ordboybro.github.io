@@ -13,15 +13,24 @@
         };
     }
 
+    const loadScriptOnce = (src, attribute) => {
+        if (document.querySelector(`script[data-${attribute}="1"]`)) return;
+        const script = document.createElement("script");
+        script.src = src;
+        script.defer = true;
+        script.dataset[attribute] = "1";
+        document.head.appendChild(script);
+    };
+
     // Keep the old visual baseline intact while consolidating non-destructive
     // interaction/motion fixes into one runtime layer.
     const loadQualityPolish = () => {
-        if (document.querySelector('script[data-quality-polish="1"]')) return;
-        const script = document.createElement("script");
-        script.src = "js/quality-polish.js";
-        script.defer = true;
-        script.dataset.qualityPolish = "1";
-        document.head.appendChild(script);
+        loadScriptOnce("js/quality-polish.js", "quality-polish");
+
+        // Economy is loaded after the application so its public API and
+        // canonical case prices can normalize legacy values without creating
+        // another competing game implementation.
+        loadScriptOnce("js/economy.js", "economy-runtime");
     };
 
     if (document.readyState === "loading") {
