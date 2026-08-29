@@ -1,19 +1,12 @@
 (() => {
   'use strict';
 
-  // app.js historically defined a second rarity table. economy.js is now the
-  // canonical source; keep the legacy function name for compatibility.
-  const canonicalRandom = window.getRandomByChance;
-  if (typeof canonicalRandom === 'function' && window.EMOJI_DROPS_ECONOMY?.RARITY_ODDS) {
-    window.getRandomByChance = function getRandomByChance(items) {
-      const pool = Array.isArray(items) ? items.filter(Boolean) : [];
-      return pool.length ? canonicalRandom(pool) : null;
-    };
-  }
+  // economy.js is the single source of truth for rarity/item selection.
+  // app.js keeps the legacy function name for compatibility, but economy.js
+  // overwrites window.getRandomByChance when it boots. Do not wrap that
+  // function here: wrapping the legacy implementation would reintroduce the
+  // old 3/5/17/30/45 rarity table.
 
-  // Keep visible balances synchronized when the existing application updates
-  // them. Avoid observing the whole DOM because roulette/inventory rendering
-  // can create many mutations per frame.
   const syncBalance = () => {
     const value = Number(window.state?.balance);
     if (!Number.isFinite(value)) return;
@@ -24,15 +17,19 @@
   };
 
   const originalUpdateBalance = window.updateBalanceUI;
-  window.updateBalanceUI = function updateBalanceUIConsistent(...args) {
-    if (typeof originalUpdateBalance === 'function') originalUpdateBalance.apply(this, args);
-    syncBalance();
-  };
+  if (typeof originalUpdateBalance === 'function' && !originalUpdateBalance.__emojiDropsConsistent) {
+    const wrapped = function updateBalanceUIConsistent(...args) {
+      originalUpdateBalance.apply(this, args);
+      syncBalance();
+    };
+    Object.defineProperty(wrapped, '__emojiDropsConsistent', { value: true });
+    window.updateBalanceUI = wrapped;
+  }
 
   syncBalance();
 
   window.__emojiDropsCoreConsistency = Object.freeze({
-    version: 2,
+    version: 3,
     economyConnected: typeof window.getRandomByChance === 'function' && !!window.EMOJI_DROPS_ECONOMY
   });
 })();
