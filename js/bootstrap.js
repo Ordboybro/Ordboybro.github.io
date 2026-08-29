@@ -20,27 +20,31 @@
     script.src = src;
     script.dataset[attribute] = "1";
     script.onload = () => { script.dataset.loaded = "1"; resolve(); };
-    script.onerror = reject;
+    script.onerror = () => reject(new Error(`Failed to load ${src}`));
     document.head.appendChild(script);
   });
 
   const loadStylesheet = (href, attribute) => new Promise((resolve, reject) => {
-    const existing = document.querySelector(`link[data-${attribute}="1"], link[href$="${href}"]`);
+    const existing = [...document.querySelectorAll('link[rel="stylesheet"]')]
+      .find(link => {
+        try { return new URL(link.href, location.href).pathname.endsWith(href); }
+        catch { return false; }
+      });
     if (existing) return resolve();
+
     const link = document.createElement("link");
     link.rel = "stylesheet";
     link.href = href;
     link.dataset[attribute] = "1";
     link.onload = resolve;
-    link.onerror = reject;
+    link.onerror = () => reject(new Error(`Failed to load ${href}`));
     document.head.appendChild(link);
   });
 
   async function bootRuntime() {
     try {
-      // Layout is established before behaviour and recovery layers.
+      // One layout authority. Behaviour and recovery are loaded afterwards.
       await loadStylesheet("css/layout-sanitizer.css", "clean-layout");
-      await loadStylesheet("css/component-layout.css", "component-layout");
       await loadScript("js/economy.js", "economy-runtime");
       await loadScript("js/core-consistency.js", "core-consistency");
       await loadScript("js/quality-polish.js", "quality-polish");
