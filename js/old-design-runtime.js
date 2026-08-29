@@ -125,9 +125,11 @@
     if (!state.selectedCase || !state.currentCase?.length) return alert('Выберите кейс');
 
     const count = Math.max(1, Math.min(10, Number(state.openAmount) || 1));
-    const casePrice = Number(window.casePrices?.[state.selectedCase] || 0);
+    const casePrice = typeof window.getCasePrice === 'function'
+      ? Number(window.getCasePrice(state.selectedCase))
+      : Number(window.casePrices?.[state.selectedCase] || 0);
     const totalPrice = casePrice * count;
-    if (Number(state.balance) < totalPrice) return alert('Недостаточно средств');
+    if (!casePrice || Number(state.balance) < totalPrice) return alert('Недостаточно средств');
 
     state.isSpinning = true;
     const buttons = [byId('openCaseButton'), byId('fastOpenButton')].filter(Boolean);
@@ -189,9 +191,6 @@
   }
 
   function install() {
-    // Navigation and case-page mounting are owned exclusively by router.js.
-    // This runtime owns only case state preparation, roulette animation and
-    // persistence. The inline legacy openCasePage is shadowed by this one.
     window.openCasePage = openCasePageCanonical;
     window.createRoulettes = createRoulettes;
 
