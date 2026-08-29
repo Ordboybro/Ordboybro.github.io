@@ -1,26 +1,25 @@
 (() => {
   'use strict';
 
-  // One source of truth for gameplay-facing random selection.
-  // app.js historically defined a second rarity table (3/5/17/30/45),
-  // while economy.js defines the current public economy. Keep the legacy
-  // function name for compatibility, but delegate the implementation.
+  // app.js historically defined a second rarity table. economy.js is now the
+  // canonical source; keep the legacy function name for compatibility.
   const canonicalRandom = window.getRandomByChance;
   if (typeof canonicalRandom === 'function' && window.EMOJI_DROPS_ECONOMY?.RARITY_ODDS) {
     window.getRandomByChance = function getRandomByChance(items) {
       const pool = Array.isArray(items) ? items.filter(Boolean) : [];
-      if (!pool.length) return null;
-      return canonicalRandom(pool);
+      return pool.length ? canonicalRandom(pool) : null;
     };
   }
 
-  // Keep the visible balance in sync when gameplay changes state.balance.
-  // This avoids stale header/profile values without polling.
+  // Keep visible balances synchronized when the existing application updates
+  // them. Avoid observing the whole DOM because roulette/inventory rendering
+  // can create many mutations per frame.
   const syncBalance = () => {
     const value = Number(window.state?.balance);
     if (!Number.isFinite(value)) return;
+    const text = String(value);
     document.querySelectorAll('#balance, #profileBalance').forEach((node) => {
-      if (node.textContent !== String(value)) node.textContent = String(value);
+      if (node.textContent !== text) node.textContent = text;
     });
   };
 
@@ -30,14 +29,10 @@
     syncBalance();
   };
 
-  // A small, non-invasive observer handles UI nodes created after navigation.
-  // It is deliberately scoped to balance elements rather than the whole DOM.
-  const observer = new MutationObserver(syncBalance);
-  observer.observe(document.body, { childList: true, subtree: true });
   syncBalance();
 
   window.__emojiDropsCoreConsistency = Object.freeze({
-    version: 1,
+    version: 2,
     economyConnected: typeof window.getRandomByChance === 'function' && !!window.EMOJI_DROPS_ECONOMY
   });
 })();
