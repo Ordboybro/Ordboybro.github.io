@@ -8,14 +8,25 @@
     };
   }
 
+  const normalizedPath = src => {
+    try { return new URL(src, location.href).pathname; }
+    catch { return src; }
+  };
+
   const loadScript = (src, attribute) => new Promise((resolve, reject) => {
-    const existing = document.querySelector(`script[data-${attribute}="1"]`);
+    const wanted = normalizedPath(src);
+    const existing = [...document.scripts].find(script => {
+      try { return new URL(script.src, location.href).pathname === wanted; }
+      catch { return false; }
+    });
+
     if (existing) {
-      if (existing.dataset.loaded === "1") return resolve();
+      if (existing.dataset.loaded === "1" || existing.readyState === "complete") return resolve();
       existing.addEventListener("load", resolve, { once: true });
       existing.addEventListener("error", reject, { once: true });
       return;
     }
+
     const script = document.createElement("script");
     script.src = src;
     script.dataset[attribute] = "1";
@@ -25,12 +36,16 @@
   });
 
   const loadStylesheet = (href, attribute) => new Promise((resolve, reject) => {
-    const existing = [...document.querySelectorAll('link[rel="stylesheet"]')]
-      .find(link => {
-        try { return new URL(link.href, location.href).pathname.endsWith(href); }
-        catch { return false; }
-      });
-    if (existing) return resolve();
+    const wanted = normalizedPath(href);
+    const existing = [...document.querySelectorAll('link[rel="stylesheet"]')].find(link => {
+      try { return new URL(link.href, location.href).pathname === wanted; }
+      catch { return false; }
+    });
+
+    if (existing) {
+      existing.disabled = false;
+      return resolve();
+    }
 
     const link = document.createElement("link");
     link.rel = "stylesheet";
@@ -43,10 +58,14 @@
 
   async function bootRuntime() {
     try {
-      // One layout authority. Behaviour and recovery are loaded afterwards.
+      // Canonical runtime order. Every loader first checks the real src path,
+      // so a direct <script> in index.html cannot be loaded a second time.
       await loadStylesheet("css/layout-sanitizer.css", "clean-layout");
       await loadScript("js/economy.js", "economy-runtime");
       await loadScript("js/core-consistency.js", "core-consistency");
+      await loadScript("js/old-design-runtime.js", "old-design-runtime");
+      await loadScript("js/router.js", "router-runtime");
+      await loadScript("js/device-quality.js", "device-quality-runtime");
       await loadScript("js/quality-polish.js", "quality-polish");
       await loadScript("js/layout-sanitizer.js", "layout-sanitizer");
       await loadScript("js/functional-recovery.js", "functional-recovery");
