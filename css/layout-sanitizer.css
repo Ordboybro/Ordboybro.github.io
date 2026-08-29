@@ -1,8 +1,4 @@
-/* Emoji Drops — consolidated layout / motion authority
-   Legacy polish sheets are disabled by layout-sanitizer.js.
-   The important override block is intentionally narrow: the legacy index
-   contains old geometry declarations that otherwise win the cascade. */
-
+/* Emoji Drops — consolidated layout / motion authority */
 :root { --ui-max:1480px; --ui-gutter:clamp(18px,3vw,42px); --ui-gap:clamp(14px,1.5vw,24px); --ui-radius:18px; --ui-control-h:48px; --ui-ease:cubic-bezier(.22,.61,.36,1); --ui-fast:160ms; --ui-med:240ms; --ui-slow:360ms; }
 html { scroll-behavior:smooth; }
 body { min-width:320px; }
@@ -34,10 +30,10 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible { 
 .inventory-grid,.inventory,#inventoryGrid { display:grid; grid-template-columns:repeat(auto-fill,minmax(min(100%,170px),1fr)); gap:16px; align-items:stretch; }
 .inventory-card { display:grid; grid-template-rows:minmax(110px,1fr) auto auto; justify-items:center; text-align:center; }
 .inventory-card img,.inventory-item img { max-width:100%; max-height:150px; object-fit:contain; }
-.live-container,.live-drops,#liveDrops { position:fixed; left:0; right:0; bottom:max(12px,env(safe-area-inset-bottom)); z-index:1200; width:100%; padding:10px var(--ui-gutter); overflow:visible !important; contain:layout; pointer-events:none; }
-.live-container > *,.live-drops > *,#liveDrops > * { pointer-events:auto; }
-.live-track,.live-list { width:min(100%,var(--ui-max)); margin-inline:auto; display:flex; align-items:center; justify-content:flex-start; gap:12px; overflow:visible; }
-.live-item,.live-drop-item { flex:0 0 auto; animation:edLiveIn var(--ui-med) var(--ui-ease) both; will-change:transform,opacity; }
+.live-container,.live-drops,#liveDrops,#liveContainer,#liveDropsContainer,.live-drops-container { position:fixed; left:0; right:0; bottom:max(12px,env(safe-area-inset-bottom)); z-index:1200; width:100%; padding:10px var(--ui-gutter); overflow:visible !important; contain:layout; pointer-events:none; max-height:none !important; }
+.live-container > *,.live-drops > *,#liveDrops > *,#liveContainer > * { pointer-events:auto; }
+.live-track,.live-list,#liveContainer { width:min(100%,var(--ui-max)); margin-inline:auto; display:flex; flex-direction:row !important; align-items:center; justify-content:flex-start; gap:12px; overflow:visible !important; }
+.live-item,.live-drop-item,.live-drop { flex:0 0 auto; animation:edLiveIn var(--ui-med) var(--ui-ease) both; will-change:transform,opacity; }
 @keyframes edLiveIn { from { opacity:0; transform:translate3d(-28px,10px,0) scale(.94); } to { opacity:1; transform:translate3d(0,0,0) scale(1); } }
 .multi-roulette,.roulette,.case-roulette { position:relative; overflow:hidden; width:100%; }
 .multi-track,.roulette-track { display:flex; align-items:center; width:max-content; min-height:100%; will-change:transform; }
@@ -45,7 +41,6 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible { 
 .page,.section,.modal-content { animation:edPageIn var(--ui-slow) var(--ui-ease) both; }
 @keyframes edPageIn { from { opacity:0; transform:translate3d(0,8px,0); } to { opacity:1; transform:translate3d(0,0,0); } }
 
-/* Legacy geometry cleanup: targeted important rules are only used to defeat old index geometry. */
 @layer legacyGeometryGuard {
 .cases { width:min(100% - (var(--ui-gutter)*2),var(--ui-max)) !important; margin:34px auto 0 !important; grid-template-columns:repeat(auto-fill,minmax(min(100%,220px),1fr)) !important; gap:clamp(18px,2vw,30px) !important; }
 .case { width:100% !important; min-width:0 !important; min-height:300px !important; height:auto !important; margin:0 !important; position:relative !important; display:grid !important; grid-template-rows:auto minmax(0,1fr) auto auto !important; align-items:center !important; justify-items:center !important; }
@@ -61,9 +56,10 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible { 
 .multi-roulette { width:min(100%,1200px) !important; margin-inline:auto !important; overflow:hidden !important; }
 .multi-track { width:max-content !important; }
 .profile-top-line { width:100% !important; }
+#liveContainer { flex-direction:row !important; overflow:visible !important; max-height:none !important; }
 }
 
 @media (max-width:900px) { .profile-layout,.profile-grid,.upgrade-layout { grid-template-columns:1fr; } .stats-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } header { padding-inline:18px; } }
-@media (max-width:650px) { :root { --ui-gutter:14px; --ui-gap:12px; } header { min-height:68px; } .top-right { gap:8px; } .top-btn { padding-inline:14px; } .stats-grid { grid-template-columns:1fr; } .cases,.cases-grid,.case-grid,#casesContainer { grid-template-columns:repeat(2,minmax(0,1fr)) !important; gap:12px !important; } .inventory-grid,.inventory,#inventoryGrid { grid-template-columns:repeat(2,minmax(0,1fr)); } .live-container,.live-drops,#liveDrops { padding-inline:10px; } }
+@media (max-width:650px) { :root { --ui-gutter:14px; --ui-gap:12px; } header { min-height:68px; } .top-right { gap:8px; } .top-btn { padding-inline:14px; } .stats-grid { grid-template-columns:1fr; } .cases,.cases-grid,.case-grid,#casesContainer { grid-template-columns:repeat(2,minmax(0,1fr)) !important; gap:12px !important; } .inventory-grid,.inventory,#inventoryGrid { grid-template-columns:repeat(2,minmax(0,1fr)); } .live-container,.live-drops,#liveDrops,#liveContainer { padding-inline:10px; } }
 @media (max-width:390px) { .cases,.cases-grid,.case-grid,#casesContainer { grid-template-columns:1fr !important; gap:10px !important; } .inventory-grid,.inventory,#inventoryGrid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; } .profile-actions,.stats-actions,.upgrade-actions,.inventory-actions { grid-template-columns:1fr; } }
 @media (prefers-reduced-motion:reduce) { *,*::before,*::after { animation-duration:1ms !important; animation-iteration-count:1 !important; transition-duration:1ms !important; scroll-behavior:auto !important; } }
