@@ -1,13 +1,13 @@
-/* EmojiDrops Motion System — dedicated, compositor-friendly animation layer. */
-:root{--ed-motion-fast:160ms;--ed-motion-ui:220ms;--ed-motion-smooth:420ms;--ed-motion-spring:cubic-bezier(.22,1,.36,1);--ed-motion-enter:cubic-bezier(.16,1,.3,1);--ed-content-max:1440px;--ed-space-3:14px}
+/* EmojiDrops Motion System — single shared motion/layout layer. */
+:root{--ed-motion-fast:140ms;--ed-motion-ui:200ms;--ed-motion-smooth:360ms;--ed-motion-spring:cubic-bezier(.22,1,.36,1);--ed-motion-enter:cubic-bezier(.16,1,.3,1);--ed-content-max:1440px;--ed-space-3:14px}
 
 /* One shared alignment rhythm for the whole site. */
-main,.main-content,.cases-section,.cases-container,.profile-content,.open-content,.stats-content{width:min(100% - 48px,var(--ed-content-max));margin-inline:auto}
+main,.main-content,.cases-section,.cases-container,.profile-content,.open-content,.stats-content{width:min(calc(100% - 48px),var(--ed-content-max));margin-inline:auto}
 .top-right,.profile-actions,.profile-buttons,.case-controls,.case-search,.open-actions,.open-amounts,.stats-actions,.inventory-actions{display:flex;align-items:center;gap:var(--ed-space-3)}
 .top-right>*{margin:0!important}
 .top-btn,.main-btn,.fast-btn,.amount-btn,.multi-open-btn,.profile-mini-btn,.back-btn,.settings-action-btn,.settings-close,.auth-btn{min-height:42px;display:inline-flex;align-items:center;justify-content:center;line-height:1;white-space:nowrap;box-sizing:border-box}
 
-/* Real grid alignment: cards no longer drift because of individual margins. */
+/* Real grid alignment: cards share columns and stretch to the same height. */
 .cases-grid,.cases-list,.case-grid,.inventory-grid,.stats-grid{display:grid!important;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px!important;align-items:stretch;justify-items:stretch}
 .case,.case-card,.inventory-item,.case-item-card,.stat-card{width:100%!important;margin:0!important;min-width:0}
 .case{display:flex;flex-direction:column;align-items:stretch}
@@ -15,11 +15,11 @@ main,.main-content,.cases-section,.cases-container,.profile-content,.open-conten
 .case .case-price,.case .price{margin-top:6px!important;text-align:center}
 .case button,.case .case-button{margin-top:auto}
 
-/* Search is one complete control instead of an artificially clipped field. */
+/* Search is one complete control instead of a clipped field. */
 .case-search,.search-wrap{width:min(100%,520px);margin-inline:auto}
 .case-search input,.search-input,#searchInput{width:100%!important;min-width:0!important;box-sizing:border-box}
 
-/* Corner controls share the same inset. */
+/* Corner controls share the same viewport inset. */
 .back-btn-profile,.profile-back,.back-btn{top:18px!important;right:18px!important;left:auto!important;margin:0!important}
 .settings-button,.profile-settings{top:18px!important;right:18px!important;left:auto!important;margin:0!important}
 .profile-header,.profile-banner{width:100%;margin-inline:auto}.profile-top-line{width:100%!important}.profile-content{padding-inline:0!important}.profile-actions,.profile-buttons{justify-content:center;flex-wrap:wrap}.profile-stats,.stats-grid{align-items:stretch}
@@ -29,8 +29,9 @@ main,.main-content,.cases-section,.cases-container,.profile-content,.open-conten
 .multi-roulette{width:100%!important;overflow:hidden!important;position:relative}.multi-track{display:flex;align-items:center;gap:0;min-width:max-content;will-change:transform;backface-visibility:hidden;transform:translateZ(0)}.new-pointer,.roulette-marker{left:50%!important;right:auto!important;transform:translateX(-50%)!important}
 .settings-box,.auth-box,.win-box,.upgrade-box{margin:auto!important;max-width:min(92vw,900px)}
 
+/* Motion uses compositor-friendly properties only where possible. */
 @media (prefers-reduced-motion:no-preference){
-.case,.top-btn,.profile-box,.main-btn,.fast-btn,.amount-btn,.multi-open-btn,.profile-mini-btn,.back-btn,.settings-action-btn,.settings-close,.auth-btn,.live-drop,.case-item-card,.inventory-item,.stat-card,.search-input,#searchInput{transition:transform var(--ed-motion-ui) var(--ed-motion-spring),opacity var(--ed-motion-ui) ease,border-color var(--ed-motion-ui) ease,background-color var(--ed-motion-ui) ease,box-shadow var(--ed-motion-ui) ease!important}
+.case,.top-btn,.profile-box,.main-btn,.fast-btn,.amount-btn,.multi-open-btn,.profile-mini-btn,.back-btn,.settings-action-btn,.settings-close,.auth-btn,.live-drop,.case-item-card,.inventory-item,.stat-card,.search-input,#searchInput{transition:transform var(--ed-motion-ui) var(--ed-motion-spring),opacity var(--ed-motion-ui) ease,border-color var(--ed-motion-ui) ease,background-color var(--ed-motion-ui) ease!important}
 .case:hover,.live-drop:hover,.profile-mini-btn:hover,.inventory-item:hover,.stat-card:hover{transform:translate3d(0,-4px,0)!important}
 .main-btn:active,.fast-btn:active,.amount-btn:active,.multi-open-btn:active,.profile-mini-btn:active,.back-btn:active,.settings-action-btn:active,.auth-btn:active,.inventory-btn:active{transform:translate3d(0,1px,0) scale(.985)!important}
 .case,.inventory-item,.stat-card{animation:ed-card-enter 360ms var(--ed-motion-enter) both}
@@ -44,10 +45,16 @@ main,.main-content,.cases-section,.cases-container,.profile-content,.open-conten
 @keyframes ed-live-enter{from{opacity:0;transform:translate3d(-48px,0,0) scale(.96)}to{opacity:1;transform:none}}
 @keyframes ed-live-move{from{transform:translate3d(-18px,0,0)}to{transform:none}}
 
-.ed-spin-lock{cursor:wait!important;pointer-events:none!important;filter:saturate(.75)!important}.live-drops-bar{isolation:isolate}.live-container{contain:layout paint;overflow:visible!important}.live-drop{contain:layout paint;will-change:auto}.live-drop.ed-live-enter,.live-drop.ed-live-move,.ed-spin-lock{will-change:transform,opacity}.multi-track{will-change:transform;backface-visibility:hidden;transform:translateZ(0)}
+.ed-spin-lock{cursor:wait!important;pointer-events:none!important;filter:saturate(.75)!important}
+.live-drops-bar{isolation:isolate}
+/* Do not use paint containment here: it clips legendary glows/shadows. */
+.live-container{contain:layout;overflow:visible!important}
+.live-drop{contain:layout;will-change:auto}
+.live-drop.ed-live-enter,.live-drop.ed-live-move,.ed-spin-lock{will-change:transform,opacity}
+.multi-track{will-change:transform;backface-visibility:hidden;transform:translateZ(0)}
 .ed-quality-low .live-drop.legendary{box-shadow:none!important}.ed-quality-low .case:hover,.ed-quality-low .live-drop:hover{box-shadow:none!important}.ed-quality-low .win-box{box-shadow:0 20px 50px #0009!important}.ed-quality-low .top-btn,.ed-quality-low header{backdrop-filter:none!important}.ed-quality-low .live-drops-bar{box-shadow:0 10px 24px #0005!important}.ed-quality-medium header{backdrop-filter:blur(8px)!important}.ed-quality-medium .win-box{box-shadow:0 24px 70px #000a!important}.ed-quality-high .win-box{box-shadow:0 30px 100px #000b!important}
 @media (prefers-reduced-motion:no-preference){html.ed-page-hidden .live-drop,html.ed-page-hidden .multi-track{animation-play-state:paused!important;will-change:auto!important}}
-@media(max-width:900px){main,.main-content,.cases-section,.cases-container,.profile-content,.open-content,.stats-content{width:min(100% - 32px,var(--ed-content-max))}.cases-grid,.cases-list,.case-grid,.inventory-grid,.stats-grid{grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px!important}.top-right{gap:10px}}
-@media(max-width:650px){main,.main-content,.cases-section,.cases-container,.profile-content,.open-content,.stats-content{width:calc(100% - 20px)}.cases-grid,.cases-list,.case-grid,.inventory-grid,.stats-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px!important}.top-right{gap:6px}.top-btn{padding-inline:12px}.live-drops-bar{overflow:visible!important}.live-container{overflow:hidden!important}.live-drop.legendary{box-shadow:0 0 18px rgba(255,207,56,.16)!important}.back-btn-profile,.profile-back,.back-btn,.settings-button,.profile-settings{top:12px!important;right:12px!important}}
+@media(max-width:900px){main,.main-content,.cases-section,.cases-container,.profile-content,.open-content,.stats-content{width:min(calc(100% - 32px),var(--ed-content-max))}.cases-grid,.cases-list,.case-grid,.inventory-grid,.stats-grid{grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px!important}.top-right{gap:10px}}
+@media(max-width:650px){main,.main-content,.cases-section,.cases-container,.profile-content,.open-content,.stats-content{width:calc(100% - 20px)}.cases-grid,.cases-list,.case-grid,.inventory-grid,.stats-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px!important}.top-right{gap:6px}.top-btn{padding-inline:12px}.live-drops-bar,.live-container{overflow:visible!important}.live-drop.legendary{box-shadow:0 0 18px rgba(255,207,56,.16)!important}.back-btn-profile,.profile-back,.back-btn,.settings-button,.profile-settings{top:12px!important;right:12px!important}}
 @media(max-width:390px){.cases-grid,.cases-list,.case-grid,.inventory-grid,.stats-grid{grid-template-columns:1fr!important}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.001ms!important}}
