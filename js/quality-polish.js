@@ -1,14 +1,10 @@
 (() => {
   "use strict";
 
-  // This module owns behaviour-level polish only. Layout belongs to CSS so we
-  // don't have a runtime stylesheet fighting index.html/motion-system.css.
+  // Behaviour-level polish only. Layout belongs to layout-sanitizer.css.
+  // Case opening/navigation/economy each have one canonical owner.
   const prefersReduced = () => window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches === true;
-  const appState = () => {
-    if (window.state) return window.state;
-    try { if (typeof state !== "undefined") return state; } catch (_) {}
-    return null;
-  };
+  const appState = () => window.state || null;
 
   const animateIn = (element, options = {}) => {
     if (!(element instanceof HTMLElement) || prefersReduced()) return null;
@@ -47,45 +43,24 @@
     if (balance && state) balance.textContent = String(state.balance ?? 0);
   }
 
-  async function playCaseReveal() {
-    if (prefersReduced()) return;
-    const tracks = [...document.querySelectorAll("#multiRouletteContainer .multi-track, .multi-roulette .multi-track")];
-    if (!tracks.length) return;
-
-    const animations = tracks.map((track, index) => {
-      const distance = index % 2 ? "-68%" : "-72%";
-      return track.animate([
-        { transform: "translate3d(0,0,0)" },
-        { transform: `translate3d(${distance},0,0)`, offset: .78 },
-        { transform: `translate3d(calc(${distance} + 18px),0,0)`, offset: .9 },
-        { transform: `translate3d(calc(${distance} + 8px),0,0)`, offset: .96 },
-        { transform: `translate3d(${distance},0,0)` }
-      ], {
-        duration: 1850 + index * 90,
-        delay: index * 45,
-        easing: "cubic-bezier(.08,.72,.18,1)",
-        fill: "forwards"
-      });
-    });
-
-    await Promise.all(animations.map(animation => animation.finished.catch(() => undefined)));
-    animations.forEach(animation => animation.cancel());
-  }
-
-  function decorateHandlers() {
+  function decorateNavigation() {
     if (window.__emojiDropsPolishHandlers) return;
 
     const decorate = (name, selector, duration) => {
       const original = window[name];
-      if (typeof original !== "function") return;
-      window[name] = function polishedHandler(...args) {
+      if (typeof original !== "function" || original.__emojiDropsPolished) return;
+      const wrapped = function polishedHandler(...args) {
         const result = original.apply(this, args);
         Promise.resolve(result).then(() => {
           const element = document.querySelector(selector);
-          if (element && getComputedStyle(element).display !== "none") animateIn(element, { duration });
+          if (element && !element.hidden && getComputedStyle(element).display !== "none") {
+            animateIn(element, { duration });
+          }
         });
         return result;
       };
+      Object.defineProperty(wrapped, "__emojiDropsPolished", { value: true });
+      window[name] = wrapped;
     };
 
     decorate("openCasePage", "#openPage", 280);
@@ -93,8 +68,8 @@
     decorate("openUpgradeMenu", "#upgradePage", 220);
 
     const originalShowWin = window.showWin;
-    if (typeof originalShowWin === "function") {
-      window.showWin = function polishedShowWin(...args) {
+    if (typeof originalShowWin === "function" && !originalShowWin.__emojiDropsPolished) {
+      const wrapped = function polishedShowWin(...args) {
         const result = originalShowWin.apply(this, args);
         const popup = document.getElementById("winPopup");
         if (popup && !prefersReduced()) {
@@ -108,33 +83,8 @@
         }
         return result;
       };
-    }
-
-    const originalOpenCase = window.openCase;
-    if (typeof originalOpenCase === "function") {
-      window.openCase = async function polishedOpenCase(...args) {
-        const state = appState();
-        if (!state || state.__emojiDropsRevealRunning || state.isSpinning) return;
-        if (!state.selectedCase || !state.currentUser) return originalOpenCase.apply(this, args);
-
-        state.__emojiDropsRevealRunning = true;
-        try {
-          await playCaseReveal();
-          return await originalOpenCase.apply(this, args);
-        } finally {
-          state.__emojiDropsRevealRunning = false;
-          syncBalance();
-        }
-      };
-    }
-
-    const originalStartUpgrade = window.startUpgrade;
-    if (typeof originalStartUpgrade === "function") {
-      window.startUpgrade = function polishedUpgrade(...args) {
-        const result = originalStartUpgrade.apply(this, args);
-        syncBalance();
-        return result;
-      };
+      Object.defineProperty(wrapped, "__emojiDropsPolished", { value: true });
+      window.showWin = wrapped;
     }
 
     window.__emojiDropsPolishHandlers = true;
@@ -154,7 +104,6 @@
     ).forEach(root => {
       if (root.dataset.qualityObserver === "1") return;
       root.dataset.qualityObserver = "1";
-
       const observer = new MutationObserver(mutations => {
         for (const mutation of mutations) {
           for (const node of mutation.addedNodes) {
@@ -167,8 +116,6 @@
     });
   }
 
-  // Delegation keeps the number of permanent event listeners small even when
-  // the page has many dynamically-created buttons.
   function addButtonMotion() {
     if (document.documentElement.dataset.buttonMotionReady === "1") return;
     document.documentElement.dataset.buttonMotionReady = "1";
@@ -183,7 +130,6 @@
       const button = event.target instanceof Element ? event.target.closest("button, .top-btn, .amount-btn") : null;
       if (button instanceof HTMLElement) button.style.willChange = "auto";
     };
-
     document.addEventListener("pointerup", release, { passive: true });
     document.addEventListener("pointercancel", release, { passive: true });
   }
@@ -196,15 +142,13 @@
 
   function init() {
     normalizeSearchFields();
-    decorateHandlers();
+    decorateNavigation();
     observeLiveDrops();
     addButtonMotion();
     pauseWhenHidden();
+    syncBalance();
   }
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", init, { once: true });
-  } else {
-    init();
-  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init, { once: true });
+  else init();
 })();
