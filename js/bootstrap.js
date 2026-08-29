@@ -58,6 +58,9 @@
 
   async function bootRuntime() {
     try {
+      // The preserved design is the base. Disable old patch generations before
+      // installing the single consolidated visual authority.
+      await loadScript("js/legacy-style-isolation.js", "legacy-style-isolation");
       await loadStylesheet("css/layout-sanitizer.css", "clean-layout");
       await loadScript("js/economy.js", "economy-runtime");
       await loadScript("js/core-consistency.js", "core-consistency");
