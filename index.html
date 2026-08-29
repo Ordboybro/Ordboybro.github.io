@@ -49,6 +49,7 @@ main{max-width:1240px;margin:0 auto;padding:36px 24px 80px}.hero{display:flex;ju
 <script>function getUsers(){try{return JSON.parse(localStorage.getItem('users')||'[]')}catch{return []}}</script>
 <script src="js/data.js"></script>
 <script src="js/app-v2.js"></script>
+<script src="js/final-v6.js"></script>
 <script>function changeNickname(){const u=getUser?.();const v=document.getElementById('nicknameInput')?.value.trim();if(!u||!v)return;u.nickname=v;saveUser(u);renderAll?.();alert('Ник изменён')} </script>
 </body>
 </html>
