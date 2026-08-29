@@ -8,14 +8,6 @@
   const ITEM_COUNT = 42;
   const WIN_INDEX = 30;
 
-  function syncCasePage(open) {
-    const page = byId('openPage');
-    if (!page) return;
-    document.body.classList.toggle('case-route', open);
-    page.style.display = open ? 'flex' : 'none';
-    page.setAttribute('aria-hidden', open ? 'false' : 'true');
-  }
-
   function itemNode(item) {
     const node = document.createElement('div');
     node.className = 'item';
@@ -183,26 +175,16 @@
   }
 
   function install() {
-    const originalOpenCasePage = window.openCasePage;
-    if (typeof originalOpenCasePage === 'function' && !originalOpenCasePage.__emojiDropsOldDesign) {
-      const wrapped = type => {
-        originalOpenCasePage(type);
-        syncCasePage(true);
-        requestAnimationFrame(() => byId('openPage')?.scrollTo?.({ top: 0, behavior: 'auto' }));
-      };
-      Object.defineProperty(wrapped, '__emojiDropsOldDesign', { value: true });
-      window.openCasePage = wrapped;
-    }
-
-    window.closePage = () => {
-      if (window.state?.isSpinning) return;
-      syncCasePage(false);
-      byId('multiRouletteContainer')?.replaceChildren();
-    };
+    // Navigation is owned exclusively by router.js. The case runtime only
+    // owns the opening animation, persistence and roulette DOM.
     window.createRoulettes = createRoulettes;
     bind('openCaseButton', () => openCaseAnimated());
     bind('fastOpenButton', () => openCaseAnimated({ fast: true }));
-    bind('caseBackButton', () => window.closePage());
+    bind('caseBackButton', () => {
+      if (window.state?.isSpinning) return;
+      if (window.EmojiDropsRouter?.navigate) window.EmojiDropsRouter.navigate('/');
+      else window.closePage?.();
+    });
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install, { once: true });
