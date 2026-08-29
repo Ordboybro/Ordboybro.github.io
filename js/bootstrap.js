@@ -37,9 +37,10 @@
 
   async function bootRuntime() {
     try {
-      // Establish layout before behaviour-level wrappers.
+      // Establish the canonical layout and economy before UI polish/recovery.
       await loadStylesheet("css/layout-sanitizer.css", "clean-layout");
       await loadScript("js/economy.js", "economy-runtime");
+      await loadScript("js/core-consistency.js", "core-consistency");
       await loadScript("js/quality-polish.js", "quality-polish");
       await loadScript("js/layout-sanitizer.js", "layout-sanitizer");
       await loadScript("js/functional-recovery.js", "functional-recovery");
