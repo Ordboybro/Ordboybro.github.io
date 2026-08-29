@@ -9,6 +9,8 @@
     "unified.css", "updates.css"
   ]);
 
+  const CLEAN_LAYOUT = "css/layout-sanitizer.css";
+
   function filename(href) {
     try { return new URL(href, location.href).pathname.split("/").pop(); }
     catch { return ""; }
@@ -24,10 +26,18 @@
   }
 
   function loadCleanLayout() {
-    if (document.querySelector('link[data-emoji-drops-clean-layout="1"], link[data-clean-layout="1"]')) return;
+    const existing = [...document.querySelectorAll('link[rel="stylesheet"]')]
+      .find(link => filename(link.href) === filename(CLEAN_LAYOUT));
+
+    if (existing) {
+      existing.disabled = false;
+      existing.dataset.emojiDropsCleanLayout = "1";
+      return;
+    }
+
     const link = document.createElement("link");
     link.rel = "stylesheet";
-    link.href = "css/layout-sanitizer.css";
+    link.href = CLEAN_LAYOUT;
     link.dataset.emojiDropsCleanLayout = "1";
     document.head.appendChild(link);
   }
