@@ -67,6 +67,42 @@
     }
   }
 
+  function restoreMainChildren() {
+    const main = $('main');
+    if (!main) return;
+    [...main.children].forEach(child => {
+      child.hidden = false;
+      child.removeAttribute('aria-hidden');
+      if (child.dataset.edCasesRouteHidden === '1') {
+        child.style.removeProperty('display');
+        delete child.dataset.edCasesRouteHidden;
+      }
+    });
+  }
+
+  function showCasesOnly() {
+    const main = $('main');
+    if (!main) return;
+
+    [...main.children].forEach(child => {
+      const ownsCases = Boolean(child.matches('.cases, .cases-section, .cases-container, #casesContainer') ||
+        child.querySelector?.('.cases, .cases-grid, .case-grid, #casesContainer'));
+      const ownsSearch = Boolean(child.matches('.search-wrap, .search-container') ||
+        child.querySelector?.('.search-wrap, .search-container, #caseSearch, .case-search'));
+
+      if (ownsCases || ownsSearch) {
+        child.hidden = false;
+        child.removeAttribute('aria-hidden');
+        child.style.removeProperty('display');
+        return;
+      }
+
+      child.hidden = true;
+      child.setAttribute('aria-hidden', 'true');
+      child.dataset.edCasesRouteHidden = '1';
+    });
+  }
+
   function hideAllViews() {
     ['#profilePage', '#settingsOverlay', '#statsOverlay', '#historyOverlay', '#openPage'].forEach(selector => {
       setVisible($(selector), false);
@@ -143,22 +179,37 @@
     if (name === 'upgrade') {
       window.openUpgradeMenu?.();
       const upgrade = $('#edUpgrade2') || $('#upgradePage');
-      if (upgrade) setVisible(upgrade, true, 'flex'), upgrade.classList.add('open');
+      if (upgrade) {
+        setVisible(upgrade, true, 'flex');
+        upgrade.classList.add('open');
+      }
     }
   }
 
   function render() {
     const current = route();
     hideAllViews();
-    if (current.name === 'home' || current.name === 'cases') {
+
+    if (current.name === 'home') {
       restoreCasePage();
+      restoreMainChildren();
       setHomeChrome(true);
       const main = $('main');
       if (main) main.hidden = false;
-      const cases = $('main .cases') || $('.cases');
-      if (cases) cases.hidden = false;
       return;
     }
+
+    if (current.name === 'cases') {
+      restoreCasePage();
+      showCasesOnly();
+      setHomeChrome(true);
+      const main = $('main');
+      if (main) main.hidden = false;
+      const cases = $('main .cases, main .cases-grid, main .case-grid, #casesContainer, .cases');
+      cases?.scrollIntoView({ block: 'start', behavior: 'auto' });
+      return;
+    }
+
     if (current.name === 'case') return showCase(current.id);
     restoreCasePage();
     showAuthenticatedView(current.name);
@@ -218,15 +269,11 @@
   window.addEventListener('popstate', render);
   window.EmojiDropsRouter = { navigate, render, route };
   window.openProfileRoute = () => navigate('/profile');
-  window.openUpgradeRoute = () => navigate('/upgrade');
-  window.openStatsRoute = () => navigate('/profile/statistics');
-  window.openHistoryRoute = () => navigate('/profile/history');
-  window.openSettingsRoute = () => navigate('/profile/settings');
 
-  function init() {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => { installCaseBridge(); render(); }, { once: true });
+  } else {
     installCaseBridge();
     render();
   }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });
-  else init();
 })();
