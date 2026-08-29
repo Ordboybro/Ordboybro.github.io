@@ -31,9 +31,7 @@
 
   function navigate(path, replace = false) {
     const target = path.startsWith('/') ? path : `/${path}`;
-    if (normalize() !== normalize(target)) {
-      history[replace ? 'replaceState' : 'pushState']({}, '', target);
-    }
+    if (normalize() !== normalize(target)) history[replace ? 'replaceState' : 'pushState']({}, '', target);
     render();
   }
 
@@ -58,13 +56,9 @@
 
   function restoreCasePage() {
     const page = $('#openPage');
-    if (!page || !casePageParent) return;
-    if (page.parentNode === casePageParent) return;
-    if (casePageNextSibling && casePageNextSibling.parentNode === casePageParent) {
-      casePageParent.insertBefore(page, casePageNextSibling);
-    } else {
-      casePageParent.appendChild(page);
-    }
+    if (!page || !casePageParent || page.parentNode === casePageParent) return;
+    if (casePageNextSibling && casePageNextSibling.parentNode === casePageParent) casePageParent.insertBefore(page, casePageNextSibling);
+    else casePageParent.appendChild(page);
   }
 
   function restoreMainChildren() {
@@ -83,43 +77,35 @@
   function showCasesOnly() {
     const main = $('main');
     if (!main) return;
-
     [...main.children].forEach(child => {
-      const ownsCases = Boolean(child.matches('.cases, .cases-section, .cases-container, #casesContainer') ||
-        child.querySelector?.('.cases, .cases-grid, .case-grid, #casesContainer'));
-      const ownsSearch = Boolean(child.matches('.search-wrap, .search-container') ||
-        child.querySelector?.('.search-wrap, .search-container, #caseSearch, .case-search'));
-
-      if (ownsCases || ownsSearch) {
+      const ownsCases = Boolean(child.matches('.cases,.cases-section,.cases-container,#casesContainer') || child.querySelector?.('.cases,.cases-grid,.case-grid,#casesContainer'));
+      if (ownsCases) {
         child.hidden = false;
         child.removeAttribute('aria-hidden');
         child.style.removeProperty('display');
-        return;
+      } else {
+        child.hidden = true;
+        child.setAttribute('aria-hidden', 'true');
+        child.dataset.edCasesRouteHidden = '1';
       }
-
-      child.hidden = true;
-      child.setAttribute('aria-hidden', 'true');
-      child.dataset.edCasesRouteHidden = '1';
     });
   }
 
   function hideAllViews() {
-    ['#profilePage', '#settingsOverlay', '#statsOverlay', '#historyOverlay', '#openPage'].forEach(selector => {
-      setVisible($(selector), false);
-    });
+    ['#profilePage','#settingsOverlay','#statsOverlay','#historyOverlay','#openPage'].forEach(selector => setVisible($(selector), false));
     const upgrade = $('#edUpgrade2') || $('#upgradePage');
     if (upgrade) {
-      upgrade.classList.remove('open', 'closing');
+      upgrade.classList.remove('open','closing');
       upgrade.style.display = 'none';
-      upgrade.setAttribute('aria-hidden', 'true');
+      upgrade.setAttribute('aria-hidden','true');
     }
-    document.body.classList.remove('case-route', 'modal-open', 'ed-opening');
+    document.body.classList.remove('case-route','modal-open','ed-opening');
   }
 
   function setHomeChrome(visible) {
-    ['header', '.top-line', '.search-wrap', '.live-drops-bar'].forEach(selector => {
+    ['header','.top-line','.search-wrap','.live-drops-bar'].forEach(selector => {
       $$(selector).forEach(element => {
-        if (element.closest('#profilePage, #openPage, #settingsOverlay, #statsOverlay, #historyOverlay, #upgradePage')) return;
+        if (element.closest('#profilePage,#openPage,#settingsOverlay,#statsOverlay,#historyOverlay,#upgradePage')) return;
         element.hidden = !visible;
         element.setAttribute('aria-hidden', visible ? 'false' : 'true');
       });
@@ -134,13 +120,13 @@
     if (main) main.hidden = true;
     setHomeChrome(false);
     document.body.classList.add('case-route');
-
     if (typeof nativeCaseOpen === 'function') {
       window.__edRouteRenderingCase = true;
       try { nativeCaseOpen(id); } finally { window.__edRouteRenderingCase = false; }
     }
     setVisible(page, true, 'flex');
     page.scrollTop = 0;
+    window.scrollTo({ top: 0, behavior: 'auto' });
   }
 
   function showAuthenticatedView(name) {
@@ -152,7 +138,6 @@
       queueMicrotask(() => window.openAuth?.('login'));
       return;
     }
-
     if (name === 'profile') {
       window.openProfile?.();
       setVisible($('#profilePage'), true, 'flex');
@@ -182,6 +167,7 @@
       if (upgrade) {
         setVisible(upgrade, true, 'flex');
         upgrade.classList.add('open');
+        document.body.classList.add('modal-open');
       }
     }
   }
@@ -189,7 +175,6 @@
   function render() {
     const current = route();
     hideAllViews();
-
     if (current.name === 'home') {
       restoreCasePage();
       restoreMainChildren();
@@ -198,18 +183,16 @@
       if (main) main.hidden = false;
       return;
     }
-
     if (current.name === 'cases') {
       restoreCasePage();
       showCasesOnly();
       setHomeChrome(true);
       const main = $('main');
       if (main) main.hidden = false;
-      const cases = $('main .cases, main .cases-grid, main .case-grid, #casesContainer, .cases');
-      cases?.scrollIntoView({ block: 'start', behavior: 'auto' });
+      const cases = $('main .cases,main .cases-grid,main .case-grid,#casesContainer,.cases');
+      cases?.scrollIntoView({ block:'start', behavior:'auto' });
       return;
     }
-
     if (current.name === 'case') return showCase(current.id);
     restoreCasePage();
     showAuthenticatedView(current.name);
@@ -219,9 +202,7 @@
     rememberCaseMount();
     if (!nativeCaseOpen && typeof window.openCasePage === 'function') {
       nativeCaseOpen = window.openCasePage;
-      window.openCasePage = id => window.__edRouteRenderingCase
-        ? nativeCaseOpen(id)
-        : navigate(`/case/${encodeURIComponent(String(id))}`);
+      window.openCasePage = id => window.__edRouteRenderingCase ? nativeCaseOpen(id) : navigate(`/case/${encodeURIComponent(String(id))}`);
     }
     if (!nativeClosePage && typeof window.closePage === 'function') {
       nativeClosePage = window.closePage;
@@ -232,7 +213,24 @@
   document.addEventListener('click', event => {
     const target = event.target instanceof Element ? event.target : null;
     if (!target) return;
-    const card = target.closest('.case[data-case], .case-card[data-case], .case-item[data-case]');
+
+    const routeButton = target.closest('[data-route]');
+    if (routeButton) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      navigate(routeButton.dataset.route || '/');
+      return;
+    }
+
+    const back = target.closest('[data-back]');
+    if (back) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      navigate('/');
+      return;
+    }
+
+    const card = target.closest('.case[data-case],.case-card[data-case],.case-item[data-case]');
     if (card && !target.closest('button,input,a,[data-route]')) {
       const id = card.getAttribute('data-case') || card.querySelector('.case-name,.case-title')?.textContent?.trim();
       if (id) {
@@ -242,7 +240,8 @@
         return;
       }
     }
-    const profile = target.closest('#profileBtn, .profile-box');
+
+    const profile = target.closest('#profileBtn,.profile-box');
     if (profile && getState()?.currentUser && !target.closest('button,a,[data-route]')) {
       event.preventDefault();
       event.stopImmediatePropagation();
@@ -250,30 +249,10 @@
     }
   }, true);
 
-  document.addEventListener('click', event => {
-    const target = event.target instanceof Element ? event.target : null;
-    if (!target) return;
-    const routeButton = target.closest('[data-route]');
-    if (routeButton) {
-      event.preventDefault();
-      navigate(routeButton.dataset.route || '/');
-      return;
-    }
-    const back = target.closest('[data-back]');
-    if (back) {
-      event.preventDefault();
-      navigate('/');
-    }
-  });
-
   window.addEventListener('popstate', render);
   window.EmojiDropsRouter = { navigate, render, route };
   window.openProfileRoute = () => navigate('/profile');
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => { installCaseBridge(); render(); }, { once: true });
-  } else {
-    installCaseBridge();
-    render();
-  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => { installCaseBridge(); render(); }, { once:true });
+  else { installCaseBridge(); render(); }
 })();
