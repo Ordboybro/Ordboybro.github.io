@@ -58,8 +58,8 @@
 
   async function bootRuntime() {
     try {
-      // The preserved design is the base. Disable old patch generations before
-      // installing the single consolidated visual authority.
+      // The preserved design is the base. Disable obsolete patch generations
+      // before installing the single consolidated visual/runtime authorities.
       await loadScript("js/legacy-style-isolation.js", "legacy-style-isolation");
       await loadStylesheet("css/layout-sanitizer.css", "clean-layout");
       await loadScript("js/economy.js", "economy-runtime");
@@ -70,6 +70,7 @@
       await loadScript("js/upgrade.js", "upgrade-runtime");
       await loadScript("js/quality-polish.js", "quality-polish");
       await loadScript("js/layout-sanitizer.js", "layout-sanitizer");
+      await loadStylesheet("css/final-component-polish.css", "final-component-polish");
       await loadScript("js/functional-recovery.js", "functional-recovery");
     } catch (error) {
       console.error("[EmojiDrops] runtime bootstrap failed", error);
