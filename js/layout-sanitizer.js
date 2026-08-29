@@ -2,30 +2,16 @@
   "use strict";
 
   const LEGACY_STYLE_NAMES = new Set([
-    "final-layout.css",
-    "final-polish.css",
-    "final-stability.css",
-    "finish.css",
-    "last-polish.css",
-    "motion-system.css",
-    "polish.css",
-    "premium.css",
-    "quality-pass.css",
-    "quality-v2.css",
-    "runtime-quality.css",
-    "site-fixes-20260826.css",
-    "stable-polish.css",
-    "ultimate-ui.css",
-    "unified.css",
-    "updates.css"
+    "final-layout.css", "final-polish.css", "final-stability.css", "finish.css",
+    "last-polish.css", "motion-system.css", "polish.css", "premium.css",
+    "quality-pass.css", "quality-v2.css", "runtime-quality.css",
+    "site-fixes-20260826.css", "stable-polish.css", "ultimate-ui.css",
+    "unified.css", "updates.css"
   ]);
 
   function filename(href) {
-    try {
-      return new URL(href, location.href).pathname.split("/").pop();
-    } catch {
-      return "";
-    }
+    try { return new URL(href, location.href).pathname.split("/").pop(); }
+    catch { return ""; }
   }
 
   function disableLegacyStyles() {
@@ -38,7 +24,7 @@
   }
 
   function loadCleanLayout() {
-    if (document.querySelector('link[data-emoji-drops-clean-layout="1"]')) return;
+    if (document.querySelector('link[data-emoji-drops-clean-layout="1"], link[data-clean-layout="1"]')) return;
     const link = document.createElement("link");
     link.rel = "stylesheet";
     link.href = "css/layout-sanitizer.css";
@@ -49,14 +35,9 @@
   function start() {
     disableLegacyStyles();
     loadCleanLayout();
-    requestAnimationFrame(() => {
-      document.documentElement.classList.add("layout-sanitized");
-    });
+    requestAnimationFrame(() => document.documentElement.classList.add("layout-sanitized"));
   }
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", start, { once: true });
-  } else {
-    start();
-  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start, { once: true });
+  else start();
 })();
