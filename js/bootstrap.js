@@ -58,14 +58,13 @@
 
   async function bootRuntime() {
     try {
-      // Canonical runtime order. Every loader first checks the real src path,
-      // so a direct <script> in index.html cannot be loaded a second time.
       await loadStylesheet("css/layout-sanitizer.css", "clean-layout");
       await loadScript("js/economy.js", "economy-runtime");
       await loadScript("js/core-consistency.js", "core-consistency");
       await loadScript("js/old-design-runtime.js", "old-design-runtime");
       await loadScript("js/router.js", "router-runtime");
       await loadScript("js/device-quality.js", "device-quality-runtime");
+      await loadScript("js/upgrade.js", "upgrade-runtime");
       await loadScript("js/quality-polish.js", "quality-polish");
       await loadScript("js/layout-sanitizer.js", "layout-sanitizer");
       await loadScript("js/functional-recovery.js", "functional-recovery");
