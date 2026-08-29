@@ -29,6 +29,7 @@
 
   function setVisible(element, visible, display = '') {
     if (!element) return;
+    element.hidden = !visible;
     element.style.display = visible ? display : 'none';
     element.setAttribute('aria-hidden', visible ? 'false' : 'true');
   }
@@ -45,17 +46,22 @@
   let nativeClosePage = null;
 
   function hideAllViews() {
-    ['#profilePage', '#settingsOverlay', '#statsOverlay', '#historyOverlay', '#openPage']
-      .forEach(selector => setVisible($(selector), false));
-    const upgrade = $('#edUpgrade2');
-    if (upgrade) upgrade.classList.remove('open', 'closing');
-    document.body.classList.remove('case-route', 'modal-open');
+    ['#profilePage', '#settingsOverlay', '#statsOverlay', '#historyOverlay', '#openPage'].forEach(selector => {
+      setVisible($(selector), false);
+    });
+    const upgrade = $('#edUpgrade2') || $('#upgradePage');
+    if (upgrade) {
+      upgrade.classList.remove('open', 'closing');
+      upgrade.style.display = 'none';
+      upgrade.setAttribute('aria-hidden', 'true');
+    }
+    document.body.classList.remove('case-route', 'modal-open', 'ed-opening');
   }
 
   function setHomeChrome(visible) {
     ['header', '.top-line', '.search-wrap', '.live-drops-bar'].forEach(selector => {
       $$(selector).forEach(element => {
-        if (element.closest('#profilePage, #openPage, #settingsOverlay, #statsOverlay, #historyOverlay')) return;
+        if (element.closest('#profilePage, #openPage, #settingsOverlay, #statsOverlay, #historyOverlay, #upgradePage')) return;
         element.hidden = !visible;
         element.setAttribute('aria-hidden', visible ? 'false' : 'true');
       });
@@ -78,6 +84,7 @@
       try { nativeCaseOpen(id); } finally { window.__edRouteRenderingCase = false; }
     }
     setVisible(page, true, 'flex');
+    page.scrollTop = 0;
   }
 
   function showAuthenticatedView(name) {
@@ -115,7 +122,15 @@
       document.body.classList.add('modal-open');
       return;
     }
-    if (name === 'upgrade') window.openUpgradeMenu?.();
+    if (name === 'upgrade') {
+      window.openUpgradeMenu?.();
+      const upgrade = $('#edUpgrade2') || $('#upgradePage');
+      if (upgrade) {
+        upgrade.classList.add('open');
+        upgrade.style.display = 'flex';
+        upgrade.setAttribute('aria-hidden', 'false');
+      }
+    }
   }
 
   function render() {
@@ -153,6 +168,33 @@
     }
   }
 
+  /* Capture card/profile navigation before legacy inline handlers can render a
+     case/profile panel inside the home page. Buttons/links inside cards keep
+     their native action. */
+  document.addEventListener('click', event => {
+    const target = event.target instanceof Element ? event.target : null;
+    if (!target) return;
+
+    const card = target.closest('.case[data-case], .case-card[data-case], .case-item[data-case]');
+    if (card && !target.closest('button,input,a,[data-route]')) {
+      const id = card.getAttribute('data-case') || card.querySelector('.case-name,.case-title')?.textContent?.trim();
+      if (id) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        navigate(`/case/${encodeURIComponent(String(id).toLowerCase())}`);
+        return;
+      }
+    }
+
+    const profile = target.closest('#profileBtn, .profile-box');
+    if (profile && getState()?.currentUser && !target.closest('button,a,[data-route]')) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      navigate('/profile');
+      return;
+    }
+  }, true);
+
   document.addEventListener('click', event => {
     const target = event.target instanceof Element ? event.target : null;
     if (!target) return;
@@ -170,12 +212,6 @@
       navigate('/');
       return;
     }
-
-    const profile = target.closest('#profileBtn');
-    if (profile && getState()?.currentUser) {
-      event.preventDefault();
-      navigate('/profile');
-    }
   });
 
   window.addEventListener('popstate', render);
@@ -188,7 +224,10 @@
 
   function init() {
     installCaseBridge();
-    setTimeout(() => { installCaseBridge(); render(); }, 0);
+    setTimeout(() => {
+      installCaseBridge();
+      render();
+    }, 0);
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });
