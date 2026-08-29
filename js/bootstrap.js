@@ -12,8 +12,8 @@
     const existing = document.querySelector(`script[data-${attribute}="1"]`);
     if (existing) {
       if (existing.dataset.loaded === "1") return resolve();
-      existing.addEventListener("load", resolve, { once:true });
-      existing.addEventListener("error", reject, { once:true });
+      existing.addEventListener("load", resolve, { once: true });
+      existing.addEventListener("error", reject, { once: true });
       return;
     }
     const script = document.createElement("script");
@@ -25,7 +25,8 @@
   });
 
   const loadStylesheet = (href, attribute) => new Promise((resolve, reject) => {
-    if (document.querySelector(`link[data-${attribute}="1"]`)) return resolve();
+    const existing = document.querySelector(`link[data-${attribute}="1"], link[href$="${href}"]`);
+    if (existing) return resolve();
     const link = document.createElement("link");
     link.rel = "stylesheet";
     link.href = href;
@@ -37,7 +38,7 @@
 
   async function bootRuntime() {
     try {
-      // Establish the canonical layout and economy before UI polish/recovery.
+      // Establish the canonical layout and economy before behaviour wrappers.
       await loadStylesheet("css/layout-sanitizer.css", "clean-layout");
       await loadScript("js/economy.js", "economy-runtime");
       await loadScript("js/core-consistency.js", "core-consistency");
@@ -50,7 +51,7 @@
   }
 
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", bootRuntime, { once:true });
+    document.addEventListener("DOMContentLoaded", bootRuntime, { once: true });
   } else {
     bootRuntime();
   }
