@@ -5,11 +5,9 @@
     const value = String(path).replace(/\\+/g, '/').replace(/\/$/, '');
     return value || '/';
   };
-
-  const getState = () => {
-    if (window.state) return window.state;
-    try { return state; } catch (_) { return null; }
-  };
+  const getState = () => window.state || null;
+  const $ = selector => document.querySelector(selector);
+  const $$ = selector => [...document.querySelectorAll(selector)];
 
   const route = () => {
     const path = normalize();
@@ -23,9 +21,6 @@
     if (path === '/upgrade') return { name: 'upgrade' };
     return { name: 'home' };
   };
-
-  const $ = selector => document.querySelector(selector);
-  const $$ = selector => [...document.querySelectorAll(selector)];
 
   function setVisible(element, visible, display = '') {
     if (!element) return;
@@ -44,6 +39,33 @@
 
   let nativeCaseOpen = null;
   let nativeClosePage = null;
+  let casePageParent = null;
+  let casePageNextSibling = null;
+
+  function rememberCaseMount() {
+    const page = $('#openPage');
+    if (!page || casePageParent) return;
+    casePageParent = page.parentNode;
+    casePageNextSibling = page.nextSibling;
+  }
+
+  function detachCasePage() {
+    const page = $('#openPage');
+    if (!page) return;
+    rememberCaseMount();
+    if (page.parentNode !== document.body) document.body.appendChild(page);
+  }
+
+  function restoreCasePage() {
+    const page = $('#openPage');
+    if (!page || !casePageParent) return;
+    if (page.parentNode === casePageParent) return;
+    if (casePageNextSibling && casePageNextSibling.parentNode === casePageParent) {
+      casePageParent.insertBefore(page, casePageNextSibling);
+    } else {
+      casePageParent.appendChild(page);
+    }
+  }
 
   function hideAllViews() {
     ['#profilePage', '#settingsOverlay', '#statsOverlay', '#historyOverlay', '#openPage'].forEach(selector => {
@@ -70,12 +92,10 @@
 
   function showCase(id) {
     const page = $('#openPage');
-    const main = $('main');
-    const cases = $('main .cases') || $('.cases');
     if (!page) return;
-
-    if (main) main.hidden = false;
-    if (cases) cases.hidden = true;
+    detachCasePage();
+    const main = $('main');
+    if (main) main.hidden = true;
     setHomeChrome(false);
     document.body.classList.add('case-route');
 
@@ -91,9 +111,7 @@
     setHomeChrome(false);
     const main = $('main');
     if (main) main.hidden = true;
-
-    const currentState = getState();
-    if (!currentState?.currentUser) {
+    if (!getState()?.currentUser) {
       navigate('/', true);
       queueMicrotask(() => window.openAuth?.('login'));
       return;
@@ -125,56 +143,44 @@
     if (name === 'upgrade') {
       window.openUpgradeMenu?.();
       const upgrade = $('#edUpgrade2') || $('#upgradePage');
-      if (upgrade) {
-        upgrade.classList.add('open');
-        upgrade.style.display = 'flex';
-        upgrade.setAttribute('aria-hidden', 'false');
-      }
+      if (upgrade) setVisible(upgrade, true, 'flex'), upgrade.classList.add('open');
     }
   }
 
   function render() {
     const current = route();
     hideAllViews();
-    setHomeChrome(true);
-
     if (current.name === 'home' || current.name === 'cases') {
+      restoreCasePage();
+      setHomeChrome(true);
       const main = $('main');
-      const cases = $('main .cases') || $('.cases');
       if (main) main.hidden = false;
+      const cases = $('main .cases') || $('.cases');
       if (cases) cases.hidden = false;
       return;
     }
-    if (current.name === 'case') {
-      showCase(current.id);
-      return;
-    }
+    if (current.name === 'case') return showCase(current.id);
+    restoreCasePage();
     showAuthenticatedView(current.name);
   }
 
   function installCaseBridge() {
+    rememberCaseMount();
     if (!nativeCaseOpen && typeof window.openCasePage === 'function') {
       nativeCaseOpen = window.openCasePage;
       window.openCasePage = id => window.__edRouteRenderingCase
         ? nativeCaseOpen(id)
         : navigate(`/case/${encodeURIComponent(String(id))}`);
     }
-
     if (!nativeClosePage && typeof window.closePage === 'function') {
       nativeClosePage = window.closePage;
-      window.closePage = (...args) => route().name === 'case'
-        ? navigate('/')
-        : nativeClosePage(...args);
+      window.closePage = (...args) => route().name === 'case' ? navigate('/') : nativeClosePage(...args);
     }
   }
 
-  /* Capture card/profile navigation before legacy inline handlers can render a
-     case/profile panel inside the home page. Buttons/links inside cards keep
-     their native action. */
   document.addEventListener('click', event => {
     const target = event.target instanceof Element ? event.target : null;
     if (!target) return;
-
     const card = target.closest('.case[data-case], .case-card[data-case], .case-item[data-case]');
     if (card && !target.closest('button,input,a,[data-route]')) {
       const id = card.getAttribute('data-case') || card.querySelector('.case-name,.case-title')?.textContent?.trim();
@@ -185,32 +191,27 @@
         return;
       }
     }
-
     const profile = target.closest('#profileBtn, .profile-box');
     if (profile && getState()?.currentUser && !target.closest('button,a,[data-route]')) {
       event.preventDefault();
       event.stopImmediatePropagation();
       navigate('/profile');
-      return;
     }
   }, true);
 
   document.addEventListener('click', event => {
     const target = event.target instanceof Element ? event.target : null;
     if (!target) return;
-
     const routeButton = target.closest('[data-route]');
     if (routeButton) {
       event.preventDefault();
       navigate(routeButton.dataset.route || '/');
       return;
     }
-
     const back = target.closest('[data-back]');
     if (back) {
       event.preventDefault();
       navigate('/');
-      return;
     }
   });
 
@@ -224,12 +225,8 @@
 
   function init() {
     installCaseBridge();
-    setTimeout(() => {
-      installCaseBridge();
-      render();
-    }, 0);
+    render();
   }
-
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });
   else init();
 })();
