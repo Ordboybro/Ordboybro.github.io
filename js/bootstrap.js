@@ -19,14 +19,12 @@
       try { return new URL(script.src, location.href).pathname === wanted; }
       catch { return false; }
     });
-
     if (existing) {
       if (existing.dataset.loaded === "1" || existing.readyState === "complete") return resolve();
       existing.addEventListener("load", resolve, { once: true });
       existing.addEventListener("error", reject, { once: true });
       return;
     }
-
     const script = document.createElement("script");
     script.src = src;
     script.dataset[attribute] = "1";
@@ -41,12 +39,7 @@
       try { return new URL(link.href, location.href).pathname === wanted; }
       catch { return false; }
     });
-
-    if (existing) {
-      existing.disabled = false;
-      return resolve();
-    }
-
+    if (existing) { existing.disabled = false; return resolve(); }
     const link = document.createElement("link");
     link.rel = "stylesheet";
     link.href = href;
@@ -58,8 +51,6 @@
 
   async function bootRuntime() {
     try {
-      // The preserved design is the base. Disable obsolete patch generations
-      // before installing the single consolidated visual/runtime authorities.
       await loadScript("js/legacy-style-isolation.js", "legacy-style-isolation");
       await loadStylesheet("css/layout-sanitizer.css", "clean-layout");
       await loadScript("js/economy.js", "economy-runtime");
@@ -72,14 +63,12 @@
       await loadScript("js/layout-sanitizer.js", "layout-sanitizer");
       await loadStylesheet("css/final-component-polish.css", "final-component-polish");
       await loadScript("js/functional-recovery.js", "functional-recovery");
+      await loadScript("js/final-fixes.js", "final-fixes");
     } catch (error) {
       console.error("[EmojiDrops] runtime bootstrap failed", error);
     }
   }
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", bootRuntime, { once: true });
-  } else {
-    bootRuntime();
-  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", bootRuntime, { once: true });
+  else bootRuntime();
 })();
