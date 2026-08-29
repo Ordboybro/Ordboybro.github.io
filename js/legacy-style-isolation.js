@@ -2,10 +2,12 @@
 (() => {
   'use strict';
 
-  const KEEP = /\/layout-sanitizer\.css$/i;
+  // style.css is the preserved design's base stylesheet and MUST remain
+  // active. Only the historical patch generations are isolated here.
+  const KEEP = /\/(?:style|layout-sanitizer)\.css$/i;
   const MOBILE = /\/mobile\.css$/i;
   const ROUTER = /\/router\.css$/i;
-  const DISABLED = /\/(?:style|polish|premium|quality-pass|quality-v2|runtime-quality|final-layout|final-polish|final-stability|finish|last-polish|site-fixes-20260826|stable-polish|ultimate-ui|unified|updates|motion-system|component-layout)\.css$/i;
+  const DISABLED = /\/(?:polish|premium|quality-pass|quality-v2|runtime-quality|final-layout|final-polish|final-stability|finish|last-polish|site-fixes-20260826|stable-polish|ultimate-ui|unified|updates|motion-system|component-layout)\.css$/i;
 
   const pathOf = node => {
     try { return new URL(node.href || node.getAttribute?.('href') || '', location.href).pathname; }
@@ -19,6 +21,7 @@
 
     if (KEEP.test(path)) {
       link.disabled = false;
+      delete link.dataset.legacyDisabled;
       return;
     }
     if (MOBILE.test(path)) {
