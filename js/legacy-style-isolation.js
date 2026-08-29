@@ -1,7 +1,4 @@
-/* Emoji Drops — isolate obsolete visual patch generations.
- * index.html is the preserved design base. layout-sanitizer.css is the
- * single consolidated visual authority for the main site.
- */
+/* Emoji Drops — isolate obsolete visual patch generations. */
 (() => {
   'use strict';
 
@@ -10,36 +7,51 @@
   const ROUTER = /\/router\.css$/i;
   const DISABLED = /\/(?:style|polish|premium|quality-pass|quality-v2|runtime-quality|final-layout|final-polish|final-stability|finish|last-polish|site-fixes-20260826|stable-polish|ultimate-ui|unified|updates|motion-system|component-layout)\.css$/i;
 
-  function isolate() {
+  const pathOf = node => {
+    try { return new URL(node.href || node.getAttribute?.('href') || '', location.href).pathname; }
+    catch { return node.getAttribute?.('href') || ''; }
+  };
+
+  function isolateLink(link) {
+    if (!(link instanceof HTMLLinkElement) || link.rel !== 'stylesheet') return;
+    const path = pathOf(link);
     const isMobileSite = document.body?.classList.contains('mobile-app');
 
-    document.querySelectorAll('link[rel="stylesheet"]').forEach(link => {
-      const path = (() => {
-        try { return new URL(link.href, location.href).pathname; }
-        catch { return link.getAttribute('href') || ''; }
-      })();
+    if (KEEP.test(path)) {
+      link.disabled = false;
+      return;
+    }
+    if (MOBILE.test(path)) {
+      link.disabled = !isMobileSite;
+      return;
+    }
+    if (ROUTER.test(path)) return;
 
-      if (KEEP.test(path)) {
-        link.disabled = false;
-        return;
-      }
+    if (DISABLED.test(path)) {
+      link.disabled = true;
+      link.dataset.legacyDisabled = '1';
+    }
+  }
 
-      // mobile.css belongs to the dedicated mobile.html surface; router.css
-      // is harmless and contains only route-specific classes.
-      if (MOBILE.test(path)) {
-        link.disabled = !isMobileSite;
-        return;
-      }
-      if (ROUTER.test(path)) return;
-
-      if (DISABLED.test(path)) {
-        link.disabled = true;
-        link.dataset.legacyDisabled = '1';
-      }
-    });
+  function isolate() {
+    document.querySelectorAll('link[rel="stylesheet"]').forEach(isolateLink);
   }
 
   isolate();
+
+  // Old scripts can dynamically inject their styles after bootstrap. Catch
+  // those additions immediately instead of allowing one frame of bad layout.
+  const observer = new MutationObserver(mutations => {
+    for (const mutation of mutations) {
+      for (const node of mutation.addedNodes) {
+        if (!(node instanceof Element)) continue;
+        if (node.matches?.('link[rel="stylesheet"]')) isolateLink(node);
+        node.querySelectorAll?.('link[rel="stylesheet"]').forEach(isolateLink);
+      }
+    }
+  });
+  observer.observe(document.head, { childList: true, subtree: true });
+
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', isolate, { once: true });
   }
