@@ -74,6 +74,15 @@
   function applyRarityPalette() {
     const legendary = window.rarities?.legendary;
     if (legendary) legendary.color = '#ff9f43';
+    const palette = window.rarities || {};
+    all('.item,.case-item-emoji,.live-drop').forEach(node => {
+      const rarity = String(node.dataset?.rarity || [...node.classList].find(name => palette[name])) .toLowerCase();
+      const color = palette[rarity]?.color;
+      if (color && node instanceof HTMLElement) {
+        node.style.borderColor = color;
+        node.style.setProperty('--rarity-color', color);
+      }
+    });
   }
 
   function liveDrops() {
@@ -109,7 +118,7 @@
       for (const record of records) {
         for (const node of record.addedNodes) if (node.nodeType === 1) added.push(node);
       }
-      for (let i = added.length - 1; i >= 0; i--) {
+      for (let i = added.length - 1; i >= 0; i -= 1) {
         const node = added[i];
         if (node.parentNode === root && !node.matches('.live-title,.live-drops-title,#liveDropsTitle')) root.prepend(node);
         decorate(node);
@@ -302,11 +311,17 @@
     });
   }
 
+  function shouldRefreshFromClick(event) {
+    const target = event.target instanceof Element ? event.target : null;
+    if (!target) return false;
+    return Boolean(target.closest('[data-route],[data-back],.case,.case-card,.case-item,#profileBtn,.profile-box,.balance-menu,.daily-reward-btn,#settingsOverlay,#statsOverlay,#historyOverlay,#edUpgrade2,#upgradePage'));
+  }
+
   function start() {
     refresh();
     buttonMotion();
     decorateWinPopup();
-    document.addEventListener('click', refresh, { passive: true });
+    document.addEventListener('click', event => { if (shouldRefreshFromClick(event)) refresh(); }, { passive: true });
     window.addEventListener('popstate', refresh, { passive: true });
     document.addEventListener('visibilitychange', () => {
       document.documentElement.classList.toggle('ed-page-hidden', document.hidden);
