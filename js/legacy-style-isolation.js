@@ -1,27 +1,44 @@
-/* Emoji Drops — isolate legacy visual patch layers.
- * The preserved old design lives in index.html; patch generations must not
- * compete with the consolidated layout/motion authority.
+/* Emoji Drops — isolate obsolete visual patch generations.
+ * index.html is the preserved design base. layout-sanitizer.css is the
+ * single consolidated visual authority for the main site.
  */
 (() => {
   'use strict';
 
-  const LEGACY_RE = /(?:polish|premium|quality|final-layout|final-polish|final-stability|finish|last-polish|site-fixes|runtime-quality|motion-system|component-layout)/i;
+  const KEEP = /\/layout-sanitizer\.css$/i;
+  const MOBILE = /\/mobile\.css$/i;
+  const ROUTER = /\/router\.css$/i;
+  const DISABLED = /\/(?:style|polish|premium|quality-pass|quality-v2|runtime-quality|final-layout|final-polish|final-stability|finish|last-polish|site-fixes-20260826|stable-polish|ultimate-ui|unified|updates|motion-system|component-layout)\.css$/i;
 
   function isolate() {
+    const isMobileSite = document.body?.classList.contains('mobile-app');
+
     document.querySelectorAll('link[rel="stylesheet"]').forEach(link => {
       const path = (() => {
         try { return new URL(link.href, location.href).pathname; }
         catch { return link.getAttribute('href') || ''; }
       })();
-      if (LEGACY_RE.test(path) && !/layout-sanitizer\.css$/i.test(path)) {
+
+      if (KEEP.test(path)) {
+        link.disabled = false;
+        return;
+      }
+
+      // mobile.css belongs to the dedicated mobile.html surface; router.css
+      // is harmless and contains only route-specific classes.
+      if (MOBILE.test(path)) {
+        link.disabled = !isMobileSite;
+        return;
+      }
+      if (ROUTER.test(path)) return;
+
+      if (DISABLED.test(path)) {
         link.disabled = true;
         link.dataset.legacyDisabled = '1';
       }
     });
   }
 
-  // Run after parsing so all declarative styles are present, then again after
-  // the other runtime loaders have had a chance to append their styles.
   isolate();
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', isolate, { once: true });
