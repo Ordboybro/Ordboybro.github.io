@@ -37,10 +37,16 @@
     return { pool, groups };
   }
 
-  // Price weighting makes expensive items rarer inside one rarity tier while
-  // keeping every valid item obtainable. A square-root curve avoids extreme
-  // suppression of high-value items.
+  // Expensive items remain obtainable but are somewhat less common inside the
+  // same rarity tier. The square-root curve avoids extreme suppression.
   const priceWeight = item => 1 / Math.sqrt(parsePrice(item));
+
+  function effectiveRarityWeights(groups) {
+    const available = [...groups.keys()].filter(rarity => rarityWeight(rarity) > 0);
+    if (!available.length) return new Map();
+    const rawTotal = available.reduce((sum, rarity) => sum + rarityWeight(rarity), 0);
+    return new Map(available.map(rarity => [rarity, (rarityWeight(rarity) / rawTotal) * 100]));
+  }
 
   function chooseWeighted(source) {
     if (!source?.length) return null;
@@ -55,14 +61,16 @@
     return source[source.length - 1];
   }
 
-  function chooseRarity() {
+  function chooseRarity(groups) {
+    const weights = effectiveRarityWeights(groups);
+    if (!weights.size) return null;
     const roll = secureUnit() * 100;
     let cursor = 0;
-    for (const [rarity, chance] of Object.entries(RARITY_ODDS)) {
+    for (const [rarity, chance] of weights) {
       cursor += chance;
       if (roll < cursor) return rarity;
     }
-    return 'common';
+    return [...weights.keys()][weights.size - 1];
   }
 
   function itemChance(items, target) {
@@ -71,8 +79,9 @@
     const rarity = normalizeRarity(target.rarity);
     const candidates = built.groups.get(rarity) || [];
     if (!candidates.includes(target)) return 0;
+    const tierChance = effectiveRarityWeights(built.groups).get(rarity) || 0;
     const total = candidates.reduce((sum, item) => sum + priceWeight(item), 0);
-    return total ? rarityWeight(rarity) * (priceWeight(target) / total) : 0;
+    return total ? tierChance * (priceWeight(target) / total) : 0;
   }
 
   function upgradeChance(sourceValue, targetValue) {
@@ -80,17 +89,15 @@
     const target = Number(targetValue) || 0;
     if (source <= 0 || target <= 0) return 0;
     if (target <= source) return 95;
-    // Keep the probability monotonic and capped. This is intentionally based
-    // only on the value ratio, so displayed and actual chances can share one
-    // formula across every Upgrade UI.
     return Math.max(1, Math.min(95, (source / target) * 100));
   }
 
   function getRandomByChance(items) {
     const built = buildItemWeights(items);
     if (!built) return null;
-    const rarity = chooseRarity();
-    return chooseWeighted(built.groups.get(rarity)?.length ? built.groups.get(rarity) : built.pool);
+    const rarity = chooseRarity(built.groups);
+    const candidates = rarity ? built.groups.get(rarity) : built.pool;
+    return chooseWeighted(candidates?.length ? candidates : built.pool);
   }
 
   window.getRandomByChance = getRandomByChance;
@@ -108,13 +115,14 @@
     return { price, expectedValue, rtp: price > 0 ? (expectedValue / price) * 100 : 0, items: rows };
   };
 
-  // Useful for the UI and QA: one canonical snapshot of every item chance.
   window.getCaseItemChances = function getCaseItemChances(items, caseKey) {
+    const built = buildItemWeights(items);
     const economy = window.getCaseEconomy(items, caseKey);
+    const effective = built ? effectiveRarityWeights(built.groups) : new Map();
     return economy.items.map(({ item, chance }) => ({
       item,
       chance,
-      rarityChance: rarityWeight(item?.rarity)
+      rarityChance: effective.get(normalizeRarity(item?.rarity)) || 0
     }));
   };
 
@@ -133,7 +141,7 @@
     let appState = window.state;
     try { if (typeof state !== 'undefined') appState = state; } catch (_) {}
     if (!appState || appState.currentUser) return;
-    if (appState.balance === 1000 || appState.balance == null) appState.balance = STARTING_BALANCE;
+    if (appState.balance == null || appState.balance === 1000) appState.balance = STARTING_BALANCE;
     const balance = document.getElementById('balance');
     if (balance) balance.textContent = String(appState.balance);
   };
