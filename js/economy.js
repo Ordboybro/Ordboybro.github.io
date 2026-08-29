@@ -3,11 +3,18 @@
 
   const STARTING_BALANCE = 100;
   const RARITY_ODDS = Object.freeze({ common: 55, rare: 28, epic: 11, mythical: 5, legendary: 1 });
-  const CASE_PRICES = Object.freeze({ transport: 15, animals: 25, food: 40, nature: 60, moves: 85, smile: 120, sport: 250, games: 500 });
+  const TARGET_RTP = 0.70;
+  const TARGET_COUNTS = Object.freeze({ common: 8, rare: 5, epic: 3, mythical: 2, legendary: 2 });
+  const FILLERS = Object.freeze({
+    common: ['🙂','🙃','😉','😊','😌','😐','😶','😴','🤍','✨'],
+    rare: ['😎','🤓','🥰','😇','🤠','🫶','💙','🌸','🍀','⚡'],
+    epic: ['🤩','🥳','👻','🤖','🔥','🌈','💜','🌌','🎯','🚀'],
+    mythical: ['💀','👽','🦹','🌪️','☄️','❤️‍🔥','🧿','🌋','🪄','🪽'],
+    legendary: ['👑','💎','🌟','🏆','🐉','🦄','🌠','🔱','🌌','☀️']
+  });
 
-  const oddsTotal = Object.values(RARITY_ODDS).reduce((sum, value) => sum + value, 0);
-  if (oddsTotal !== 100) console.warn('[EmojiDrops] Rarity odds must total 100%, got', oddsTotal);
-  if (window.casePrices) Object.assign(window.casePrices, CASE_PRICES);
+  const DEFAULT_PRICES = Object.freeze({ transport: 15, animals: 25, food: 40, nature: 60, moves: 85, smile: 120, sport: 250, games: 500 });
+  const CASE_PRICES = { ...DEFAULT_PRICES };
 
   const parsePrice = item => {
     const value = Number.parseFloat(String(item?.price ?? 0).replace(',', '.'));
@@ -25,63 +32,63 @@
     return Math.random();
   }
 
-  function buildItemWeights(items) {
+  function pickFiller(rarity, used) {
+    const source = FILLERS[rarity] || FILLERS.common;
+    const emoji = source.find(value => !used.has(value)) || source[0];
+    used.add(emoji);
+    return emoji;
+  }
+
+  function normalizedCaseItems(items) {
+    const source = Array.isArray(items) ? items.filter(Boolean).map(item => ({ ...item, rarity: normalizeRarity(item.rarity) })) : [];
+    const groups = new Map(Object.keys(RARITY_ODDS).map(rarity => [rarity, []]));
+    source.forEach(item => groups.get(item.rarity).push(item));
+    const used = new Set(source.map(item => item.emoji));
+    const result = [];
+
+    for (const [rarity, count] of Object.entries(TARGET_COUNTS)) {
+      const group = groups.get(rarity) || [];
+      if (group.length >= count) {
+        const step = group.length / count;
+        for (let i = 0; i < count; i += 1) result.push({ ...group[Math.min(group.length - 1, Math.floor(i * step))] });
+      } else {
+        group.forEach(item => result.push({ ...item }));
+        while (result.filter(item => item.rarity === rarity).length < count) {
+          const emoji = pickFiller(rarity, used);
+          const base = rarity === 'common' ? 4 : rarity === 'rare' ? 11 : rarity === 'epic' ? 25 : rarity === 'mythical' ? 60 : 150;
+          result.push({ emoji, rarity, price: `${base}₽` });
+        }
+      }
+    }
+    return result;
+  }
+
+  function uniformItemChance(items, target) {
+    const pool = Array.isArray(items) ? items : [];
+    const rarity = normalizeRarity(target?.rarity);
+    const candidates = pool.filter(item => normalizeRarity(item?.rarity) === rarity);
+    if (!candidates.length || !candidates.includes(target)) return 0;
+    return (rarityWeight(rarity) / 100) / candidates.length * 100;
+  }
+
+  function chooseUniform(items) {
+    if (!Array.isArray(items) || !items.length) return null;
+    const roll = secureUnit() * items.length;
+    return items[Math.min(items.length - 1, Math.floor(roll))];
+  }
+
+  function getRandomByChance(items) {
     const pool = Array.isArray(items) ? items.filter(Boolean) : [];
     if (!pool.length) return null;
-    const groups = new Map();
-    for (const item of pool) {
-      const rarity = normalizeRarity(item.rarity);
-      if (!groups.has(rarity)) groups.set(rarity, []);
-      groups.get(rarity).push(item);
-    }
-    return { pool, groups };
-  }
-
-  // Expensive items remain obtainable but are somewhat less common inside the
-  // same rarity tier. The square-root curve avoids extreme suppression.
-  const priceWeight = item => 1 / Math.sqrt(parsePrice(item));
-
-  function effectiveRarityWeights(groups) {
-    const available = [...groups.keys()].filter(rarity => rarityWeight(rarity) > 0);
-    if (!available.length) return new Map();
-    const rawTotal = available.reduce((sum, rarity) => sum + rarityWeight(rarity), 0);
-    return new Map(available.map(rarity => [rarity, (rarityWeight(rarity) / rawTotal) * 100]));
-  }
-
-  function chooseWeighted(source) {
-    if (!source?.length) return null;
-    const weights = source.map(priceWeight);
-    const total = weights.reduce((sum, weight) => sum + weight, 0);
-    if (!total) return source[0];
-    let roll = secureUnit() * total;
-    for (let index = 0; index < source.length; index += 1) {
-      roll -= weights[index];
-      if (roll <= 0) return source[index];
-    }
-    return source[source.length - 1];
-  }
-
-  function chooseRarity(groups) {
-    const weights = effectiveRarityWeights(groups);
-    if (!weights.size) return null;
     const roll = secureUnit() * 100;
     let cursor = 0;
-    for (const [rarity, chance] of weights) {
+    let rarity = 'common';
+    for (const [key, chance] of Object.entries(RARITY_ODDS)) {
       cursor += chance;
-      if (roll < cursor) return rarity;
+      if (roll < cursor) { rarity = key; break; }
     }
-    return [...weights.keys()][weights.size - 1];
-  }
-
-  function itemChance(items, target) {
-    const built = buildItemWeights(items);
-    if (!built || !target) return 0;
-    const rarity = normalizeRarity(target.rarity);
-    const candidates = built.groups.get(rarity) || [];
-    if (!candidates.includes(target)) return 0;
-    const tierChance = effectiveRarityWeights(built.groups).get(rarity) || 0;
-    const total = candidates.reduce((sum, item) => sum + priceWeight(item), 0);
-    return total ? tierChance * (priceWeight(target) / total) : 0;
+    const candidates = pool.filter(item => normalizeRarity(item?.rarity) === rarity);
+    return chooseUniform(candidates.length ? candidates : pool);
   }
 
   function upgradeChance(sourceValue, targetValue) {
@@ -92,50 +99,47 @@
     return Math.max(1, Math.min(95, (source / target) * 100));
   }
 
-  function getRandomByChance(items) {
-    const built = buildItemWeights(items);
-    if (!built) return null;
-    const rarity = chooseRarity(built.groups);
-    const candidates = rarity ? built.groups.get(rarity) : built.pool;
-    return chooseWeighted(candidates?.length ? candidates : built.pool);
+  function roundCasePrice(value) {
+    const raw = Math.max(15, Math.min(500, value));
+    const step = raw < 50 ? 5 : raw < 100 ? 10 : raw < 250 ? 25 : 50;
+    return Math.max(15, Math.round(raw / step) * step);
   }
 
+  function calibrateCases() {
+    const sourceCases = window.cases;
+    if (!sourceCases || typeof sourceCases !== 'object') return;
+    for (const [key, items] of Object.entries(sourceCases)) {
+      const normalized = normalizedCaseItems(items);
+      sourceCases[key] = normalized;
+      const expectedValue = normalized.reduce((sum, item) => {
+        return sum + parsePrice(item) * (uniformItemChance(normalized, item) / 100);
+      }, 0);
+      CASE_PRICES[key] = roundCasePrice(expectedValue / TARGET_RTP);
+    }
+    if (window.casePrices && typeof window.casePrices === 'object') Object.assign(window.casePrices, CASE_PRICES);
+  }
+
+  function getCaseEconomy(items, caseKey) {
+    const pool = Array.isArray(items) ? items : [];
+    const price = Number(CASE_PRICES[caseKey] ?? window.casePrices?.[caseKey] ?? 0);
+    const rows = pool.map(item => ({ item, chance: uniformItemChance(pool, item) }));
+    const expectedValue = rows.reduce((sum, row) => sum + parsePrice(row.item) * row.chance / 100, 0);
+    return { price, expectedValue, rtp: price > 0 ? expectedValue / price * 100 : 0, items: rows };
+  }
+
+  const getCaseItemChances = (items, caseKey) => {
+    const economy = getCaseEconomy(items, caseKey);
+    return economy.items.map(({ item, chance }) => ({ item, chance, rarityChance: rarityWeight(item?.rarity) }));
+  };
+
   window.getRandomByChance = getRandomByChance;
-  window.getItemChance = itemChance;
+  window.getItemChance = uniformItemChance;
   window.getRarityChance = rarityWeight;
   window.getUpgradeChance = upgradeChance;
-  window.getCasePrice = caseKey => Number(CASE_PRICES[caseKey] ?? 0);
-
-  window.getCaseEconomy = function getCaseEconomy(items, caseKey) {
-    const built = buildItemWeights(items);
-    const price = Number(CASE_PRICES[caseKey] ?? window.casePrices?.[caseKey] ?? 0);
-    if (!built) return { price, expectedValue: 0, rtp: 0, items: [] };
-    const rows = built.pool.map(item => ({ item, chance: itemChance(built.pool, item) }));
-    const expectedValue = rows.reduce((sum, row) => sum + parsePrice(row.item) * (row.chance / 100), 0);
-    return { price, expectedValue, rtp: price > 0 ? (expectedValue / price) * 100 : 0, items: rows };
-  };
-
-  window.getCaseItemChances = function getCaseItemChances(items, caseKey) {
-    const built = buildItemWeights(items);
-    const economy = window.getCaseEconomy(items, caseKey);
-    const effective = built ? effectiveRarityWeights(built.groups) : new Map();
-    return economy.items.map(({ item, chance }) => ({
-      item,
-      chance,
-      rarityChance: effective.get(normalizeRarity(item?.rarity)) || 0
-    }));
-  };
-
-  window.EMOJI_DROPS_ECONOMY = Object.freeze({
-    STARTING_BALANCE,
-    RARITY_ODDS,
-    CASE_PRICES,
-    getItemChance: itemChance,
-    getRarityChance: rarityWeight,
-    getUpgradeChance: upgradeChance,
-    getCaseEconomy: window.getCaseEconomy,
-    getCaseItemChances: window.getCaseItemChances
-  });
+  window.getCasePrice = key => Number(CASE_PRICES[key] ?? 0);
+  window.getCaseEconomy = getCaseEconomy;
+  window.getCaseItemChances = getCaseItemChances;
+  window.EMOJI_DROPS_ECONOMY = Object.freeze({ STARTING_BALANCE, RARITY_ODDS, TARGET_RTP, TARGET_COUNTS, CASE_PRICES });
 
   const applyStartingBalance = () => {
     let appState = window.state;
@@ -146,6 +150,7 @@
     if (balance) balance.textContent = String(appState.balance);
   };
 
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', applyStartingBalance, { once: true });
-  else applyStartingBalance();
+  const init = () => { calibrateCases(); applyStartingBalance(); };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });
+  else init();
 })();
