@@ -1,74 +1,69 @@
 /* EmojiDrops — final layout authority.
-   This file is intentionally loaded last. It owns geometry only.
-   Motion/effects stay in motion-system.css and runtime scripts. */
+   Geometry only. This file is loaded last so the legacy visual style remains,
+   while repeated/competing layout rules are normalized in one place. */
 
 :root {
   --ed-layout-max: 1440px;
-  --ed-gutter: clamp(16px, 2.5vw, 40px);
-  --ed-grid-gap: clamp(12px, 1.35vw, 20px);
+  --ed-gutter: clamp(18px, 2.5vw, 40px);
+  --ed-grid-gap: clamp(14px, 1.5vw, 22px);
   --ed-control-gap: 10px;
   --ed-control-height: 44px;
+  --ed-radius: 18px;
 }
 
-/* One page width. Do not let individual sections invent their own width. */
-body > main,
-body > .main-content,
-body > .cases-section,
-body > .cases-container,
-#profilePage .profile-content,
-#openPage .open-content,
-#statsOverlay .stats-content,
-#historyOverlay .history-content {
-  width: min(calc(100% - (var(--ed-gutter) * 2)), var(--ed-layout-max));
-  margin-inline: auto;
+html { overflow-x: hidden; }
+body {
+  overflow-x: hidden;
+  overflow-y: auto;
+  min-width: 0;
 }
+body > main { width: min(calc(100% - 2 * var(--ed-gutter)), var(--ed-layout-max)); margin-inline: auto; }
 
-/* Header controls: one baseline, one gap system. */
+/* Keep the legacy home composition intact; only normalize its spacing. */
+header {
+  padding-inline: var(--ed-gutter);
+  gap: 18px;
+}
 header .top-right,
 header .profile-actions,
-header .profile-buttons {
+header .profile-buttons,
+.top-right {
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: var(--ed-control-gap);
   flex-wrap: nowrap;
 }
-
 header .top-right > *,
 header .profile-actions > *,
-header .profile-buttons > * {
-  margin: 0;
-  flex: 0 0 auto;
-}
+header .profile-buttons > * { margin: 0; flex: 0 0 auto; }
 
-header button,
-header .top-btn,
-header .main-btn,
-header .fast-btn,
-header .profile-mini-btn {
+button,
+.top-btn,
+.main-btn,
+.fast-btn,
+.profile-mini-btn,
+.amount-btn {
   min-height: var(--ed-control-height);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  vertical-align: middle;
+  box-sizing: border-box;
 }
 
-/* Cases: predictable columns instead of manually positioned cards. */
+/* The old page uses a few different wrappers for the same case collection.
+   Normalize all of them without changing card appearance. */
+.cases,
+.cases-grid,
+.cases-list,
+.case-grid {
+  width: 100%;
+}
 .cases-grid,
 .cases-list,
 .case-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--ed-grid-gap);
   align-items: stretch;
 }
-
-.cases-grid > *,
-.cases-list > *,
-.case-grid > * {
-  min-width: 0;
-}
-
 .case,
 .case-card,
 .case-item-card {
@@ -78,18 +73,16 @@ header .profile-mini-btn {
   display: flex;
   flex-direction: column;
 }
-
 .case .case-name,
 .case .case-title,
 .case-card .case-name,
 .case-card .case-title {
-  min-height: 2.6em;
+  min-height: 2.7em;
   display: flex;
   align-items: center;
   justify-content: center;
   text-align: center;
 }
-
 .case .case-price,
 .case .price,
 .case-card .case-price,
@@ -97,38 +90,33 @@ header .profile-mini-btn {
   margin: 8px 0 0;
   text-align: center;
 }
-
 .case button:last-child,
 .case .case-button:last-child,
-.case-card button:last-child {
-  margin-top: auto;
-}
+.case-card button:last-child { margin-top: auto; }
 
-/* Search: complete pill, never clipped to the text width. */
-.case-search,
-.search-wrap {
-  width: min(100%, 620px);
+/* Search is one complete control, not a text-width fragment. */
+.search-wrap,
+.case-search {
+  width: min(calc(100% - 2 * var(--ed-gutter)), 620px);
   margin-inline: auto;
 }
-
+.search-wrap input,
 .case-search input,
 .search-input,
 #searchInput {
-  display: block;
   width: 100%;
   min-width: 0;
   box-sizing: border-box;
 }
 
-/* Inventory and stats use the same visual rhythm. */
+/* Inventory/statistics: common columns and equal-height cards. */
 .inventory-grid,
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(210px, 100%), 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--ed-grid-gap);
   align-items: stretch;
 }
-
 .inventory-item,
 .stat-card {
   width: 100%;
@@ -136,21 +124,9 @@ header .profile-mini-btn {
   margin: 0;
   box-sizing: border-box;
 }
-
-.inventory-item {
-  display: flex;
-  flex-direction: column;
-}
-
-.inventory-emoji {
-  align-self: center;
-}
-
-.inventory-rarity {
-  min-height: 20px;
-  text-align: center;
-}
-
+.inventory-item { display: flex; flex-direction: column; }
+.inventory-emoji { align-self: center; }
+.inventory-rarity { min-height: 20px; text-align: center; }
 .inventory-bottom {
   margin-top: auto;
   display: flex;
@@ -159,20 +135,20 @@ header .profile-mini-btn {
   gap: 10px;
 }
 
-/* Profile: controls are centered as a group; corner actions are truly corners. */
+/* Profile page: one content frame, symmetric corner actions. */
 #profilePage {
   position: fixed;
   inset: 0;
   overflow: auto;
   box-sizing: border-box;
 }
-
 #profilePage .profile-content {
   position: relative;
+  width: min(calc(100% - 2 * var(--ed-gutter)), var(--ed-layout-max));
   min-height: 100%;
+  margin-inline: auto;
   box-sizing: border-box;
 }
-
 #profilePage .profile-actions,
 #profilePage .profile-buttons {
   display: flex;
@@ -181,7 +157,6 @@ header .profile-mini-btn {
   gap: var(--ed-control-gap);
   flex-wrap: wrap;
 }
-
 #profilePage .back-btn-profile,
 #profilePage .profile-back {
   position: absolute;
@@ -190,7 +165,6 @@ header .profile-mini-btn {
   right: auto;
   margin: 0;
 }
-
 #profilePage .settings-button,
 #profilePage .profile-settings {
   position: absolute;
@@ -200,19 +174,21 @@ header .profile-mini-btn {
   margin: 0;
 }
 
-/* Open-case page: controls belong below the roulette, not beside/over it. */
+/* Open-case page: never let the page controls occupy roulette space. */
 #openPage {
   position: fixed;
   inset: 0;
   overflow: auto;
   box-sizing: border-box;
+  z-index: 1100;
 }
-
 #openPage .open-content {
+  width: min(calc(100% - 2 * var(--ed-gutter)), var(--ed-layout-max));
   min-height: 100%;
+  margin-inline: auto;
   box-sizing: border-box;
+  padding-bottom: 32px;
 }
-
 #openPage .open-amounts,
 #openPage .openActions,
 #openPage .open-actions,
@@ -222,10 +198,9 @@ header .profile-mini-btn {
   justify-content: center;
   flex-wrap: wrap;
   gap: 8px;
+  width: 100%;
 }
 
-/* The roulette itself must remain horizontally scrollable. */
-#openPage .multi-roulette,
 .multi-roulette {
   position: relative;
   width: 100%;
@@ -234,15 +209,12 @@ header .profile-mini-btn {
   scrollbar-color: #222 #090909;
   scrollbar-width: thin;
 }
-
 .multi-track {
   display: flex;
   align-items: center;
   width: max-content;
   min-width: 100%;
 }
-
-/* One marker only; keep the two legacy arrow styles from fighting. */
 #openPage .roulette-marker,
 #openPage .new-pointer {
   left: 50%;
@@ -250,7 +222,7 @@ header .profile-mini-btn {
   transform: translateX(-50%);
 }
 
-/* Modal pages: exactly one centered box, never a nested offset panel. */
+/* Modals are centered and isolated from the document flow. */
 #settingsOverlay,
 #statsOverlay,
 #historyOverlay,
@@ -259,7 +231,6 @@ header .profile-mini-btn {
 #edUpgrade2 {
   box-sizing: border-box;
 }
-
 .settings-overlay,
 #settingsOverlay,
 .auth-popup,
@@ -267,7 +238,6 @@ header .profile-mini-btn {
   align-items: center;
   justify-content: center;
 }
-
 .settings-box,
 .auth-box,
 .win-box,
@@ -279,36 +249,48 @@ header .profile-mini-btn {
   box-sizing: border-box;
 }
 
-/* Mobile: two balanced columns, then one column only when it truly cannot fit. */
-@media (max-width: 900px) {
+/* Live drops stay attached to the viewport but never clip rare-item glow. */
+.live-drops-bar,
+.live-container,
+.live-drops,
+#liveDrops,
+#liveContainer,
+#liveDropsContainer {
+  overflow: visible !important;
+}
+.live-drops-bar { z-index: 900; }
+
+/* Remove accidental horizontal scroll created by wide children. */
+.case-route main,
+.case-route .cases,
+.case-route .search-wrap { overflow-x: clip; }
+
+@media (max-width: 1100px) {
+  .cases-grid,
+  .cases-list,
+  .case-grid,
+  .inventory-grid,
+  .stats-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (max-width: 800px) {
   :root { --ed-gutter: 16px; }
   header { padding-inline: var(--ed-gutter); }
   .cases-grid,
   .cases-list,
   .case-grid,
   .inventory-grid,
-  .stats-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+  .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: 520px) {
-  :root { --ed-gutter: 10px; --ed-grid-gap: 10px; }
+  :root { --ed-gutter: 10px; --ed-grid-gap: 10px; --ed-control-gap: 8px; }
   header { padding-inline: 10px; }
   header .top-right { gap: 6px; }
-  .cases-grid,
-  .cases-list,
-  .case-grid,
-  .inventory-grid,
-  .stats-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
   #profilePage .back-btn-profile,
   #profilePage .profile-back,
   #profilePage .settings-button,
-  #profilePage .profile-settings {
-    top: 12px;
-  }
+  #profilePage .profile-settings { top: 12px; }
   #profilePage .back-btn-profile,
   #profilePage .profile-back { left: 12px; }
   #profilePage .settings-button,
@@ -320,7 +302,14 @@ header .profile-mini-btn {
   .cases-list,
   .case-grid,
   .inventory-grid,
-  .stats-grid {
-    grid-template-columns: 1fr;
+  .stats-grid { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
   }
 }
