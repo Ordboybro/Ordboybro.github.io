@@ -64,6 +64,7 @@
       await loadStylesheet("css/final-component-polish.css", "final-component-polish");
       await loadScript("js/functional-recovery.js", "functional-recovery");
       await loadScript("js/final-fixes.js", "final-fixes");
+      await loadScript("js/final-override.js", "final-override");
     } catch (error) {
       console.error("[EmojiDrops] runtime bootstrap failed", error);
     }
