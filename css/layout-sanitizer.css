@@ -1,4 +1,4 @@
-/* Emoji Drops — consolidated layout / motion authority */
+/* Emoji Drops — single consolidated layout / motion authority */
 :root {
   --ui-max: 1480px;
   --ui-gutter: clamp(18px, 3vw, 42px);
@@ -9,8 +9,11 @@
   --ui-ease: cubic-bezier(.22,.61,.36,1);
   --ui-fast: 160ms;
   --ui-med: 240ms;
-  --ui-slow: 360ms;
+  --ui-slow: 320ms;
 }
+
+/* Routing uses the native hidden attribute. Author CSS must never override it. */
+[hidden] { display: none !important; }
 
 html { scroll-behavior: smooth; }
 body { min-width: 320px; overflow-x: hidden; }
@@ -30,13 +33,16 @@ main,
   box-sizing: border-box;
 }
 
+/* Header: one horizontal baseline, no stretching and no accidental overlap. */
 header {
   min-height: 78px;
   height: auto;
   padding: 14px var(--ui-gutter);
   box-sizing: border-box;
   gap: 18px;
-  isolation: isolate;
+  position: sticky;
+  top: 0;
+  z-index: 1000 !important;
 }
 header > * { min-width: 0; }
 header .top-right,
@@ -44,18 +50,28 @@ header .logo,
 .top-right,
 .logo,
 .nav,
-.header-actions { display: flex; align-items: center; }
+.header-actions {
+  display: flex;
+  align-items: center;
+}
 header .top-right,
 .top-right,
-.header-actions { gap: 12px; flex-wrap: nowrap; }
+.header-actions {
+  gap: 12px;
+  flex-wrap: nowrap;
+}
 header .logo { flex: 0 1 auto; }
 header .top-right,
-header .header-actions { flex: 0 0 auto; }
+header .header-actions { flex: 0 0 auto; margin-inline-start: auto; }
 
+/* Shared controls. Do not animate geometry or shadows. */
 button,
 .top-btn,
 .action-btn,
+.open-btn,
 .fast-open-btn,
+.main-btn,
+.fast-btn,
 .case-open-btn,
 .back-btn,
 .settings-btn,
@@ -70,62 +86,174 @@ button,
   gap: 8px;
   line-height: 1;
   white-space: nowrap;
-  transition: transform var(--ui-fast) var(--ui-ease), opacity var(--ui-fast) var(--ui-ease), border-color var(--ui-fast) var(--ui-ease), background-color var(--ui-fast) var(--ui-ease), box-shadow var(--ui-med) var(--ui-ease);
+  transition:
+    transform var(--ui-fast) var(--ui-ease),
+    opacity var(--ui-fast) var(--ui-ease),
+    border-color var(--ui-med) var(--ui-ease),
+    background-color var(--ui-med) var(--ui-ease),
+    color var(--ui-med) var(--ui-ease);
 }
 button:not(:disabled):hover,
 .top-btn:hover,
 .action-btn:hover,
+.open-btn:hover,
 .fast-open-btn:hover,
+.main-btn:hover,
+.fast-btn:hover,
 .case-open-btn:hover,
 .back-btn:hover,
 .settings-btn:hover,
 .profile-action:hover,
 .upgrade-btn:hover,
-.stat-btn:hover { transform: translateY(-2px); }
+.stat-btn:hover { transform: translate3d(0, -2px, 0); }
 button:not(:disabled):active,
 .top-btn:active,
 .action-btn:active,
+.open-btn:active,
 .fast-open-btn:active,
+.main-btn:active,
+.fast-btn:active,
 .case-open-btn:active,
 .back-btn:active,
 .settings-btn:active,
 .profile-action:active,
 .upgrade-btn:active,
-.stat-btn:active { transform: translateY(0) scale(.98); }
+.stat-btn:active { transform: translate3d(0, 0, 0) scale(.98); }
 button:focus-visible,
 a:focus-visible,
 input:focus-visible,
-select:focus-visible { outline: 2px solid #ff8a00; outline-offset: 3px; }
+select:focus-visible {
+  outline: 2px solid #ff8a00;
+  outline-offset: 3px;
+}
 
+/* Search */
 .search-wrap,
-.search-container { width: min(100%, 620px); margin: 0 auto clamp(22px, 3vw, 34px); box-sizing: border-box; }
+.search-container {
+  width: min(100%, 620px);
+  margin: 0 auto clamp(22px, 3vw, 34px);
+  box-sizing: border-box;
+}
 .search-wrap input,
 .search-container input,
 .search,
 .case-search,
-#caseSearch { width: 100%; min-width: 0; height: 48px; border-radius: 999px; box-sizing: border-box; }
+#caseSearch {
+  width: 100%;
+  min-width: 0;
+  height: 48px;
+  border-radius: 999px;
+  box-sizing: border-box;
+}
 
+/* Case catalog */
 .cases-grid,
 .cases,
 .case-grid,
-#casesContainer { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); gap: var(--ui-card-gap); align-items: stretch; justify-items: stretch; }
+#casesContainer {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)) !important;
+  gap: var(--ui-card-gap) !important;
+  align-items: stretch !important;
+  justify-items: stretch !important;
+}
 .case-card,
 .case,
-.case-item { min-width: 0; width: 100%; height: 100%; box-sizing: border-box; display: grid; grid-template-rows: auto minmax(0, 1fr) auto auto; align-items: center; justify-items: center; text-align: center; }
+.case-item {
+  min-width: 0 !important;
+  width: 100% !important;
+  min-height: 300px !important;
+  height: auto !important;
+  margin: 0 !important;
+  padding: 18px !important;
+  box-sizing: border-box;
+  display: grid !important;
+  grid-template-rows: auto minmax(120px, 1fr) auto auto !important;
+  align-items: center !important;
+  justify-items: center !important;
+  text-align: center !important;
+  position: relative !important;
+}
 .case-card img,
 .case img,
-.case-item img { display: block; max-width: 100%; object-fit: contain; }
+.case-item img {
+  display: block;
+  max-width: 100%;
+  max-height: 175px;
+  object-fit: contain;
+}
+.case-emoji {
+  width: 100%;
+  min-height: 145px;
+  display: grid;
+  place-items: center;
+  margin-inline: auto;
+}
 .case-title,
-.case-name { width: 100%; min-height: 2.4em; display: grid; place-items: center; text-align: center; overflow-wrap: anywhere; }
-.case-price { position: static !important; inset: auto !important; width: 100%; display: flex; justify-content: center; align-items: center; margin: 6px 0 12px; padding: 0 !important; font-variant-numeric: tabular-nums; }
+.case-name {
+  width: 100%;
+  min-height: 2.4em;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+.case-price {
+  position: static !important;
+  inset: auto !important;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 6px 0 12px !important;
+  padding: 0 !important;
+  background: transparent !important;
+  font-variant-numeric: tabular-nums;
+}
 .case-card .case-open-btn,
 .case .case-open-btn,
-.case-item .case-open-btn { width: min(100%, 180px); margin-inline: auto; }
+.case-item .case-open-btn {
+  width: min(100%, 180px) !important;
+  margin-inline: auto !important;
+}
 
+/* Case screen controls */
+#openAmounts,
+.open-buttons {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) !important;
+  width: min(100%, 760px) !important;
+  margin: 18px auto 0 !important;
+  gap: 12px !important;
+}
+#openAmounts > *,
+.open-buttons > *,
+.open-btn,
+.fast-open-btn,
+.main-btn,
+.fast-btn {
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 60px !important;
+  margin: 0 !important;
+}
+.case-items-list {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)) !important;
+  gap: 14px !important;
+  padding: 0 20px 140px !important;
+}
+.case-item-card { width: 100% !important; min-width: 0 !important; }
+
+/* Profile / statistics / Upgrade */
 .profile-layout,
 .profile-grid,
 .stats-grid,
-.upgrade-layout { display: grid; gap: var(--ui-gap); align-items: stretch; }
+.upgrade-layout {
+  display: grid;
+  gap: var(--ui-gap);
+  align-items: stretch;
+}
 .profile-layout,
 .profile-grid { grid-template-columns: minmax(0, 1.35fr) minmax(280px, .65fr); }
 .stats-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -137,127 +265,205 @@ select:focus-visible { outline: 2px solid #ff8a00; outline-offset: 3px; }
 .profile-actions,
 .stats-actions,
 .upgrade-actions,
-.inventory-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; align-items: stretch; }
+.inventory-actions {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)) !important;
+  gap: 12px !important;
+  align-items: stretch;
+}
+.profile-actions > *,
+.stats-actions > *,
+.upgrade-actions > *,
+.inventory-actions > * { width: 100%; min-width: 0; }
 
+/* Profile banner: keep action buttons out of the text area. */
+.profile-header,
+.profile-banner,
+.profile-top,
+.profile-top-line {
+  position: relative;
+  box-sizing: border-box;
+}
+.profile-header,
+.profile-banner { padding-inline: 76px !important; }
+.profile-top-line {
+  width: 100% !important;
+  overflow: visible !important;
+}
 .back-btn-profile,
 .page-back,
 .settings-page-btn,
-.profile-settings { position: absolute; top: 18px; z-index: 30; }
+.profile-settings {
+  position: absolute !important;
+  top: 18px !important;
+  z-index: 40 !important;
+  margin: 0 !important;
+}
 .back-btn-profile,
-.page-back { left: 18px; right: auto; }
+.page-back { left: 18px !important; right: auto !important; }
 .settings-page-btn,
-.profile-settings { right: 18px; left: auto; }
+.profile-settings { right: 18px !important; left: auto !important; }
 
+/* Inventory: true three-column header so the title stays visually centered. */
+.inventory-header,
+.inventory-title-row,
+.inventory-top {
+  position: relative;
+  display: grid !important;
+  grid-template-columns: 1fr auto 1fr !important;
+  align-items: center;
+  gap: 12px;
+}
+.inventory-header > :first-child,
+.inventory-title-row > :first-child,
+.inventory-top > :first-child { justify-self: start; }
+.inventory-header > :last-child,
+.inventory-title-row > :last-child,
+.inventory-top > :last-child { justify-self: end; }
+.inventory-header > h1,
+.inventory-header > h2,
+.inventory-title-row > h1,
+.inventory-title-row > h2,
+.inventory-top > h1,
+.inventory-top > h2 {
+  grid-column: 2;
+  justify-self: center;
+  margin: 0;
+}
 .inventory-grid,
 .inventory,
-#inventoryGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 170px), 1fr)); gap: 16px; align-items: stretch; }
-.inventory-card { display: grid; grid-template-rows: minmax(110px, 1fr) auto auto; justify-items: center; text-align: center; }
+#inventoryGrid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 170px), 1fr)) !important;
+  gap: 16px !important;
+  align-items: stretch;
+}
+.inventory-card {
+  display: grid !important;
+  grid-template-rows: minmax(110px, 1fr) auto auto;
+  justify-items: center;
+  text-align: center;
+  padding: 14px;
+}
 .inventory-card img,
 .inventory-item img { max-width: 100%; max-height: 150px; object-fit: contain; }
 
+/* Live Drops: fixed bottom rail; children can glow outside their own box. */
 .live-container,
 .live-drops,
 #liveDrops,
 #liveContainer,
 #liveDropsContainer,
-.live-drops-container { position: fixed; left: 0; right: 0; bottom: max(12px, env(safe-area-inset-bottom)); z-index: 1200; width: 100%; padding: 10px var(--ui-gutter); overflow: visible !important; contain: layout; pointer-events: none; max-height: none !important; box-sizing: border-box; }
+.live-drops-container {
+  position: fixed !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: max(12px, env(safe-area-inset-bottom)) !important;
+  z-index: 1200 !important;
+  width: 100% !important;
+  max-height: none !important;
+  padding: 10px var(--ui-gutter) !important;
+  overflow: visible !important;
+  contain: layout;
+  pointer-events: none;
+  box-sizing: border-box;
+}
 .live-container > *,
 .live-drops > *,
 #liveDrops > *,
 #liveContainer > * { pointer-events: auto; }
 .live-track,
-.live-list { width: min(100%, var(--ui-max)); margin-inline: auto; display: flex; flex-direction: row !important; align-items: center; justify-content: flex-start; gap: 12px; overflow: visible !important; }
+.live-list,
+#liveDrops > div {
+  width: min(100%, var(--ui-max));
+  margin-inline: auto;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  overflow: visible !important;
+}
 .live-item,
 .live-drop-item,
-.live-drop { flex: 0 0 auto; animation: edLiveIn var(--ui-med) var(--ui-ease) both; will-change: transform, opacity; }
-@keyframes edLiveIn { from { opacity: 0; transform: translate3d(-28px, 10px, 0) scale(.94); } to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); } }
+.live-drop {
+  flex: 0 0 auto !important;
+  margin: 0 !important;
+  animation: edLiveIn var(--ui-med) var(--ui-ease) both;
+}
+@keyframes edLiveIn {
+  from { opacity: 0; transform: translate3d(-24px, 8px, 0) scale(.96); }
+  to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
 
+/* Roulette: only the reel clips. The page/modal never clips it. */
 .multi-roulette,
 .roulette,
-.case-roulette { position: relative; overflow: hidden; width: 100%; }
-.multi-track,
-.roulette-track { display: flex; align-items: center; width: max-content; min-height: 100%; will-change: transform; }
-.roulette-marker,
-.center-indicator { pointer-events: none; left: 50%; transform: translateX(-50%); z-index: 50; }
-
-.page { animation: edPageIn var(--ui-slow) var(--ui-ease) both; }
-@keyframes edPageIn { from { opacity: 0; transform: translate3d(0, 8px, 0); } to { opacity: 1; transform: translate3d(0, 0, 0); } }
-
-@layer legacyGeometryGuard {
-  .cases { width: min(100% - (var(--ui-gutter) * 2), var(--ui-max)) !important; margin: 34px auto 0 !important; grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)) !important; gap: var(--ui-card-gap) !important; }
-  .case { width: 100% !important; min-width: 0 !important; min-height: 300px !important; height: auto !important; margin: 0 !important; position: relative !important; display: grid !important; grid-template-rows: auto minmax(0, 1fr) auto auto !important; align-items: center !important; justify-items: center !important; }
-  .case-name { width: 100% !important; margin-top: 14px !important; text-align: center !important; }
-  .case-price { position: static !important; margin: 4px 0 12px !important; background: transparent !important; padding: 0 !important; }
-  .case .case-emoji { margin-inline: auto !important; }
-  #openAmounts,
-  .open-buttons { display: grid !important; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) !important; width: min(100%, 760px) !important; margin-inline: auto !important; gap: 12px !important; }
-  .open-btn,
-  .fast-open-btn,
-  .main-btn,
-  .fast-btn { width: 100% !important; min-width: 0 !important; height: 60px !important; margin: 0 !important; }
-  .case-items-list { display: grid !important; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)) !important; gap: 14px !important; padding: 0 20px 140px !important; }
-  .case-item-card { width: 100% !important; min-width: 0 !important; }
-  .search-wrap { width: min(100% - (var(--ui-gutter) * 2), 620px) !important; margin: 24px auto 0 !important; }
-  .search { width: 100% !important; max-width: 620px !important; }
-  .multi-roulette { width: min(100%, 1200px) !important; margin-inline: auto !important; overflow: hidden !important; }
-  .multi-track { width: max-content !important; }
-  .profile-top-line { width: 100% !important; }
-  #liveContainer { flex-direction: row !important; overflow: visible !important; max-height: none !important; }
-
-  /* Header */
-  header { display: flex !important; align-items: center !important; justify-content: space-between !important; }
-  header > .logo,
-  header > .brand,
-  header > .header-logo { flex: 0 1 auto !important; min-width: 0 !important; }
-  header > .top-right,
-  header > .header-actions,
-  header > .nav { flex: 0 0 auto !important; margin-inline-start: auto !important; }
-  .top-right button,
-  .header-actions button { flex: 0 0 auto !important; }
-  .profile-actions > *,
-  .stats-actions > *,
-  .upgrade-actions > *,
-  .inventory-actions > * { min-width: 0 !important; width: 100%; }
-
-  /* Profile */
-  .profile-header,
-  .profile-banner,
-  .profile-top,
-  .profile-top-line { position: relative; box-sizing: border-box; }
-  .profile-header,
-  .profile-banner { padding-inline: 76px !important; }
-
-  /* Inventory */
-  .inventory-header,
-  .inventory-title-row,
-  .inventory-top { position: relative; display: grid !important; grid-template-columns: 1fr auto 1fr !important; align-items: center; gap: 12px; }
-  .inventory-header > :first-child,
-  .inventory-title-row > :first-child,
-  .inventory-top > :first-child { justify-self: start; }
-  .inventory-header > :last-child,
-  .inventory-title-row > :last-child,
-  .inventory-top > :last-child { justify-self: end; }
-  .inventory-header > h1,
-  .inventory-header > h2,
-  .inventory-title-row > h1,
-  .inventory-title-row > h2,
-  .inventory-top > h1,
-  .inventory-top > h2 { grid-column: 2; justify-self: center; margin: 0; }
-
-  /* Upgrade */
-  .upgrade-panel,
-  .upgrade-content { min-width: 0; }
-  .upgrade-actions { width: 100%; }
-
-  /* Case opening */
-  .case-modal,
-  .open-case-modal,
-  .case-opening-modal,
-  .modal.case-modal { overflow: hidden; box-sizing: border-box; }
-  .case-modal .modal-content,
-  .open-case-modal .modal-content,
-  .case-opening-modal .modal-content { width: min(100% - 28px, 1100px); max-height: min(88vh, 900px); overflow: auto; box-sizing: border-box; margin-inline: auto; }
+.case-roulette {
+  position: relative !important;
+  width: min(100%, 1200px) !important;
+  margin-inline: auto !important;
+  overflow: hidden !important;
+  isolation: isolate;
 }
+.multi-track,
+.roulette-track {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center;
+  width: max-content !important;
+  min-height: 100%;
+  will-change: transform;
+}
+.roulette-marker,
+.center-indicator {
+  pointer-events: none !important;
+  left: 50% !important;
+  z-index: 100 !important;
+  transform: translateX(-50%) !important;
+}
+
+/* Modal stack: one predictable stacking order. */
+.settings-overlay,
+#settingsOverlay,
+#statsOverlay,
+#historyOverlay,
+.auth-popup,
+.win-popup,
+.case-modal,
+.open-case-modal,
+.case-opening-modal,
+.modal {
+  z-index: 2000 !important;
+}
+.settings-box,
+.modal-content,
+.case-modal .modal-content,
+.open-case-modal .modal-content,
+.case-opening-modal .modal-content {
+  box-sizing: border-box;
+  max-width: min(1100px, calc(100vw - 28px));
+  max-height: min(88vh, 900px);
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+body.modal-open { overflow: hidden !important; }
+
+/* Pages fade only. Transforming the page can create a containing block for fixed descendants. */
+.page { animation: edPageIn var(--ui-slow) var(--ui-ease) both; }
+@keyframes edPageIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Remove accidental clipping around decorative card effects. */
+.case,
+.case-card,
+.inventory-card,
+.profile-card,
+.upgrade-card,
+.live-item,
+.live-drop { isolation: isolate; }
 
 @media (max-width: 900px) {
   .profile-layout,
@@ -278,26 +484,30 @@ select:focus-visible { outline: 2px solid #ff8a00; outline-offset: 3px; }
   .cases-grid,
   .case-grid,
   #casesContainer { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 12px !important; }
+  .case,
+  .case-card,
+  .case-item { min-height: 280px !important; padding: 13px !important; }
+  .case-emoji { min-height: 120px; }
+  .case-card img,
+  .case img,
+  .case-item img { max-height: 135px; }
   .inventory-grid,
   .inventory,
-  #inventoryGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  #inventoryGrid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 12px !important; }
+  .profile-header,
+  .profile-banner { padding-inline: 60px !important; }
   .live-container,
   .live-drops,
   #liveDrops,
-  #liveContainer { padding-inline: 10px; }
-  .profile-header,
-  .profile-banner { padding-inline: 60px !important; }
-  .inventory-header,
-  .inventory-title-row,
-  .inventory-top { grid-template-columns: 1fr auto 1fr !important; }
+  #liveContainer { padding-inline: 10px !important; }
   .back-btn-profile,
   .page-back,
   .settings-page-btn,
-  .profile-settings { top: 14px; }
+  .profile-settings { top: 14px !important; }
   .back-btn-profile,
-  .page-back { left: 14px; }
+  .page-back { left: 14px !important; }
   .settings-page-btn,
-  .profile-settings { right: 14px; }
+  .profile-settings { right: 14px !important; }
 }
 
 @media (max-width: 390px) {
@@ -307,15 +517,22 @@ select:focus-visible { outline: 2px solid #ff8a00; outline-offset: 3px; }
   #casesContainer { grid-template-columns: 1fr !important; gap: 10px !important; }
   .inventory-grid,
   .inventory,
-  #inventoryGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+  #inventoryGrid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 9px !important; }
   .profile-actions,
   .stats-actions,
   .upgrade-actions,
-  .inventory-actions { grid-template-columns: 1fr; }
+  .inventory-actions { grid-template-columns: 1fr !important; }
   .profile-header,
   .profile-banner { padding-inline: 52px !important; }
+  #openAmounts,
+  .open-buttons { grid-template-columns: 1fr !important; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation-duration: 1ms !important; animation-iteration-count: 1 !important; transition-duration: 1ms !important; scroll-behavior: auto !important; }
+  *, *::before, *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
 }
