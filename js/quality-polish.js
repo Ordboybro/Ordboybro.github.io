@@ -21,7 +21,6 @@
   function normalizeSearchFields() {
     document.querySelectorAll('input[type="search"], input[name*="search" i], input[placeholder*="кейс" i], input[placeholder*="поиск" i]').forEach(input => {
       input.type = 'search';
-      input.name = 'case-search';
       input.autocomplete = 'off';
       input.autocapitalize = 'none';
       input.autocorrect = 'off';
@@ -38,8 +37,7 @@
       const popup = document.getElementById('winPopup');
       if (popup && !reduced()) {
         animateIn(popup, { duration: 320, from: 'translate3d(0,14px,0) scale(.94)' });
-        const emoji = document.getElementById('winEmoji');
-        emoji?.animate([
+        document.getElementById('winEmoji')?.animate([
           { transform: 'scale(.72) rotate(-5deg)', opacity: .2 },
           { transform: 'scale(1.12) rotate(2deg)', opacity: 1, offset: .68 },
           { transform: 'scale(1) rotate(0deg)', opacity: 1 }
