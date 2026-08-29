@@ -49,7 +49,6 @@
     state.currentCase = Array.isArray(window.cases[key]) ? window.cases[key] : [];
     state.selectedCase = key;
     state.openAmount = 1;
-
     window.renderOpenAmounts?.();
     window.updateBestDrop?.();
     createRoulettes();
@@ -60,7 +59,6 @@
     const track = roulette.querySelector('.multi-track');
     const winner = track?.children?.[WIN_INDEX];
     if (!track || !winner) return Promise.resolve();
-
     const rr = roulette.getBoundingClientRect();
     const wr = winner.getBoundingClientRect();
     const target = rr.width / 2 - (wr.left - rr.left) - wr.width / 2;
@@ -109,26 +107,21 @@
       state.balance = previousBalance - totalPrice;
       user.balance = state.balance;
       user.inventory = previousInventory.slice();
-
       wins.forEach(item => {
         const copy = { ...item };
         user.inventory.push(copy);
         window.addLiveDrop?.(user.nickname || 'Игрок', copy);
       });
-
       state.stats = { ...previousStats };
       state.stats.opened = (previousStats.opened || 0) + wins.length;
       state.stats.spent = (previousStats.spent || 0) + totalPrice;
       state.winQueue = wins.slice();
-
       window.saveUsers?.();
       window.saveStats?.();
       window.renderInventory?.();
       window.updateBalanceUI?.();
       return true;
     } catch (error) {
-      // Opening is transactional: a persistence/render failure must not leave
-      // the user charged or their inventory partially modified.
       state.balance = previousBalance;
       user.balance = previousBalance;
       user.inventory = previousInventory;
@@ -204,6 +197,7 @@
     const node = byId(id);
     if (!node || node.dataset.oldDesignBound === '1') return;
     const clone = node.cloneNode(true);
+    clone.removeAttribute('onclick');
     clone.dataset.oldDesignBound = '1';
     node.replaceWith(clone);
     clone.addEventListener('click', event => {
@@ -216,6 +210,7 @@
   function install() {
     window.openCasePage = openCasePageCanonical;
     window.createRoulettes = createRoulettes;
+    window.openCase = openCaseAnimated;
 
     bind('openCaseButton', () => openCaseAnimated());
     bind('fastOpenButton', () => openCaseAnimated({ fast: true }));
