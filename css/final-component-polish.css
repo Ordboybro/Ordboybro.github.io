@@ -1,6 +1,5 @@
 /* Emoji Drops — final component alignment layer
- * This file owns only concrete component geometry. It intentionally does not
- * contain gameplay rules or page routing.
+ * Concrete component geometry only. Gameplay and routing stay elsewhere.
  */
 :root {
   --ed-content: min(1480px, calc(100vw - 48px));
@@ -9,7 +8,6 @@
   --ed-card-gap: clamp(14px, 1.8vw, 26px);
 }
 
-/* Header */
 header {
   width: 100%;
   min-width: 0;
@@ -17,21 +15,17 @@ header {
 }
 header .logo,
 header .top-right,
-header .header-actions {
-  min-width: 0;
-}
+header .header-actions,
 header .logo-text,
 header .top-right > *,
-header .header-actions > * {
-  min-width: 0;
-}
+header .header-actions > * { min-width: 0; }
 
-/* Catalog/search */
 .search-wrap,
 .search-container {
   width: min(100%, 620px) !important;
   margin-inline: auto !important;
 }
+
 .cases,
 .cases-grid,
 .case-grid,
@@ -46,10 +40,10 @@ header .header-actions > * {
 .case,
 .case-card,
 .case-item {
-  overflow: hidden;
   min-height: 0 !important;
   aspect-ratio: 0.82 / 1;
   grid-template-rows: minmax(0, 1fr) auto auto auto !important;
+  overflow: visible !important;
 }
 .case > img,
 .case-card > img,
@@ -66,6 +60,7 @@ header .header-actions > * {
   min-height: 0 !important;
   margin: 4px 0 0 !important;
   line-height: 1.2;
+  overflow-wrap: anywhere;
 }
 .case-price {
   margin: 5px 0 10px !important;
@@ -74,11 +69,8 @@ header .header-actions > * {
 }
 .case .case-open-btn,
 .case-card .case-open-btn,
-.case-item .case-open-btn {
-  align-self: end;
-}
+.case-item .case-open-btn { align-self: end; }
 
-/* Shared action rows */
 .open-buttons,
 #openAmounts,
 .profile-actions,
@@ -93,23 +85,15 @@ header .header-actions > * {
 .profile-actions > *,
 .stats-actions > *,
 .upgrade-actions > *,
-.inventory-actions > * {
-  min-width: 0 !important;
-}
+.inventory-actions > * { min-width: 0 !important; }
 
-/* Corner actions */
 .back-btn-profile,
 .page-back,
 .settings-page-btn,
-.profile-settings {
-  margin: 0 !important;
-}
+.profile-settings { margin: 0 !important; }
 
-/* Profile banner and stats */
 .profile-page,
-#profilePage {
-  min-height: 0;
-}
+#profilePage { min-height: 0; }
 .profile-top-line {
   position: relative !important;
   left: 0 !important;
@@ -117,30 +101,18 @@ header .header-actions > * {
   width: 100% !important;
   transform: none !important;
 }
-.profile-content {
-  position: relative;
-  isolation: isolate;
-}
+.profile-content { position: relative; isolation: isolate; }
 .profile-layout,
-.profile-grid {
-  width: 100%;
-  max-width: var(--ed-content);
-  margin-inline: auto;
-}
+.profile-grid,
 .stats-grid {
   width: 100%;
   max-width: var(--ed-content);
   margin-inline: auto;
 }
 
-/* Inventory */
 .inventory-header,
 .inventory-title-row,
-.inventory-top {
-  width: 100%;
-  max-width: var(--ed-content);
-  margin-inline: auto;
-}
+.inventory-top,
 .inventory-grid,
 #inventoryGrid,
 .inventory {
@@ -148,24 +120,16 @@ header .header-actions > * {
   max-width: var(--ed-content);
   margin-inline: auto;
 }
-.inventory-card {
-  min-width: 0;
-  overflow: hidden;
-}
+.inventory-card { min-width: 0; overflow: visible; }
 
-/* Upgrade */
 .upgrade-layout,
 .upgrade-content {
   width: 100%;
   max-width: var(--ed-content);
   margin-inline: auto;
 }
-.upgrade-card {
-  min-width: 0;
-  overflow: hidden;
-}
+.upgrade-card { min-width: 0; overflow: visible; }
 
-/* Live drops: never let the rail participate in page layout. */
 #liveContainer,
 #liveDrops,
 #liveDropsContainer,
@@ -173,25 +137,15 @@ header .header-actions > * {
 .live-drops,
 .live-drops-container {
   pointer-events: none !important;
+  padding-inline: var(--ed-edge) !important;
 }
 #liveContainer > *,
 #liveDrops > *,
 #liveDropsContainer > *,
 .live-container > *,
 .live-drops > *,
-.live-drops-container > * {
-  pointer-events: auto;
-}
-#liveContainer,
-#liveDrops,
-#liveDropsContainer,
-.live-container,
-.live-drops,
-.live-drops-container {
-  padding-inline: var(--ed-edge) !important;
-}
+.live-drops-container > * { pointer-events: auto; }
 
-/* Case opening: the page owns the scroll; the reel owns clipping. */
 #openPage,
 .case-page,
 .open-page {
@@ -208,25 +162,17 @@ header .header-actions > * {
 }
 .multi-roulette,
 .roulette,
-.case-roulette {
-  min-width: 0;
-  max-width: 100%;
-}
+.case-roulette { min-width: 0; max-width: 100%; }
 .multi-track,
-.roulette-track {
-  min-width: max-content;
-}
+.roulette-track { min-width: max-content; }
 
-/* Modal geometry */
 .settings-overlay,
 .auth-popup,
 .win-popup,
 .case-modal,
 .open-case-modal,
 .case-opening-modal,
-.modal {
-  padding: 14px !important;
-}
+.modal { padding: 14px !important; }
 .settings-box,
 .modal-content,
 .case-modal .modal-content,
@@ -237,7 +183,6 @@ header .header-actions > * {
   max-height: calc(100dvh - 28px) !important;
 }
 
-/* Prevent text from changing the geometry of controls. */
 button,
 .top-btn,
 .action-btn,
@@ -255,7 +200,6 @@ button,
   text-overflow: ellipsis;
 }
 
-/* Small screens */
 @media (max-width: 650px) {
   :root { --ed-content: calc(100vw - 28px); }
   header { padding-inline: 14px !important; }
