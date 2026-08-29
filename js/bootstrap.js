@@ -38,8 +38,9 @@
 
   async function bootRuntime() {
     try {
-      // Establish the canonical layout and economy before behaviour wrappers.
+      // Layout is established before behaviour and recovery layers.
       await loadStylesheet("css/layout-sanitizer.css", "clean-layout");
+      await loadStylesheet("css/component-layout.css", "component-layout");
       await loadScript("js/economy.js", "economy-runtime");
       await loadScript("js/core-consistency.js", "core-consistency");
       await loadScript("js/quality-polish.js", "quality-polish");
