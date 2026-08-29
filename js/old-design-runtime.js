@@ -42,6 +42,20 @@
     }
   }
 
+  function openCasePageCanonical(type) {
+    const state = window.state;
+    if (!state || !window.cases) return;
+    const key = String(type || '').toLowerCase();
+    state.currentCase = Array.isArray(window.cases[key]) ? window.cases[key] : [];
+    state.selectedCase = key;
+    state.openAmount = 1;
+
+    window.renderOpenAmounts?.();
+    window.updateBestDrop?.();
+    createRoulettes();
+    window.renderCaseItems?.();
+  }
+
   function animateTrack(roulette, delay = 0) {
     const track = roulette.querySelector('.multi-track');
     const winner = track?.children?.[WIN_INDEX];
@@ -175,9 +189,12 @@
   }
 
   function install() {
-    // Navigation is owned exclusively by router.js. The case runtime only
-    // owns the opening animation, persistence and roulette DOM.
+    // Navigation and case-page mounting are owned exclusively by router.js.
+    // This runtime owns only case state preparation, roulette animation and
+    // persistence. The inline legacy openCasePage is shadowed by this one.
+    window.openCasePage = openCasePageCanonical;
     window.createRoulettes = createRoulettes;
+
     bind('openCaseButton', () => openCaseAnimated());
     bind('fastOpenButton', () => openCaseAnimated({ fast: true }));
     bind('caseBackButton', () => {
