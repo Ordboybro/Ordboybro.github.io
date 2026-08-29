@@ -1,74 +1,116 @@
 (() => {
   'use strict';
 
-  const STARTING_BALANCE = 100;
-  const RARITY_ODDS = Object.freeze({ common: 55, rare: 28, epic: 11, mythical: 5, legendary: 1 });
-  const TARGET_RTP = 0.70;
-  const TARGET_COUNTS = Object.freeze({ common: 8, rare: 5, epic: 3, mythical: 2, legendary: 2 });
-  const FILLERS = Object.freeze({
-    common:['🙂','🙃','😉','😊','😌','😐','😶','😴','🤍','✨'],
-    rare:['😎','🤓','🥰','😇','🤠','🫶','💙','🌸','🍀','⚡'],
-    epic:['🤩','🥳','👻','🤖','🔥','🌈','💜','🌌','🎯','🚀'],
-    mythical:['💀','👽','🦹','🌪️','☄️','❤️‍🔥','🧿','🌋','🪄','🪽'],
-    legendary:['👑','💎','🌟','🏆','🐉','🦄','🌠','🔱','🌌','☀️']
+  // EmojiDrops economy — single source of truth.
+  // Case price, catalogue size, rarity odds and item EV are calibrated together.
+  const CASE_META = Object.freeze({
+    transport: { price: 15,  rtp: 0.93, count: 12 },
+    animals:   { price: 25,  rtp: 0.93, count: 14 },
+    food:      { price: 40,  rtp: 0.92, count: 15 },
+    nature:    { price: 65,  rtp: 0.92, count: 16 },
+    moves:     { price: 90,  rtp: 0.92, count: 18 },
+    smile:     { price: 130, rtp: 0.91, count: 20 },
+    sport:     { price: 250, rtp: 0.91, count: 22 },
+    games:     { price: 500, rtp: 0.90, count: 25 }
   });
-  const DEFAULT_PRICES=Object.freeze({transport:15,animals:25,food:40,nature:60,moves:85,smile:120,sport:250,games:500});
-  const CASE_PRICES={...DEFAULT_PRICES};
-
-  const parsePrice=item=>{const value=Number.parseFloat(String(item?.price??0).replace(',','.'));return Number.isFinite(value)&&value>0?value:1};
-  const normalizeRarity=rarity=>RARITY_ODDS[rarity]!=null?rarity:'common';
-  const rarityWeight=rarity=>Number(RARITY_ODDS[normalizeRarity(rarity)]||0);
-  const secureUnit=()=>{if(window.crypto?.getRandomValues){const b=new Uint32Array(1);window.crypto.getRandomValues(b);return(b[0]+1)/4294967297}return Math.random()};
-
-  function pickFiller(rarity,used){const source=FILLERS[rarity]||FILLERS.common;const emoji=source.find(value=>!used.has(value))||source[0];used.add(emoji);return emoji}
-  function normalizedCaseItems(items){
-    const source=Array.isArray(items)?items.filter(Boolean).map(item=>({...item,rarity:normalizeRarity(item.rarity)})):[];
-    const groups=new Map(Object.keys(RARITY_ODDS).map(r=>[r,[]]));source.forEach(item=>groups.get(item.rarity).push(item));
-    const used=new Set(source.map(item=>item.emoji)),result=[];
-    for(const [rarity,count] of Object.entries(TARGET_COUNTS)){
-      const group=groups.get(rarity)||[];
-      if(group.length>=count){const step=group.length/count;for(let i=0;i<count;i++)result.push({...group[Math.min(group.length-1,Math.floor(i*step))]})}
-      else{group.forEach(item=>result.push({...item}));while(result.filter(item=>item.rarity===rarity).length<count){const emoji=pickFiller(rarity,used);const base=rarity==='common'?4:rarity==='rare'?11:rarity==='epic'?25:rarity==='mythical'?60:150;result.push({emoji,rarity,price:`${base}₽`})}}
+  const RARITIES = ['common', 'rare', 'epic', 'mythical', 'legendary'];
+  const RARITY_ODDS = Object.freeze({ common: 55, rare: 27, epic: 12, mythical: 5, legendary: 1 });
+  const VALUE_MULTIPLIERS = Object.freeze({ common: 0.28, rare: 0.72, epic: 1.68, mythical: 4.40, legendary: 14.50 });
+  const COUNTS = Object.freeze({
+    12:[6,3,1,1,1], 14:[7,4,1,1,1], 15:[8,4,1,1,1], 16:[8,4,2,1,1],
+    18:[10,5,1,1,1], 20:[11,5,2,1,1], 22:[12,6,2,1,1], 25:[14,7,2,1,1]
+  });
+  const BASE_RTP = RARITIES.reduce((sum, rarity) => sum + RARITY_ODDS[rarity] / 100 * VALUE_MULTIPLIERS[rarity], 0);
+  const money = value => Number(String(value ?? 0).replace(/[^0-9.]/g, '')) || 0;
+  const formatMoney = value => `${Math.max(1, Math.round(value))}₽`;
+  const secureRandom = () => {
+    if (window.crypto?.getRandomValues) {
+      const bytes = new Uint32Array(1);
+      window.crypto.getRandomValues(bytes);
+      return (bytes[0] + 1) / 4294967297;
     }
-    return result;
-  }
-  function uniformItemChance(items,target){const pool=Array.isArray(items)?items:[],rarity=normalizeRarity(target?.rarity),candidates=pool.filter(item=>normalizeRarity(item?.rarity)===rarity);if(!candidates.length||!candidates.includes(target))return 0;return(rarityWeight(rarity)/100)/candidates.length*100}
-  function chooseUniform(items){if(!Array.isArray(items)||!items.length)return null;return items[Math.min(items.length-1,Math.floor(secureUnit()*items.length))]}
-  function getRandomByChance(items){
-    const pool=Array.isArray(items)?items.filter(Boolean):[];if(!pool.length)return null;let cursor=0,rarity='common',roll=secureUnit()*100;
-    for(const[key,chance]of Object.entries(RARITY_ODDS)){cursor+=chance;if(roll<cursor){rarity=key;break}}
-    const candidates=pool.filter(item=>normalizeRarity(item?.rarity)===rarity);return chooseUniform(candidates.length?candidates:pool)
-  }
-  function upgradeChance(sourceValue,targetValue){const source=Number(sourceValue)||0,target=Number(targetValue)||0;if(source<=0||target<=0)return 0;if(target<=source)return 95;return Math.max(1,Math.min(95,source/target*100))}
-  function roundCasePrice(value){const raw=Math.max(15,Math.min(500,value)),step=raw<50?5:raw<100?10:raw<250?25:50;return Math.max(15,Math.round(raw/step)*step)}
+    return Math.random();
+  };
 
-  function getCasesObject(){
-    try{if(typeof cases!=='undefined'&&cases&&typeof cases==='object')return cases}catch(_){ }
-    return window.cases&&typeof window.cases==='object'?window.cases:null;
+  function getCases() {
+    try { if (typeof cases !== 'undefined' && cases) return cases; } catch (_) {}
+    return window.cases || null;
   }
-  function syncLegacyGlobals(){
-    const sourceCases=getCasesObject();
-    if(sourceCases)window.cases=sourceCases;
-    try{if(typeof casePrices!=='undefined'&&casePrices&&typeof casePrices==='object')Object.assign(casePrices,CASE_PRICES)}catch(_){ }
-    if(!window.casePrices)window.casePrices=CASE_PRICES;else Object.assign(window.casePrices,CASE_PRICES);
+  function getCasePrices() {
+    try { if (typeof casePrices !== 'undefined' && casePrices) return casePrices; } catch (_) {}
+    window.casePrices ||= {};
+    return window.casePrices;
   }
-  function calibrateCases(){
-    const sourceCases=getCasesObject();if(!sourceCases)return;
-    for(const[key,items]of Object.entries(sourceCases)){
-      const normalized=normalizedCaseItems(items);sourceCases[key]=normalized;
-      const expectedValue=normalized.reduce((sum,item)=>sum+parsePrice(item)*(uniformItemChance(normalized,item)/100),0);
-      CASE_PRICES[key]=roundCasePrice(expectedValue/TARGET_RTP);
+  function pickEvenly(items, count) {
+    if (!items.length || count <= 0) return [];
+    if (items.length <= count) return items.slice();
+    const sorted = items.slice().sort((a,b) => money(a.price) - money(b.price));
+    return Array.from({length: count}, (_, i) => sorted[Math.round(i * (sorted.length - 1) / Math.max(1, count - 1))]);
+  }
+  function setGroupPrices(group, average) {
+    if (!group.length) return;
+    const values = group.map((item, i) => average * (0.78 + 0.44 * i / Math.max(1, group.length - 1)));
+    const factor = average / Math.max(0.0001, values.reduce((a,b) => a + b, 0) / values.length);
+    values.forEach((value, i) => { group[i].price = formatMoney(value * factor); });
+    const target = Math.round(average * group.length);
+    const actual = group.reduce((sum, item) => sum + money(item.price), 0);
+    group[Math.floor(group.length / 2)].price = formatMoney(money(group[Math.floor(group.length / 2)].price) + target - actual);
+  }
+  function calibrateCase(id, meta) {
+    const source = getCases()?.[id];
+    if (!Array.isArray(source) || !source.length) return;
+    const distribution = COUNTS[meta.count] || COUNTS[20];
+    const selected = [];
+    RARITIES.forEach((rarity, index) => selected.push(...pickEvenly(source.filter(item => item?.rarity === rarity), distribution[index])));
+    if (selected.length < meta.count) {
+      for (const item of source) {
+        if (selected.length >= meta.count) break;
+        if (!selected.includes(item)) selected.push(item);
+      }
     }
-    syncLegacyGlobals();
+    const scale = meta.rtp / BASE_RTP;
+    RARITIES.forEach(rarity => {
+      const group = selected.filter(item => item?.rarity === rarity);
+      setGroupPrices(group, meta.price * VALUE_MULTIPLIERS[rarity] * scale);
+      const perItemChance = RARITY_ODDS[rarity] / Math.max(1, group.length);
+      group.forEach(item => { item.dropChance = perItemChance; item.caseId = id; });
+    });
+    const allCases = getCases();
+    if (allCases) allCases[id] = selected;
+    getCasePrices()[id] = meta.price;
+  }
+  function calibrate() {
+    const allCases = getCases();
+    if (!allCases) return false;
+    Object.entries(CASE_META).forEach(([id, meta]) => calibrateCase(id, meta));
+    window.getRandomByChance = function getRandomByChance(items) {
+      const pool = Array.isArray(items) ? items.filter(Boolean) : [];
+      if (!pool.length) return null;
+      const total = pool.reduce((sum, item) => sum + (Number(item.dropChance) || 0), 0);
+      if (total <= 0) return pool[Math.floor(secureRandom() * pool.length)];
+      let roll = secureRandom() * total;
+      for (const item of pool) {
+        roll -= Number(item.dropChance) || 0;
+        if (roll <= 0) return item;
+      }
+      return pool[pool.length - 1];
+    };
+    window.getUpgradeChance = function getUpgradeChance(source, target) {
+      const a = Math.max(0, Number(source) || 0), b = Math.max(0, Number(target) || 0);
+      if (!a || !b || b <= a) return 0;
+      return Math.max(1, Math.min(95, a / b * 96));
+    };
+    window.getCasePrice = id => Number(CASE_META[id]?.price || getCasePrices()[id] || 0);
+    window.getCaseEconomy = (items, id) => {
+      const pool = Array.isArray(items) ? items : [];
+      const price = window.getCasePrice(id);
+      const expectedValue = pool.reduce((sum, item) => sum + money(item?.price) * (Number(item?.dropChance) || 0) / 100, 0);
+      return { price, expectedValue, rtp: price ? expectedValue / price * 100 : 0, items: pool.map(item => ({ item, chance: Number(item?.dropChance) || 0 })) };
+    };
+    window.EMOJI_DROPS_ECONOMY = Object.freeze({ version: 3, startingBalance: 1000, cases: CASE_META, rarityOdds: RARITY_ODDS, targetRtp: Object.fromEntries(Object.entries(CASE_META).map(([id,m]) => [id,m.rtp])), upgrade: { houseEdge: 0.04, maxChance: 95 } });
+    window.__emojiDropsCalibrate = calibrate;
+    return true;
   }
 
-  function getCaseEconomy(items,caseKey){const pool=Array.isArray(items)?items:[],price=Number(CASE_PRICES[caseKey]??window.casePrices?.[caseKey]??0),rows=pool.map(item=>({item,chance:uniformItemChance(pool,item)})),expectedValue=rows.reduce((sum,row)=>sum+parsePrice(row.item)*row.chance/100,0);return{price,expectedValue,rtp:price>0?expectedValue/price*100:0,items:rows}}
-  const getCaseItemChances=(items,caseKey)=>getCaseEconomy(items,caseKey).items.map(({item,chance})=>({item,chance,rarityChance:rarityWeight(item?.rarity)}));
-
-  window.getRandomByChance=getRandomByChance;window.getItemChance=uniformItemChance;window.getRarityChance=rarityWeight;window.getUpgradeChance=upgradeChance;window.getCasePrice=key=>Number(CASE_PRICES[key]??0);window.getCaseEconomy=getCaseEconomy;window.getCaseItemChances=getCaseItemChances;
-  window.EMOJI_DROPS_ECONOMY=Object.freeze({STARTING_BALANCE,RARITY_ODDS,TARGET_RTP,TARGET_COUNTS,CASE_PRICES});
-
-  const applyStartingBalance=()=>{let appState=window.state;try{if(typeof state!=='undefined')appState=state}catch(_){}if(!appState||appState.currentUser)return;if(appState.balance==null||appState.balance===1000)appState.balance=STARTING_BALANCE;const balance=document.getElementById('balance');if(balance)balance.textContent=String(appState.balance)};
-  const init=()=>{calibrateCases();syncLegacyGlobals();applyStartingBalance()};
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
+  if (!calibrate()) window.addEventListener('DOMContentLoaded', calibrate, { once: true });
 })();
