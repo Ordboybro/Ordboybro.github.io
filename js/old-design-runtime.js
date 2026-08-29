@@ -98,24 +98,47 @@
   function persistOpen(wins, totalPrice) {
     const state = window.state;
     const user = state?.currentUser;
-    if (!state || !user || Number(state.balance) < totalPrice) return false;
-    state.balance -= totalPrice;
-    user.balance = state.balance;
-    user.inventory = Array.isArray(user.inventory) ? user.inventory : [];
-    wins.forEach(item => {
-      const copy = { ...item };
-      user.inventory.push(copy);
-      window.addLiveDrop?.(user.nickname || 'Игрок', copy);
-    });
-    state.stats = state.stats || {};
-    state.stats.opened = (state.stats.opened || 0) + wins.length;
-    state.stats.spent = (state.stats.spent || 0) + totalPrice;
-    state.winQueue = wins.slice();
-    window.saveUsers?.();
-    window.saveStats?.();
-    window.renderInventory?.();
-    window.updateBalanceUI?.();
-    return true;
+    if (!state || !user || !Array.isArray(wins) || !wins.length || Number(state.balance) < totalPrice) return false;
+
+    const previousBalance = Number(state.balance);
+    const previousInventory = Array.isArray(user.inventory) ? user.inventory.slice() : [];
+    const previousStats = { ...(state.stats || {}) };
+    const previousQueue = Array.isArray(state.winQueue) ? state.winQueue.slice() : state.winQueue;
+
+    try {
+      state.balance = previousBalance - totalPrice;
+      user.balance = state.balance;
+      user.inventory = previousInventory.slice();
+
+      wins.forEach(item => {
+        const copy = { ...item };
+        user.inventory.push(copy);
+        window.addLiveDrop?.(user.nickname || 'Игрок', copy);
+      });
+
+      state.stats = { ...previousStats };
+      state.stats.opened = (previousStats.opened || 0) + wins.length;
+      state.stats.spent = (previousStats.spent || 0) + totalPrice;
+      state.winQueue = wins.slice();
+
+      window.saveUsers?.();
+      window.saveStats?.();
+      window.renderInventory?.();
+      window.updateBalanceUI?.();
+      return true;
+    } catch (error) {
+      // Opening is transactional: a persistence/render failure must not leave
+      // the user charged or their inventory partially modified.
+      state.balance = previousBalance;
+      user.balance = previousBalance;
+      user.inventory = previousInventory;
+      state.stats = previousStats;
+      state.winQueue = previousQueue;
+      try { window.updateBalanceUI?.(); } catch (_) {}
+      try { window.renderInventory?.(); } catch (_) {}
+      console.error('[EmojiDrops] case opening rollback', error);
+      return false;
+    }
   }
 
   async function openCaseAnimated({ fast = false } = {}) {
