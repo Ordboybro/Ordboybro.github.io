@@ -41,17 +41,17 @@
 
     async function bootRuntime() {
         try {
-            // Economy first: all game calculations must share one source of truth.
+            // Economy first: all game calculations share one source of truth.
             await loadScript("js/economy.js", "economy-runtime");
 
             // Behaviour/effects next: this may wrap the application's global
             // functions and inject its own animation helpers.
             await loadScript("js/quality-polish.js", "quality-polish");
 
-            // Layout is deliberately loaded last. It is the single final
-            // geometry authority, so older polish styles cannot move controls
-            // over one another after startup.
-            await loadStylesheet("css/final-layout.css", "final-layout");
+            // Disable the accumulated polish/final/quality styles and install
+            // one deterministic layout authority. This prevents old cascade
+            // rules from fighting each other and moving controls unexpectedly.
+            await loadScript("js/layout-sanitizer.js", "layout-sanitizer");
         } catch (error) {
             console.error("[EmojiDrops] runtime bootstrap failed", error);
         }
