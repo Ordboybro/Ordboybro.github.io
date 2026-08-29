@@ -25,4 +25,21 @@
       document.body.classList.add('modal-open');
     };
   }
+
+  const CASE_PRICES = Object.freeze({ transport:15, animals:25, food:40, nature:65, moves:90, smile:130, sport:250, games:500 });
+  function syncCasePrices() {
+    document.querySelectorAll('.case').forEach(card => {
+      const onclick = card.getAttribute('onclick') || '';
+      const match = onclick.match(/openCasePage\(['"]([^'"]+)['"]\)/i);
+      const id = match?.[1]?.toLowerCase();
+      const price = CASE_PRICES[id];
+      if (!price) return;
+      const node = card.querySelector('.new-price,.case-price,[data-price]');
+      if (!node) return;
+      const target = node.classList.contains('case-price') ? node.querySelector('.new-price') : node;
+      if (target) target.textContent = `${price}₽`;
+    });
+  }
+  syncCasePrices();
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', syncCasePrices, { once:true });
 })();
