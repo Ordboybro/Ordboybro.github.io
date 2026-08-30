@@ -1,0 +1,38 @@
+name: Load Emoji Drops polish
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  inject:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+      - name: Inject polish script
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          tag='<script src="js/polish-v3.js?v=3"></script>'
+          if tag not in s:
+              marker='<script>function changeNickname()'
+              if marker in s:
+                  s=s.replace(marker, tag+'\n'+marker, 1)
+              else:
+                  s=s.replace('</body>', tag+'\n</body>', 1)
+              p.write_text(s,encoding='utf-8')
+          PY
+      - name: Commit injection
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git diff --cached --quiet || (git commit -m 'Load final UI polish' && git push origin main)
