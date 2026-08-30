@@ -1,0 +1,56 @@
+name: Apply Emoji Drops polish fix
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: "!contains(github.event.head_commit.message, '[skip polish]')"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Replace polish layer
+        shell: bash
+        run: |
+          cat > js/polish-v3.js <<'EOF'
+(()=>{'use strict';
+const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
+const users=()=>{try{return JSON.parse(localStorage.getItem('users')||'[]')}catch{return[]}};
+const current=()=>{const e=localStorage.getItem('currentUser');return users().find(u=>u.email===e)||null};
+const save=u=>{const a=users(),i=a.findIndex(x=>x.email===u.email);if(i>=0){a[i]=u;localStorage.setItem('users',JSON.stringify(a))}};
+const money=n=>`${Math.round(Number(n)||0)}₽`;
+function canBuyAny(u){if(!u)return false;return $$('#cases .case-card').some(c=>{const p=Number((c.querySelector('.case-price span')?.textContent||'').replace(/[^0-9]/g,''));return p>0&&Number(u.balance||0)>=p})}
+function style(){if($('#ed-polish-v7'))return;const s=document.createElement('style');s.id='ed-polish-v7';s.textContent=`
+.logo{display:flex!important;align-items:center!important;gap:11px!important;white-space:nowrap}.ed-logo{width:38px!important;height:38px!important;object-fit:contain!important;border-radius:10px!important}.top-pill.ed-online{display:flex!important;align-items:center!important;gap:8px!important}.ed-dot{display:inline-block!important;width:8px!important;height:8px!important;border-radius:50%!important;background:#ff3b30!important;box-shadow:0 0 9px #ff3b30!important;animation:edPulse7 1.15s ease-in-out infinite!important}@keyframes edPulse7{0%,100%{opacity:.5;transform:scale(.82)}50%{opacity:1;transform:scale(1);box-shadow:0 0 16px #ff3b30!important}}
+.balance-menu .top-pill{display:flex!important;align-items:center!important;gap:8px!important;min-width:96px!important;justify-content:center!important;font-size:17px!important;font-weight:900!important;background:linear-gradient(145deg,#17120d,#111)!important;border-color:#34302b!important;box-shadow:inset 0 1px 0 #fff1,0 6px 20px #0005!important}.ed-balance-icon{display:none!important}.balance-menu .top-pill:before{content:'₽';display:inline-grid;place-items:center;width:24px;height:24px;border-radius:7px;border:1px solid #5a3a1d;background:#21170d;color:#ffad55;font-size:13px;font-weight:1000}
+.profile-center .avatar{display:none!important}.profile-center{padding-top:24px!important}.profile-center:before{content:'👤';display:grid;place-items:center;width:76px;height:76px;margin:0 auto 10px;border-radius:22px;border:1px solid #4a3a2b;background:radial-gradient(circle at 50% 25%,#2a1b0f,#121212 70%);font-size:40px;box-shadow:0 10px 28px #0008,inset 0 1px 0 #fff1}
+.cases{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:20px!important}.case-tile{min-width:0!important}.case-tile .case-card{width:100%!important;height:270px!important;min-height:270px!important}.case-tile .case-art{font-size:92px!important;height:auto!important;min-height:150px!important}.case-info{min-height:92px!important}
+#amountLabel{display:none!important}.amounts{justify-content:center!important;margin:10px 0 8px!important}.amount.active{border-color:var(--orange)!important;background:linear-gradient(145deg,#38200d,#211309)!important;box-shadow:0 0 0 2px #ff7b0033,0 0 16px #ff7b0022!important;color:#fff!important;transform:translateY(-1px)}#costRow{text-align:center!important;margin:4px 0 12px!important}.reel-actions{justify-content:center!important;align-items:center!important}.reel-actions button{min-width:155px!important;height:48px!important}.reel-actions #openBtn{min-width:185px!important}
+.profile-layout{grid-template-columns:1fr 1.4fr 1fr!important;grid-template-areas:'center center center' 'left center2 right'!important;align-items:start!important}.profile-center{grid-area:center!important;margin-bottom:6px!important}.profile-layout>.profile-side:first-child{grid-area:left!important}.profile-layout>.profile-side:last-child{grid-area:right!important}.profile-side{justify-content:flex-start!important;padding-top:0!important}.profile-btn{min-height:50px!important}.profile-dashboard{margin-top:10px!important;position:relative!important;z-index:2!important}
+.reward-btn,.profile-btn.reward{transition:.18s!important}.reward-btn.ready,.profile-btn.reward.ready{box-shadow:0 0 0 1px #ffb35c,0 0 22px #ff7b0030!important}.reward-btn.blocked,.profile-btn.reward.blocked{background:#171717!important;border-color:#333!important;color:#777!important}.ed-reward-hint{font-size:11px;color:#777;margin-top:6px;text-align:center;line-height:1.35}.ed-reward-hint.ready{color:#ff9d3d}
+.best-wrap{margin-top:28px!important}.best{width:min(620px,100%)!important;justify-content:center!important;min-height:100px!important;padding:16px 22px!important;border-radius:22px!important;background:radial-gradient(circle at 50% 0,#ff7b0018,transparent 65%),linear-gradient(145deg,#181818,#101010)!important;box-shadow:0 12px 35px #0008,inset 0 1px 0 #fff1!important}.best strong{font-size:56px!important}.best span{font-size:16px!important}.best small{display:block!important;color:#aaa!important;margin-left:8px!important;font-size:14px!important}
+.inventory{margin-top:30px!important;padding:22px 18px 20px!important;border:1px solid #2d2d2d!important;border-radius:24px!important;background:linear-gradient(180deg,#141414,#0d0d0d)!important;box-shadow:inset 0 1px 0 #fff1,0 15px 45px #0006!important}.inventory .section-title{text-align:center!important;font-size:20px!important;margin:0 0 18px!important;position:relative!important}.inventory .section-title:after{content:'';display:block;width:74px;height:2px;margin:8px auto 0;background:linear-gradient(90deg,transparent,#ff7b00,transparent);box-shadow:0 0 12px #ff7b00}.inventory-item{transition:transform .2s,box-shadow .2s!important}.inventory-item:hover{transform:translateY(-3px)!important;box-shadow:0 12px 28px #0008!important}
+.upgrade-wheel{width:164px!important;height:164px!important;padding:8px!important;background:conic-gradient(from -20deg,#ff7b00,#ffb45c,#7c3aed,#ef4444,#ff7b00)!important;box-shadow:0 0 38px #ff7b0050,0 0 70px #ff7b0018!important}.upgrade-wheel>div{font-size:40px!important;background:radial-gradient(circle,#21160c 0 42%,#111 43% 67%,#241509 68%)!important;border:2px solid #ffb35c!important;box-shadow:inset 0 0 18px #000,0 0 15px #ff9a2e40!important}.upgrade-wheel-col{position:relative!important}.upgrade-wheel-col:before{content:'';position:absolute;top:calc(50% - 92px);left:50%;transform:translate(-50%,-100%);border-left:11px solid transparent;border-right:11px solid transparent;border-top:18px solid #ff9d3d;filter:drop-shadow(0 0 7px #ff7b00);z-index:3}.upgrade-wheel-col:after{content:'↗';position:absolute;top:calc(50% - 35px);left:50%;transform:translate(-50%,-50%);width:62px;height:62px;border-radius:50%;display:grid;place-items:center;background:#15100b;border:2px solid #ff9d3d;color:#ffb35c;font-size:31px;font-weight:900;box-shadow:0 0 20px #ff7b0040;pointer-events:none}
+@media(max-width:900px){.cases{grid-template-columns:repeat(2,minmax(0,1fr))!important}.profile-layout{grid-template-columns:1fr!important;grid-template-areas:'center' 'left' 'right'!important}.upgrade-wheel-col:before,.upgrade-wheel-col:after{display:none}}@media(max-width:520px){.cases{grid-template-columns:1fr!important}.case-tile .case-card{height:245px!important;min-height:245px!important}.case-tile .case-art{min-height:125px!important}.profile-dashboard{grid-template-columns:1fr!important}.top-right{gap:7px!important}.balance-menu .top-pill{min-width:82px!important;padding:10px 11px!important}}
+`;document.head.appendChild(s)}
+function branding(){const l=$('.logo');if(l)l.innerHTML='<img class="ed-logo" src="logo.png" alt="Emoji Drops" decoding="async"><span>Emoji <b style="color:#ff7b00">Drops</b></span>';const o=$('#onlineCount')?.closest('.top-pill');if(o){const count=$('#onlineCount')?.textContent||'128';o.classList.add('ed-online');o.innerHTML='<span class="ed-dot"></span><span id="onlineCount">'+count+'</span> online'}const t=$('.live-title');if(t)t.innerHTML='<span class="ed-dot"></span> LIVE DROPS';const b=$('#balance');if(b){b.parentElement.querySelectorAll('.ed-balance-icon').forEach(x=>x.remove());b.textContent=Math.round(Number(current()?.balance??0))}}
+function renderBest(){const u=current(),e=$('#bestDrop');if(!u||!e)return;const inv=Array.isArray(u.inventory)?u.inventory:[];if(!inv.length){e.innerHTML='<strong>🏆</strong><span>Пока нет лучшего дропа</span>';return}const rank={common:1,rare:2,epic:3,mythical:4,legendary:5},val=x=>Number(x?.value)||Number(x?.price)||0;const b=inv.slice().sort((a,c)=>(rank[c.rarity]||0)-(rank[a.rarity]||0)||val(c)-val(a))[0];e.innerHTML=`<strong>${b.emoji||'🎁'}</strong><span>${String(b.rarity||'common').toUpperCase()}</span><small>${money(val(b))}</small>`;e.style.setProperty('--rarity',({common:'#9ca3af',rare:'#3b82f6',epic:'#a855f7',mythical:'#ef4444',legendary:'#ff8a00'}[b.rarity]||'#9ca3af'))}
+function updateReward(){const u=current(),allowed=!!u&&!canBuyAny(u);[$('#rewardHeader'),$('#rewardProfile')].forEach(b=>{if(!b)return;b.textContent=allowed?'Получить 100₽':'Доступно после нехватки на кейс';b.disabled=!allowed;b.classList.toggle('ready',allowed);b.classList.toggle('blocked',!allowed)});let h=$('#ed-reward-hint');if(!h){h=document.createElement('div');h.id='ed-reward-hint';h.className='ed-reward-hint';const p=$('#rewardProfile')?.parentElement;if(p)p.appendChild(h)}if(h){h.textContent=allowed?'Можно получать сколько угодно, пока ни один кейс не доступен.':'Сейчас доступен хотя бы один кейс.';h.classList.toggle('ready',allowed)}}
+function claim(e){if(e){e.preventDefault();e.stopImmediatePropagation()}const u=current();if(!u){window.openAuth?.();return}if(canBuyAny(u)){updateReward();return}u.balance=Number(u.balance||0)+100;u.stats=u.stats||{opened:0,upgrades:0,spent:0,received:0};u.stats.received=(Number(u.stats.received)||0)+100;save(u);branding();updateReward();if(typeof window.profileSync==='function')window.profileSync();renderBest()}
+function bind(){['rewardHeader','rewardProfile'].forEach(id=>{const b=$('#'+id);if(!b||b.dataset.edv7)return;b.dataset.edv7='1';b.addEventListener('click',claim,true)})}
+function removeTopup(){$$('button,div,span,p').forEach(n=>{if((n.textContent||'').trim()==='Пополнить баланс открытием кейса')n.remove()})}
+function loop(){branding();bind();updateReward();renderBest();const a=$('.profile-center .avatar');if(a)a.textContent='';removeTopup()}
+function init(){style();loop();setInterval(loop,900)}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
+})();
+EOF
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add js/polish-v3.js
+          git diff --cached --quiet && exit 0
+          git commit -m "fix: stabilize reward and profile polish [skip polish]"
+          git push
