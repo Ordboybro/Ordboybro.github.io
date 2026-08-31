@@ -5,4 +5,6 @@ const addStyle=(href)=>{const l=document.createElement('link');l.rel='stylesheet
 addStyle('css/final-polish.css');
 addScript('js/final-content-polish.js');
 addScript('js/app-v2-core.js');
+/* Load the repair layer only after the core has finished initializing. */
+setTimeout(()=>addScript('js/emoji-drops-repair.js'),0);
 })();
