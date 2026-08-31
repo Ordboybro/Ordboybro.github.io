@@ -1,8 +1,13 @@
 (()=>{'use strict';
-/* One functional layer only. Visual design stays in index.html. */
-const current=document.currentScript;
-const addScript=(src)=>{const s=document.createElement('script');s.src=src;s.async=false;if(current?.parentNode)current.parentNode.insertBefore(s,current.nextSibling);else document.body.appendChild(s);return s};
-const core=addScript('js/app-v2-core.js');
-if(core)core.addEventListener('load',()=>{const final=addScript('js/emoji-drops-final.js');if(final)final.addEventListener('load',()=>addScript('js/economy-content.js'),{once:true})},{once:true});
-else {const final=addScript('js/emoji-drops-final.js');if(final)final.addEventListener('load',()=>addScript('js/economy-content.js'),{once:true})}
+/* Emoji Drops bootstrap: load the runtime layers in a deterministic order. */
+const scripts=[
+  'js/app-v2-core.js?v=20260831-6',
+  'js/emoji-drops-final.js?v=20260831-6',
+  'js/economy-content.js?v=20260831-6'
+];
+/* app-v2.js is parser-blocking in index.html, so document.write keeps the
+   dependency chain ordered before the later polish layers execute. */
+for(const src of scripts){
+  document.write(`<script src="${src}"><\/script>`);
+}
 })();
