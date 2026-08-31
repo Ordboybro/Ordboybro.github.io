@@ -1,14 +1,29 @@
-/* Emoji Drops — old compact geometry, current UI preserved */
-:root{--ed-header-h:76px;--ed-live-h:76px;--ed-content-max:1240px;--ed-page-x:clamp(12px,2vw,24px)}
-html,body{overflow-x:hidden}body{padding-bottom:calc(var(--ed-live-h) + env(safe-area-inset-bottom) + 22px)!important}main{max-width:var(--ed-content-max)!important;padding-inline:var(--ed-page-x)!important;padding-bottom:calc(var(--ed-live-h) + env(safe-area-inset-bottom) + 34px)!important}
-/* Old compact case geometry: 4 desktop / 2 tablet-mobile */
-.cases{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:18px!important}.case-card{min-height:245px!important;height:245px!important;padding:20px 18px 16px!important;border-radius:24px!important;display:flex;flex-direction:column;justify-content:flex-start}.case-art{height:105px!important;font-size:76px!important;flex:0 0 105px}.case-name{font-size:22px!important;line-height:1.12}.case-meta{font-size:15px!important;margin-top:4px}.case-price{margin-top:auto!important;padding-top:4px!important}.case-price span{font-size:21px!important}
-/* Old banner proportions/appearance, kept pinned below the header */
-.hero{position:sticky;top:calc(var(--ed-header-h) + 8px);z-index:40;margin:0 0 12px!important;padding:12px 14px!important;border:1px solid #292929;border-radius:18px;background:rgba(13,13,13,.94);backdrop-filter:blur(14px);box-shadow:0 10px 28px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.04);display:flex!important;justify-content:space-between;align-items:end}.hero h1{font-size:clamp(30px,3.2vw,40px)!important;line-height:1.05;margin:0!important}.hero p{display:none!important}
-/* Live Drops: pinned bottom, same visual component as current design */
-.live-section{position:fixed!important;left:0;right:0;bottom:0;margin:0!important;padding:8px max(var(--ed-page-x),env(safe-area-inset-left)) calc(8px + env(safe-area-inset-bottom))!important;z-index:900;background:rgba(10,10,10,.94);border-top:1px solid #292929;box-shadow:0 -12px 35px rgba(0,0,0,.4);backdrop-filter:blur(18px) saturate(125%)}.live-title{width:min(var(--ed-content-max),100%);margin:0 auto 5px!important;padding:0 2px!important;font-size:12px!important;line-height:1.1}.live-container{width:min(var(--ed-content-max),100%);margin:auto!important;padding:2px 0!important;gap:8px!important;overflow-x:auto!important;scrollbar-width:none}.live-container::-webkit-scrollbar{display:none}.live-drop{flex:0 0 150px!important;height:50px!important;border-radius:13px!important;padding:6px 8px!important;gap:8px!important}.live-emoji{width:36px!important;height:36px!important;font-size:22px!important;border-radius:10px!important}.live-drop b{font-size:12px!important}.live-drop span{font-size:9px!important;margin-top:2px!important}
-@media(min-width:1450px){:root{--ed-content-max:1320px}.cases{grid-template-columns:repeat(5,minmax(0,1fr))!important}.case-card{height:235px!important;min-height:235px!important}.case-art{height:96px!important;flex-basis:96px;font-size:68px!important}}
-@media(max-width:900px){.cases{grid-template-columns:repeat(2,minmax(0,1fr))!important}.case-card{height:245px!important;min-height:245px!important}.case-art{height:100px!important;flex-basis:100px;font-size:70px!important}.hero{top:calc(64px + 6px);display:block!important}}
-@media(max-width:680px){:root{--ed-header-h:64px;--ed-live-h:68px}.cases{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}.case-card{height:210px!important;min-height:210px!important;padding:12px!important;border-radius:17px!important}.case-art{height:72px!important;flex-basis:72px;font-size:56px!important}.case-name{font-size:18px!important}.case-meta{font-size:12px!important}.case-price span{font-size:18px!important}.hero{margin-inline:0!important;padding:10px 12px!important;border-radius:15px}.hero h1{font-size:28px!important}.live-section{padding-top:6px!important}.live-title{font-size:10px!important}.live-drop{flex-basis:142px!important;height:46px!important}.live-emoji{width:32px!important;height:32px!important;font-size:19px!important}}
-@media(max-width:390px){.cases{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important}.case-card{height:190px!important;min-height:190px!important;padding:10px!important}.case-art{height:60px!important;flex-basis:60px;font-size:48px!important}.case-name{font-size:15px!important}.case-meta{font-size:10px!important}.case-price span{font-size:16px!important}.live-drop{flex-basis:132px!important}.live-container{gap:6px!important}.hero h1{font-size:25px!important}}
-@media(prefers-reduced-motion:reduce){.hero,.live-section{backdrop-filter:none}}
+/* Emoji Drops — compact layout baseline
+   Only controls geometry/banner/live dock. Existing components and visual style stay intact. */
+:root{--ed-content-max:1240px;--ed-page-x:24px;--ed-header-h:76px;--ed-live-h:78px}
+html,body{overflow-x:hidden}
+body{padding-bottom:calc(var(--ed-live-h) + env(safe-area-inset-bottom) + 18px)!important}
+main{width:100%;max-width:var(--ed-content-max)!important;margin-inline:auto!important;padding:22px var(--ed-page-x) calc(var(--ed-live-h) + env(safe-area-inset-bottom) + 28px)!important}
+/* Compact case geometry from stable/emoji-drops-v7. */
+.cases{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:18px!important}
+.case-card{min-width:0!important;width:100%!important;height:245px!important;min-height:245px!important;padding:20px 18px 16px!important;border-radius:24px!important}
+.case-art{height:105px!important;flex:0 0 105px!important;font-size:76px!important}
+.case-name{font-size:22px!important;line-height:1.12!important}
+.case-meta{font-size:15px!important;margin-top:4px!important}
+.case-price{margin-top:auto!important;padding-top:4px!important}
+.case-price span{font-size:21px!important}
+/* Old compact hero geometry: no new card treatment, only compact sizing/position. */
+.hero{margin-bottom:10px!important;min-height:0!important}
+.hero h1{font-size:40px!important;line-height:1.05!important;margin:0!important}
+.hero p{display:none!important}
+/* Live Drops remains the current component, only docked at the bottom. */
+.live-section{position:fixed!important;left:0!important;right:0!important;bottom:0!important;margin:0!important;padding:8px max(var(--ed-page-x),env(safe-area-inset-left)) calc(8px + env(safe-area-inset-bottom))!important;z-index:900!important;background:rgba(10,10,10,.94)!important;border-top:1px solid #292929!important;box-shadow:0 -12px 35px rgba(0,0,0,.4)!important;backdrop-filter:blur(18px) saturate(125%)!important}
+.live-title,.live-container{width:min(var(--ed-content-max),100%)!important;margin-inline:auto!important}
+.live-title{margin-bottom:5px!important}
+.live-container{overflow-x:auto!important;scrollbar-width:none!important;padding:2px 0!important}
+.live-container::-webkit-scrollbar{display:none}
+@media(min-width:1450px){:root{--ed-content-max:1240px}.cases{grid-template-columns:repeat(4,minmax(0,1fr))!important}.case-card{height:245px!important;min-height:245px!important}.case-art{height:105px!important;flex-basis:105px!important;font-size:76px!important}}
+@media(max-width:900px){.cases{grid-template-columns:repeat(2,minmax(0,1fr))!important}.case-card{height:245px!important;min-height:245px!important}.case-art{height:100px!important;flex-basis:100px!important;font-size:70px!important}}
+@media(max-width:680px){:root{--ed-header-h:64px;--ed-live-h:68px;--ed-page-x:14px}.cases{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}.case-card{height:210px!important;min-height:210px!important;padding:12px!important;border-radius:17px!important}.case-art{height:72px!important;flex-basis:72px!important;font-size:56px!important}.case-name{font-size:18px!important}.case-meta{font-size:12px!important}.case-price span{font-size:18px!important}.hero h1{font-size:28px!important}.live-section{padding-top:6px!important}}
+@media(max-width:390px){.cases{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important}.case-card{height:190px!important;min-height:190px!important;padding:10px!important}.case-art{height:60px!important;flex-basis:60px!important;font-size:48px!important}.case-name{font-size:15px!important}.case-meta{font-size:10px!important}.case-price span{font-size:16px!important}.hero h1{font-size:25px!important}}
+@media(prefers-reduced-motion:reduce){.live-section{backdrop-filter:none}}
