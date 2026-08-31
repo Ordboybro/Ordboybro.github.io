@@ -1,0 +1,41 @@
+name: Apply final UI layer
+on:
+  push:
+    branches: [polish-final-2026-08-31]
+permissions:
+  contents: write
+jobs:
+  inject:
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-actions[bot]'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: polish-final-2026-08-31
+          fetch-depth: 1
+      - name: Inject final assets once
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          css='<link rel="stylesheet" href="css/final-polish.css">'
+          js='<script src="js/final-content-polish.js"></script>'
+          changed=False
+          if css not in s:
+              marker='</head>'
+              if marker not in s: raise SystemExit('index.html: </head> not found')
+              s=s.replace(marker,css+'\n'+marker,1); changed=True
+          if js not in s:
+              marker='<script src="js/app-v2.js"></script>'
+              if marker not in s: raise SystemExit('index.html: app-v2 script not found')
+              s=s.replace(marker,js+'\n'+marker,1); changed=True
+          if changed:
+              p.write_text(s,encoding='utf-8')
+          PY
+      - name: Commit injected assets
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git diff --cached --quiet || (git commit -m 'Wire consolidated final UI layer' && git push)
