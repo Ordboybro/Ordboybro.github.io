@@ -1,0 +1,21 @@
+/* Emoji Drops final UI contract. Loaded last. No JS layout mutations. */
+:root{--ed-content:min(100% - 32px,1480px);--ed-gap:clamp(10px,1.25vw,20px)}
+html,body{width:100%;min-width:0;overflow-x:hidden}body{margin:0}
+header{width:100%;padding-inline:clamp(12px,2.2vw,34px);box-sizing:border-box}
+main{width:var(--ed-content)!important;max-width:1480px!important;margin-inline:auto!important;padding-inline:0!important;box-sizing:border-box}
+.cases{width:100%!important;display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:var(--ed-gap)!important;align-items:stretch!important}
+.case-tile,.case-card{min-width:0!important;width:100%!important;box-sizing:border-box!important}
+.case-card{min-height:clamp(210px,17vw,270px)!important}
+.home-divider{width:100%!important;margin-top:0!important;margin-bottom:clamp(16px,2vw,24px)!important}
+.live-section{position:relative!important;left:auto!important;right:auto!important;bottom:auto!important;width:var(--ed-content)!important;max-width:1480px!important;margin:clamp(18px,2vw,28px) auto 0!important;padding:0!important;background:transparent!important;border:0!important;box-shadow:none!important;backdrop-filter:none!important;z-index:10!important}
+.live-container{width:100%!important;max-width:none!important;display:grid!important;grid-template-columns:repeat(6,minmax(0,1fr))!important;overflow:hidden!important;gap:var(--ed-gap)!important}
+.live-drop{min-width:0!important;width:100%!important;box-sizing:border-box!important}
+.modal{padding:12px!important;box-sizing:border-box!important}.panel{width:min(920px,calc(100vw - 24px))!important;max-width:920px!important;max-height:92dvh!important;box-sizing:border-box!important}
+.case-reels{width:100%!important;max-width:100%!important;overflow:hidden!important}.case-reel{width:100%!important;min-width:0!important}.case-reel-track{width:max-content!important;max-width:none!important}
+.profile-layout{width:100%!important;max-width:1100px!important;margin-inline:auto!important;box-sizing:border-box!important}.profile-center{min-width:0!important}.profile-dashboard{min-width:0!important}.inventory-grid{width:100%!important}
+.upgrade-panel{width:100%!important;max-width:100%!important;box-sizing:border-box!important}.upgrade-slot,.upgrade-targets,.upgrade-grid{min-width:0!important}.upgrade-targets{max-width:100%!important;overflow:auto!important}
+.top-right{min-width:0}.top-pill,.profile-top{white-space:nowrap;max-width:220px;overflow:hidden;text-overflow:ellipsis}
+button{touch-action:manipulation}.case-card,.live-drop,.primary,.secondary,.upgrade-item,.upgrade-target,.profile-btn{transform:translateZ(0);backface-visibility:hidden}
+@media(max-width:1100px){.live-container{grid-template-columns:repeat(4,minmax(0,1fr))!important}}
+@media(max-width:700px){main{width:calc(100% - 20px)!important;max-width:none!important}.cases{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}.case-card{min-height:190px!important;padding:14px 10px!important}.case-art{font-size:58px!important;height:80px!important}.case-name{font-size:17px!important}.case-price span{font-size:17px!important}.live-section{width:calc(100% - 20px)!important}.live-container{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important}.live-drop{height:58px!important}.panel{width:calc(100vw - 20px)!important;max-height:94dvh!important}.panel-body{padding:16px!important}.profile-layout{grid-template-columns:1fr!important}.stats{grid-template-columns:1fr 1fr!important}.upgrade-panel{grid-template-columns:1fr!important}.upgrade-arrow{margin-inline:auto!important}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important;scroll-behavior:auto!important}}
