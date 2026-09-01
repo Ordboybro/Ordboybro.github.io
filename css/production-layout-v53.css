@@ -1,0 +1,38 @@
+/* Emoji Drops production layout — single authoritative override. */
+:root{--ed-max:1480px;--ed-gutter:clamp(12px,2.2vw,32px);--ed-gap:clamp(10px,1.25vw,18px)}
+html,body{width:100%!important;min-width:0!important;max-width:none!important;overflow-x:hidden!important}
+body{margin:0!important}
+header{width:100%!important;max-width:none!important;box-sizing:border-box!important}
+main{width:calc(100% - 2*var(--ed-gutter))!important;max-width:var(--ed-max)!important;margin:0 auto!important;padding:20px 0 calc(150px + env(safe-area-inset-bottom))!important;box-sizing:border-box!important}
+/* The banner exists in the original markup; the old stylesheet hid it. */
+.hero{display:block!important;width:100%!important;max-width:none!important;margin:0 0 10px!important;min-height:clamp(150px,20vw,300px)!important;overflow:hidden!important;box-sizing:border-box!important}
+.hero img,.hero picture,.hero video,.hero canvas{display:block!important;width:100%!important;height:100%!important;max-width:none!important;object-fit:cover!important}
+.hero-banner,.banner,.hero-content{width:100%!important;max-width:none!important;box-sizing:border-box!important}
+.home-divider{display:block!important;width:100%!important;height:2px!important;margin:-1px 0 18px!important;background:linear-gradient(90deg,transparent,#ff7b00 7%,#ff7b00 93%,transparent)!important;box-shadow:0 0 14px #ff7b0044!important;border-radius:999px!important}
+.cases{display:grid!important;width:100%!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:var(--ed-gap)!important;margin:0!important}
+.case-card{width:100%!important;min-width:0!important;max-width:none!important;min-height:clamp(220px,17vw,270px)!important;box-sizing:border-box!important}
+.live-section{position:relative!important;left:auto!important;right:auto!important;bottom:auto!important;inset:auto!important;width:100%!important;max-width:var(--ed-max)!important;margin:22px auto 0!important;padding:0!important;background:transparent!important;border:0!important;box-shadow:none!important;backdrop-filter:none!important;z-index:10!important}
+.live-container{display:flex!important;width:100%!important;max-width:none!important;gap:10px!important;overflow-x:auto!important;padding:2px 0!important;box-sizing:border-box!important}
+.live-drop{flex:0 0 clamp(150px,12vw,185px)!important;height:62px!important;box-sizing:border-box!important}
+/* Do not allow the home-only Live Drops block to vanish because of stale route code. */
+body.ed-home .live-section{display:block!important}
+.profile-layout{width:100%!important;max-width:1100px!important;margin:0 auto!important;box-sizing:border-box!important}
+.profile-center,.profile-side{min-width:0!important;box-sizing:border-box!important}
+.profile-gear{animation:edProfileGear 7s linear infinite!important;transform-origin:center!important;will-change:transform!important}
+@keyframes edProfileGear{to{transform:rotate(360deg)}}
+.top-right{min-width:0!important;max-width:52vw!important}.top-pill,.profile-top{max-width:220px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+.upgrade-panel{width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important;grid-template-columns:minmax(0,1fr) 96px minmax(0,1fr)!important}
+.upgrade-slot,.upgrade-targets,.upgrade-grid{min-width:0!important;max-width:100%!important}.upgrade-targets{overflow:auto!important}
+.upgrade-arrow{position:relative!important;width:84px!important;height:84px!important;margin:auto!important;border-radius:50%!important;display:grid!important;place-items:center!important;will-change:transform!important}
+.upgrade-arrow::after{content:"➤";display:block;animation:edArrowPulse 1.2s ease-in-out infinite!important;transform-origin:center!important}
+@keyframes edArrowPulse{50%{transform:scale(1.08) rotate(2deg);filter:drop-shadow(0 0 8px #ff7b00)}}
+.upgrade-wheel{will-change:transform;transform-origin:center}.upgrade-wheel.spinning{animation:edWheelSpin 5.8s cubic-bezier(.12,.78,.18,1) forwards!important}@keyframes edWheelSpin{to{transform:rotate(2160deg)}}
+.case-reels,.case-reel{width:100%!important;min-width:0!important;overflow:hidden!important;box-sizing:border-box!important}.case-reel-track{width:max-content!important;min-width:max-content!important;will-change:transform!important;backface-visibility:hidden!important}
+.modal{width:100%!important;height:100%!important;box-sizing:border-box!important;overflow:hidden!important}.panel{width:min(920px,calc(100vw - 24px))!important;max-width:920px!important;max-height:92dvh!important;box-sizing:border-box!important;overflow:auto!important;margin:auto!important}
+button,input{max-width:100%!important}img,video,canvas,svg{max-width:100%!important}
+*{box-sizing:border-box!important}
+.case-card,.live-drop,.inventory-item,.upgrade-item,.upgrade-target,.primary,.secondary,.profile-btn{backface-visibility:hidden}
+@media(max-width:1100px){.cases{grid-template-columns:repeat(2,minmax(0,1fr))!important}.profile-layout{grid-template-columns:1fr!important}.upgrade-panel{grid-template-columns:1fr!important}.upgrade-arrow{margin:8px auto!important}}
+@media(max-width:700px){main{width:calc(100% - 20px)!important;padding-top:12px!important;padding-bottom:calc(130px + env(safe-area-inset-bottom))!important}.hero{min-height:155px!important;border-radius:18px!important}.live-section{width:calc(100% - 20px)!important;margin-top:16px!important}.live-container{gap:8px!important}.live-drop{flex-basis:155px!important;height:58px!important}.top-right{max-width:65vw!important}.top-pill,.profile-top{max-width:145px!important}.panel{width:calc(100vw - 20px)!important;max-width:none!important}.upgrade-arrow{width:76px!important;height:76px!important}}
+@media(max-width:380px){main{width:calc(100% - 16px)!important}.hero{min-height:130px!important}.live-section{width:calc(100% - 16px)!important}.live-drop{flex-basis:145px!important}.case-card{min-height:180px!important}}
+@media(prefers-reduced-motion:reduce){.profile-gear,.upgrade-arrow::after,.upgrade-wheel.spinning{animation:none!important}}
