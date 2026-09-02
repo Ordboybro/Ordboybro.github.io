@@ -1,0 +1,24 @@
+/* Emoji Drops v60 — restore v7 geometry, keep current features */
+:root{--ed60-orange:#ff7b00;--ed60-orange2:#ff9a2e}
+html,body{width:100%;min-width:0;overflow-x:hidden}*,*::before,*::after{box-sizing:border-box}
+main{width:100%!important;max-width:1240px!important;margin:0 auto!important;padding:22px 24px 80px!important}
+/* The reference screenshot has no separate hero between header and search. Keep the existing header/banner content, but never let a generated hero change card geometry. */
+.ed-banner{display:none!important}.hero{display:none!important}
+.ed-orange-line{height:2px!important;width:100%!important;margin:0 0 18px!important;background:linear-gradient(90deg,transparent,var(--ed60-orange) 8%,var(--ed60-orange2) 50%,var(--ed60-orange) 92%,transparent)!important;box-shadow:0 0 16px #ff7b0040!important;border-radius:999px}
+#cases,.cases{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:18px!important;width:100%!important;margin:0!important;padding:0!important;min-width:0!important}
+.case-card,.case-tile{width:100%!important;min-width:0!important;max-width:none!important;min-height:245px!important;border-radius:24px!important;padding:20px 18px 16px!important;overflow:hidden!important}
+.case-art{font-size:76px!important;height:105px!important}.case-name{font-size:22px!important}.case-meta{font-size:15px!important}.case-price span{font-size:21px!important}
+/* Search/filter controls keep the old compact centered shape when present. */
+main input[type=search],main input[placeholder*="Поиск"]{display:block;width:min(280px,100%);margin:0 auto 36px;height:40px;padding:0 14px;border:1px solid #292929;border-radius:20px;background:#121212;color:#fff;outline:none}main input[type=search]:focus,main input[placeholder*="Поиск"]:focus{border-color:var(--ed60-orange);box-shadow:0 0 0 3px #ff7b0018}
+/* Live Drops stays in normal document flow and spans the same content width. */
+.live-section.ed-live-home{position:relative!important;left:auto!important;right:auto!important;top:auto!important;bottom:auto!important;inset:auto!important;width:100%!important;max-width:none!important;margin:24px 0 0!important;padding:0!important;background:transparent!important;border:0!important;box-shadow:none!important;z-index:4}
+.live-container{display:flex!important;width:100%!important;max-width:none!important;gap:10px!important;overflow-x:auto!important;padding:4px 2px 10px!important;scrollbar-width:none}.live-container::-webkit-scrollbar{display:none}.live-drop{flex:0 0 165px!important;height:62px!important}
+/* Header geometry from v7/reference. */
+header{width:100%!important;height:76px!important;padding:0 34px!important}.logo{font-size:25px!important}.top-right{gap:14px!important}.top-pill{padding:12px 16px!important;border-radius:16px!important}.profile-top{padding:10px 14px!important;border-radius:16px!important}
+/* Keep the rest of the current UI stable. */
+.panel{width:min(920px,96vw)!important;max-width:calc(100vw - 24px)!important;max-height:92dvh!important}.modal{max-width:100vw!important;overflow:hidden}.case-reels,.case-reel{max-width:100%!important;min-width:0!important;overflow:hidden!important}.case-reel-track{will-change:transform;backface-visibility:hidden}.upgrade-panel{min-width:0!important;max-width:100%!important}.upgrade-slot,.upgrade-target,.upgrade-item{min-width:0!important;max-width:100%!important}.profile-layout{min-width:0!important;max-width:1180px!important}.inventory-grid{min-width:0!important;max-width:100%!important}
+button{touch-action:manipulation}img,video,canvas,svg{max-width:100%;height:auto}
+@media(max-width:1100px){#cases,.cases{grid-template-columns:repeat(2,minmax(0,1fr))!important}.upgrade-panel{grid-template-columns:1fr!important}.upgrade-arrow{margin-inline:auto}}
+@media(max-width:700px){main{padding:22px 24px 80px!important}header{padding:0 14px!important}.top-right{gap:8px!important}.case-card{min-height:205px!important;border-radius:18px!important}.case-art{font-size:53px!important;height:90px!important}.case-name{font-size:15px!important}.live-drop{flex-basis:155px!important}.profile-layout{grid-template-columns:1fr!important}.inventory-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.panel{width:calc(100vw - 16px)!important}.panel-body{padding:16px!important}}
+@media(max-width:520px){#cases,.cases{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important}.case-card{min-height:180px!important;padding:14px 10px 12px!important}.case-art{font-size:46px!important;height:72px!important}.case-name{font-size:14px!important}.case-price span{font-size:18px!important}main{padding-left:16px!important;padding-right:16px!important}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important}}
