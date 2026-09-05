@@ -5,7 +5,7 @@ runtime.src='js/functional-final.js?v=stable-functional-2';
 runtime.async=false;
 runtime.onload=()=>{
   const hardening=document.createElement('script');
-  hardening.src='js/runtime-hardening.js?v=2';
+  hardening.src='js/runtime-hardening.js?v=3';
   hardening.async=false;
   hardening.onload=()=>{
     const polish=document.createElement('script');
