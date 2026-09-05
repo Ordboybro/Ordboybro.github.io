@@ -1,57 +1,40 @@
 (()=>{'use strict';
-/* Emoji Drops — functional hardening layer. No visual redesign. */
-const LEGACY_IDS=['authModal','openModal','winModal','profileModal','settingsModal','statsModal','upgradeModal'];
-const q=(s,r=document)=>r.querySelector(s);
-function removeLegacyShells(){for(const id of LEGACY_IDS){const el=document.getElementById(id);if(el)el.remove()}}
-function storageGuard(){
-  try{JSON.parse(localStorage.getItem('users')||'[]')}catch{localStorage.setItem('users','[]')}
-  const u=localStorage.getItem('currentUser');
-  if(u&&typeof u!=='string')localStorage.removeItem('currentUser');
+/* Emoji Drops — integrity layer. No visual/UI changes. */
+const $=(s,r=document)=>r.querySelector(s);
+const ITEM_RANK={common:1,rare:2,epic:3,mythical:4,legendary:5};
+const catalog=()=>Object.values(typeof cases!=='undefined'?cases:{}).flat().filter(Boolean);
+const num=(v)=>{const n=typeof v==='number'?v:Number(String(v??'').replace(/[^0-9.\-]/g,''));return Number.isFinite(n)?n:0};
+const itemValue=(x)=>num(x?.value||x?.price);
+const canonicalItem=(x)=>{if(!x||typeof x!=='object')return null;const v=itemValue(x),hit=catalog().find(c=>c.emoji===x.emoji&&c.rarity===x.rarity&&itemValue(c)===v);return hit?{emoji:hit.emoji,rarity:hit.rarity,price:hit.price}:null};
+const validEmail=(x)=>typeof x==='string'&&/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(x)&&x.length<=254;
+function cleanUser(u){
+  if(!u||typeof u!=='object'||!validEmail(u.email)||typeof u.password!=='string')return null;
+  const nickname=typeof u.nickname==='string'&&u.nickname.trim()?u.nickname.trim().slice(0,24):'User';
+  const stats=u.stats&&typeof u.stats==='object'?u.stats:{};
+  const inventory=Array.isArray(u.inventory)?u.inventory.map(canonicalItem).filter(Boolean):[];
+  return {...u,nickname,balance:Math.max(0,num(u.balance)),stats:{opened:Math.max(0,num(stats.opened)),upgrades:Math.max(0,num(stats.upgrades)),spent:Math.max(0,num(stats.spent)),received:Math.max(0,num(stats.received))},inventory};
 }
-function lockDuplicateActions(){
+function snapshot(){try{const raw=JSON.parse(localStorage.getItem('users')||'[]');return Array.isArray(raw)?raw:null}catch{return null}}
+function repair(){
+  const raw=snapshot();
+  if(!raw){localStorage.setItem('users','[]');return}
+  const cleaned=raw.map(cleanUser).filter(Boolean);
+  const current=localStorage.getItem('currentUser');
+  if(current&&!cleaned.some(u=>u.email===current))localStorage.removeItem('currentUser');
+  const before=JSON.stringify(raw),after=JSON.stringify(cleaned);
+  if(before!==after)localStorage.setItem('users',after);
+}
+function duplicateActionGuard(){
   document.addEventListener('click',e=>{
     const b=e.target.closest('button');
-    if(!b||b.disabled)return;
-    if(b.matches('#edOpen,#edDoUpgrade,#edReward,#rewardHeader,#edSellAll')){
-      if(b.dataset.busy==='1'){e.preventDefault();e.stopImmediatePropagation();return}
-      b.dataset.busy='1';
-      const release=()=>{b.dataset.busy='0'};
-      setTimeout(release,b.id==='edOpen'?1200:700);
-    }
+    if(!b||b.disabled||!b.matches('#edOpen,#edDoUpgrade,#edReward,#rewardHeader,#edSellAll'))return;
+    if(b.dataset.edBusy==='1'){e.preventDefault();e.stopImmediatePropagation();return}
+    b.dataset.edBusy='1';
+    const ms=b.id==='edOpen'?3500:1000;
+    setTimeout(()=>{b.dataset.edBusy='0'},ms);
   },true);
 }
-function escapeSafety(){
-  document.addEventListener('keydown',e=>{
-    if(e.key!=='Escape')return;
-    const open=[...document.querySelectorAll('.modal.show')].pop();
-    if(open){open.classList.remove('show');open.setAttribute('aria-hidden','true');document.body.classList.remove('modal-lock')}
-  });
-}
-function modalA11y(){
-  document.addEventListener('click',e=>{
-    const m=e.target.closest('.modal');
-    if(m&&e.target===m){m.classList.remove('show');m.setAttribute('aria-hidden','true');if(!document.querySelector('.modal.show'))document.body.classList.remove('modal-lock')}
-  });
-  document.addEventListener('focusin',e=>{
-    const m=e.target.closest('.modal.show');if(!m)return;
-    if(!m.contains(document.activeElement))m.querySelector('button,input,[tabindex]')?.focus();
-  });
-}
-function rewardTicker(){
-  const tick=()=>{
-    const b=q('#rewardHeader');if(!b)return;
-    try{
-      const email=localStorage.getItem('currentUser')||'guest';
-      const raw=JSON.parse(localStorage.getItem(`emojiDrops.dailyReward.v7:${email}`)||'{}');
-      const left=Math.max(0,Number(raw.nextAt||0)-Date.now());
-      b.disabled=left>0;
-      b.textContent=left?`Получено · ${time(left)}`:'Получить 250₽';
-    }catch{}
-  };
-  const time=ms=>{let s=Math.ceil(ms/1000),h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=s%60;return`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(x).padStart(2,'0')}`};
-  tick();setInterval(tick,1000);window.addEventListener('storage',tick);
-}
-function runtimeErrorGuard(){window.addEventListener('error',e=>{if(String(e.message||'').includes('Emoji Drops'))console.error('Emoji Drops runtime error:',e.error||e.message)})}
-function boot(){removeLegacyShells();storageGuard();lockDuplicateActions();escapeSafety();modalA11y();rewardTicker();runtimeErrorGuard()}
+function errorGuard(){window.addEventListener('error',e=>{if(e.error)console.error('Emoji Drops runtime error:',e.error)})}
+function boot(){repair();duplicateActionGuard();errorGuard();window.addEventListener('storage',repair);setInterval(repair,5000)}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();
