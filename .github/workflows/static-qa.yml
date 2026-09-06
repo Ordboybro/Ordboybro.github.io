@@ -1,0 +1,64 @@
+name: EmojiDrops static QA
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  javascript-syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check every JavaScript file
+        shell: bash
+        run: |
+          set -euo pipefail
+          while IFS= read -r -d '' file; do
+            echo "Checking $file"
+            node --check "$file"
+          done < <(find js -type f -name '*.js' -print0 | sort -z)
+
+  html-assets:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Validate local script/style references
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          html = Path('index.html').read_text(encoding='utf-8')
+          refs = re.findall(r'<script[^>]+src=["\']([^"\']+)["\']', html, re.I)
+          refs += re.findall(r'<link[^>]+href=["\']([^"\']+\.css)["\']', html, re.I)
+
+          missing = []
+          for ref in refs:
+              clean = ref.split('?', 1)[0].split('#', 1)[0]
+              if clean.startswith(('http://', 'https://', '//', 'data:')):
+                  continue
+              path = Path(clean.lstrip('/'))
+              if not path.exists():
+                  missing.append(ref)
+
+          if missing:
+              print('Missing local assets:')
+              for ref in missing:
+                  print(' -', ref)
+              raise SystemExit(1)
+
+          print(f'Checked {len(refs)} local script/style references.')
+          PY
