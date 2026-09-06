@@ -15,7 +15,8 @@ pass('upgrade chance display',!!document.getElementById('edChance'));
 pass('case reel',!!document.getElementById('edReels'));
 pass('case open control',!!document.getElementById('edOpen'));
 let storage=true;try{const k='__ed_qa__';localStorage.setItem(k,'1');storage=localStorage.getItem(k)==='1';localStorage.removeItem(k)}catch{storage=false}pass('localStorage writable',storage);
-const scripts=[...document.scripts].map(s=>s.src).filter(Boolean);const required=['functional-final.js','runtime-hardening.js','case-upgrade-polish.js'];required.forEach(x=>pass(`runtime script ${x}`,scripts.some(s=>s.includes(x))));
+const scripts=[...document.scripts].map(s=>s.src).filter(Boolean);const required=['functional-final.js','runtime-hardening.js','transaction-guard.js','case-upgrade-polish.js'];required.forEach(x=>pass(`runtime script ${x}`,scripts.some(s=>s.includes(x))));
+pass('transaction guard active',!!window.__emojiDropsTxGuard?.version,window.__emojiDropsTxGuard?.key||'missing');
 const duplicateIds=[...document.querySelectorAll('[id]')].map(x=>x.id).filter((id,i,a)=>id&&a.indexOf(id)!==i);pass('no duplicate DOM ids',duplicateIds.length===0,[...new Set(duplicateIds)].join(', '));
 const failed=checks.filter(x=>!x.ok);window.__emojiDropsQA={ok:failed.length===0,checks,failedCount:failed.length,ranAt:new Date().toISOString()};console.groupCollapsed(`Emoji Drops QA: ${failed.length?'FAIL':'PASS'} (${checks.length} checks)`);checks.forEach(x=>console[x.ok?'log':'error'](`${x.ok?'✓':'✗'} ${x.name}`,x.detail));console.groupEnd();return window.__emojiDropsQA}
 function boot(){setTimeout(run,0)}
