@@ -19,6 +19,9 @@ const scripts=[...document.scripts].map(s=>s.src).filter(Boolean);const required
 pass('transaction guard active',!!window.__emojiDropsTxGuard?.version,`v${window.__emojiDropsTxGuard?.version||'?'}`);
 pass('case transaction key',window.__emojiDropsTxGuard?.keys?.case==='emojiDrops.caseTx.v1',window.__emojiDropsTxGuard?.keys?.case||'missing');
 pass('upgrade transaction key',window.__emojiDropsTxGuard?.keys?.upgrade==='emojiDrops.upgradeTx.v2',window.__emojiDropsTxGuard?.keys?.upgrade||'missing');
+pass('authoritative transaction engine active',!!window.__emojiDropsEngine?.version,window.__emojiDropsEngine?.version||'missing');
+pass('engine has case entrypoint',typeof window.__emojiDropsEngine?.openCase==='function');
+pass('engine has upgrade entrypoint',typeof window.__emojiDropsEngine?.upgrade==='function');
 const duplicateIds=[...document.querySelectorAll('[id]')].map(x=>x.id).filter((id,i,a)=>id&&a.indexOf(id)!==i);pass('no duplicate DOM ids',duplicateIds.length===0,[...new Set(duplicateIds)].join(', '));
 const failed=checks.filter(x=>!x.ok);window.__emojiDropsQA={ok:failed.length===0,checks,failedCount:failed.length,ranAt:new Date().toISOString()};console.groupCollapsed(`Emoji Drops QA: ${failed.length?'FAIL':'PASS'} (${checks.length} checks)`);checks.forEach(x=>console[x.ok?'log':'error'](`${x.ok?'✓':'✗'} ${x.name}`,x.detail));console.groupEnd();return window.__emojiDropsQA}
 function boot(){setTimeout(run,0)}
