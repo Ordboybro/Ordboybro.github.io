@@ -2,30 +2,19 @@
 /* Emoji Drops — non-invasive runtime QA. Read-only checks; never changes user data or UI. */
 function run(){const checks=[];const pass=(name,ok,detail='')=>checks.push({name,ok:!!ok,detail});
 const catalog=typeof cases!=='undefined'?cases:{};const prices=typeof casePrices!=='undefined'?casePrices:{};
-const keys=Object.keys(catalog);pass('catalog loaded',keys.length>0,`${keys.length} cases`);
+const keys=Object.keys(catalog);pass('catalog loaded',keys.length>0,`${keys.length} cases`);pass('full case catalog restored',keys.length===8,keys.join(', '));
 let items=0,badItems=0;keys.forEach(k=>(catalog[k]||[]).forEach(x=>{items++;if(!x||!x.emoji||!x.rarity||!(Number(x.value)||Number(x.price)>0))badItems++}));pass('catalog items valid',badItems===0,`${items} items, ${badItems} invalid`);
 const priceBad=keys.filter(k=>!(Number(prices[k])>0));pass('case prices valid',priceBad.length===0,priceBad.join(', '));
 const rarity={common:55,rare:27,epic:12,mythical:5,legendary:1};pass('rarity weights sum to 100',Object.values(rarity).reduce((a,b)=>a+b,0)===100);
+const rtp=keys.map(k=>{const list=catalog[k]||[],ev=list.reduce((s,x)=>s+(rarity[x.rarity]||0)/100/(list.filter(y=>y.rarity===x.rarity).length||1)*(Number(x.value)||Number(x.price)||0),0);return{k,cost:Number(prices[k]),ev,rtp:Number(prices[k])?ev/Number(prices[k]):0,min:Math.min(...list.map(x=>Number(x.value)||Number(x.price)||0))}});const rtpBad=rtp.filter(x=>x.rtp<.86||x.rtp>.95);pass('case RTP balanced 86–95%',rtpBad.length===0,rtpBad.map(x=>`${x.k}:${(x.rtp*100).toFixed(1)}%`).join(', '));pass('expensive case floor sane',Math.min(...rtp.map(x=>x.k==='games'?x.min:Infinity))>=200,`games min=${Math.min(...rtp.map(x=>x.k==='games'?x.min:Infinity))}₽`);
 ['edAuthModal','edOpenModal','edWinModal','edProfileModal','edStatsModal','edSettingsModal','edUpgradeModal'].forEach(id=>pass(`modal #${id}`,!!document.getElementById(id)));
 ['1.5','2','3','5'].forEach(m=>pass(`upgrade multiplier ×${m}`,!!document.querySelector(`#edUpgradeModal [data-ed-mult="${m}"]`)));
-pass('upgrade wheel',!!document.querySelector('#edUpgradeModal .ed-final-wheel-circle'));
-pass('upgrade source selector',!!document.getElementById('edUpgradeInventory'));
-pass('upgrade target selector',!!document.getElementById('edTargets'));
-pass('upgrade chance display',!!document.getElementById('edChance'));
-pass('case reel',!!document.getElementById('edReels'));
-pass('case open control',!!document.getElementById('edOpen'));
+pass('upgrade wheel',!!document.querySelector('#edUpgradeModal .ed-final-wheel-circle'));pass('upgrade source selector',!!document.getElementById('edUpgradeInventory'));pass('upgrade target selector',!!document.getElementById('edTargets'));pass('upgrade chance display',!!document.getElementById('edChance'));pass('case reel',!!document.getElementById('edReels'));pass('case open control',!!document.getElementById('edOpen'));
 let storage=true;try{const k='__ed_qa__';localStorage.setItem(k,'1');storage=localStorage.getItem(k)==='1';localStorage.removeItem(k)}catch{storage=false}pass('localStorage writable',storage);
-const scripts=[...document.scripts].map(s=>s.src).filter(Boolean);const required=['functional-final.js','runtime-hardening.js','transaction-guard.js','case-upgrade-polish.js'];required.forEach(x=>pass(`runtime script ${x}`,scripts.some(s=>s.includes(x))));
-pass('transaction guard active',!!window.__emojiDropsTxGuard?.version,`v${window.__emojiDropsTxGuard?.version||'?'}`);
-pass('case transaction key',window.__emojiDropsTxGuard?.keys?.case==='emojiDrops.caseTx.v1',window.__emojiDropsTxGuard?.keys?.case||'missing');
-pass('upgrade transaction key',window.__emojiDropsTxGuard?.keys?.upgrade==='emojiDrops.upgradeTx.v2',window.__emojiDropsTxGuard?.keys?.upgrade||'missing');
-pass('authoritative transaction engine active',!!window.__emojiDropsEngine?.version,window.__emojiDropsEngine?.version||'missing');
-pass('engine version hardened',Number(window.__emojiDropsEngine?.version||0)>=2,`v${window.__emojiDropsEngine?.version||'?'}`);
-pass('engine has case entrypoint',typeof window.__emojiDropsEngine?.openCase==='function');
-pass('engine has upgrade entrypoint',typeof window.__emojiDropsEngine?.upgrade==='function');
-let scenario=null;try{scenario=window.__emojiDropsEngine?.qa?.()}catch(e){scenario={pass:false,error:String(e)} }pass('engine economy scenario QA',scenario?.pass===true,scenario?.error||`target_count=${scenario?.target_count??'?'} chance_15=${Number(scenario?.chance_15??NaN).toFixed?.(1)??'?'}`);
+const scripts=[...document.scripts].map(s=>s.src).filter(Boolean);const required=['functional-final.js','economy-balance.js','runtime-hardening.js','transaction-guard.js','case-upgrade-polish.js'];required.forEach(x=>pass(`runtime script ${x}`,scripts.some(s=>s.includes(x))));
+pass('economy balancer active',!!window.__emojiDropsEconomy?.version,window.__emojiDropsEconomy?.version||'missing');pass('economy target RTP',Math.abs(Number(window.__emojiDropsEconomy?.targetRTP||0)-.908)<.001,`${Number(window.__emojiDropsEconomy?.targetRTP||0)*100}%`);
+pass('transaction guard active',!!window.__emojiDropsTxGuard?.version,`v${window.__emojiDropsTxGuard?.version||'?'}`);pass('case transaction key',window.__emojiDropsTxGuard?.keys?.case==='emojiDrops.caseTx.v1',window.__emojiDropsTxGuard?.keys?.case||'missing');pass('upgrade transaction key',window.__emojiDropsTxGuard?.keys?.upgrade==='emojiDrops.upgradeTx.v2',window.__emojiDropsTxGuard?.keys?.upgrade||'missing');pass('authoritative transaction engine active',!!window.__emojiDropsEngine?.version,window.__emojiDropsEngine?.version||'missing');pass('engine version hardened',Number(window.__emojiDropsEngine?.version||0)>=2,`v${window.__emojiDropsEngine?.version||'?'}`);pass('engine has case entrypoint',typeof window.__emojiDropsEngine?.openCase==='function');pass('engine has upgrade entrypoint',typeof window.__emojiDropsEngine?.upgrade==='function');let scenario=null;try{scenario=window.__emojiDropsEngine?.qa?.()}catch(e){scenario={pass:false,error:String(e)}}pass('engine economy scenario QA',scenario?.pass===true,scenario?.error||`target_count=${scenario?.target_count??'?'} chance_15=${Number(scenario?.chance_15??NaN).toFixed?.(1)??'?'}`);
 const duplicateIds=[...document.querySelectorAll('[id]')].map(x=>x.id).filter((id,i,a)=>id&&a.indexOf(id)!==i);pass('no duplicate DOM ids',duplicateIds.length===0,[...new Set(duplicateIds)].join(', '));
-const failed=checks.filter(x=>!x.ok);window.__emojiDropsQA={ok:failed.length===0,checks,failedCount:failed.length,ranAt:new Date().toISOString()};console.groupCollapsed(`Emoji Drops QA: ${failed.length?'FAIL':'PASS'} (${checks.length} checks)`);checks.forEach(x=>console[x.ok?'log':'error'](`${x.ok?'✓':'✗'} ${x.name}`,x.detail));console.groupEnd();return window.__emojiDropsQA}
-function boot(){setTimeout(run,0)}
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
+const failed=checks.filter(x=>!x.ok);window.__emojiDropsQA={ok:failed.length===0,checks,failedCount:failed.length,rtp,ranAt:new Date().toISOString()};console.groupCollapsed(`Emoji Drops QA: ${failed.length?'FAIL':'PASS'} (${checks.length} checks)`);checks.forEach(x=>console[x.ok?'log':'error'](`${x.ok?'✓':'✗'} ${x.name}`,x.detail));console.groupEnd();return window.__emojiDropsQA}
+function boot(){setTimeout(run,0)}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();
