@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>Emoji Drops</title>
 <style>
 :root{--bg:#090909;--card:#121212;--line:#292929;--text:#fff;--muted:#8b8b8b;--orange:#ff7b00;--orange2:#ff9a2e}
@@ -31,22 +33,10 @@ main{max-width:1240px;margin:0 auto;padding:22px 24px 150px}.section-title{font-
 <section class="live-section"><div class="live-title"><span>●</span> LIVE DROPS</div><div id="liveContainer" class="live-container"></div></section>
 </main>
 <script>function getUsers(){try{const x=JSON.parse(localStorage.getItem('users')||'[]');return Array.isArray(x)?x:[]}catch{return[]}}</script>
-<script src="js/data.js?v=20260907-boot-4"></script>
-<script src="js/functional-final.js?v=20260907-boot-4"></script>
-<script src="js/economy-balance.js?v=20260907-boot-4"></script>
-<script src="js/economy-sim-qa.js?v=20260907-boot-4"></script>
-<script src="js/runtime-hardening.js?v=20260907-boot-4"></script>
-<script src="js/transaction-guard.js?v=20260907-boot-4"></script>
-<script src="js/game-transaction-engine.js?v=20260907-boot-4"></script>
-<script src="js/transaction-serialization.js?v=20260907-boot-4"></script>
-<script src="js/runtime-action-bridge.js?v=20260907-boot-4"></script>
-<script src="js/case-upgrade-polish.js?v=20260907-boot-4"></script>
-<script src="js/motion-system.js?v=20260907-boot-4"></script>
-<script src="js/final-ui-recovery.js?v=20260907-boot-4"></script>
-<script src="js/final-quality-qa.js?v=20260907-boot-4"></script>
-<script src="js/runtime-qa.js?v=20260907-boot-4"></script>
-<script src="js/runtime-final-qa.js?v=20260907-boot-4"></script>
-<script src="js/economy-social-rewards.js?v=20260907-boot-4"></script>
-<script>window.__emojiDropsRuntimeLoader={version:16,complete:true,failed:[],count:14};window.__emojiDropsBoot={version:3,coreLoaded:true,deterministic:true};window.addEventListener('error',e=>console.error('Emoji Drops runtime error:',e.error||e.message),true);window.addEventListener('unhandledrejection',e=>console.error('Emoji Drops promise error:',e.reason),true);</script>
+<script src="js/data.js?v=20260907-core-5"></script>
+<script src="js/economy-balance.js?v=20260907-core-5"></script>
+<script src="js/functional-final.js?v=20260907-core-5"></script>
+<script src="js/stable-polish.js?v=20260907-core-5"></script>
+<script>window.__emojiDropsRuntimeLoader={version:17,complete:true,failed:[],count:4};window.__emojiDropsBoot={version:4,coreLoaded:true,deterministic:true,optionalLayersDisabled:true};window.addEventListener('error',e=>console.error('Emoji Drops runtime error:',e.error||e.message),true);window.addEventListener('unhandledrejection',e=>console.error('Emoji Drops promise error:',e.reason)},true);</script>
 </body>
 </html>
