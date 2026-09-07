@@ -3,7 +3,7 @@
 const STYLE='ed-motion-system';
 const reduced=()=>window.__emojiDropsPerf?.reduced||matchMedia('(prefers-reduced-motion: reduce)').matches;
 function inject(){if(document.getElementById(STYLE))return;const s=document.createElement('style');s.id=STYLE;s.textContent=`
-.ed-motion,.case-card,.top-pill,.profile-top,.profile-btn,.primary,.secondary,.amount,.close,.reward-btn,.inventory-item,.preview-item,.best,.stat{transition:transform .22s cubic-bezier(.2,.8,.2,1),opacity .22s ease,border-color .22s ease,box-shadow .22s ease,background-color .22s ease!important}
+.case-card,.top-pill,.profile-top,.profile-btn,.primary,.secondary,.amount,.close,.reward-btn,.inventory-item,.preview-item,.best,.stat{transition:transform .22s cubic-bezier(.2,.8,.2,1),opacity .22s ease,border-color .22s ease,box-shadow .22s ease,background-color .22s ease!important}
 .case-card:active,.primary:not(:disabled):active,.secondary:not(:disabled):active,.profile-btn:not(:disabled):active,.amount:not(:disabled):active,.close:not(:disabled):active{transform:scale(.975)!important}
 .case-card:hover{transform:translateY(-6px) scale(1.008)}
 .primary:not(:disabled):hover,.reward-btn:not(:disabled):hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(255,123,0,.18)}
@@ -28,9 +28,7 @@ function inject(){if(document.getElementById(STYLE))return;const s=document.crea
 body:has(.modal.show) .live-section{display:none!important}
 .online-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#ef4444;box-shadow:0 0 8px #ef4444;vertical-align:middle;margin-right:5px;animation:edOnlineBlink 1.1s ease-in-out infinite}
 @keyframes edOnlineBlink{0%,100%{opacity:.35;transform:scale(.85)}50%{opacity:1;transform:scale(1)}}
-.open-cost{display:none!important}
-.ed-final-actions{margin-top:0!important;margin-bottom:14px!important}
-.ed-final-actions button{min-height:46px}
+.open-cost{display:none!important}.ed-final-actions{margin-top:0!important;margin-bottom:14px!important}.ed-final-actions button{min-height:46px}
 header{min-width:0}.logo{flex:0 1 auto;white-space:nowrap;min-width:0}.top-right{min-width:0;flex:0 1 auto;white-space:nowrap}.top-pill,.profile-top{white-space:nowrap}
 @media(max-width:700px){header{padding:0 10px!important;gap:6px}.logo{font-size:21px!important}.top-right{gap:5px!important}.top-pill{padding:8px 8px!important;font-size:13px}.profile-top{padding:8px 9px!important;font-size:13px}.live-section{bottom:8px!important;width:calc(100vw - 16px)!important}.live-container{gap:8px!important;min-height:66px!important}.live-drop{flex-basis:150px!important;height:58px!important}.live-emoji{width:38px!important;height:38px!important;font-size:23px!important}}
 @media(max-width:360px){.logo{font-size:19px!important}.top-pill{padding:7px 6px!important;font-size:12px}.profile-top{padding:7px!important;font-size:12px}.top-right{gap:3px!important}}
@@ -40,7 +38,7 @@ document.head.appendChild(s)}
 function patchOnline(){const n=document.getElementById('onlineCount');if(!n)return;const host=n.parentElement;if(!host||host.dataset.edOnlinePatched==='1')return;host.innerHTML=`<span class="online-dot" aria-hidden="true"></span><span id="onlineCount">${n.textContent||'128'}</span> online`;host.dataset.edOnlinePatched='1'}
 function patchCaseModal(){const modal=document.getElementById('edOpenModal');if(!modal)return;const body=modal.querySelector('.panel-body');const actions=modal.querySelector('.ed-final-actions');const items=modal.querySelector('#edCaseItems');if(body&&actions&&items&&items.previousElementSibling!==actions)body.insertBefore(actions,items);const cost=modal.querySelector('.open-cost');if(cost)cost.remove()}
 function patch(){inject();patchOnline();patchCaseModal()}
-function observe(){patch();const mo=new MutationObserver(()=>patch());mo.observe(document.body,{childList:true,subtree:true});window.addEventListener('pagehide',()=>mo.disconnect(),{once:true})}
+function observe(){patch();const mo=new MutationObserver(records=>{let relevant=false;for(const r of records){for(const n of r.addedNodes){if(n.nodeType!==1)continue;if(n.id==='onlineCount'||n.id==='edOpenModal'||n.classList?.contains('ed-final-actions')||n.classList?.contains('open-cost')){relevant=true;break}if(n.querySelector?.('#onlineCount,#edOpenModal,.ed-final-actions,.open-cost')){relevant=true;break}}if(relevant)break}if(relevant)patch()});mo.observe(document.body,{childList:true,subtree:true});window.addEventListener('pagehide',()=>mo.disconnect(),{once:true})}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',observe,{once:true});else observe();
-window.__emojiDropsMotion={version:3,reduced:reduced(),visualOnly:true};
+window.__emojiDropsMotion={version:4,reduced:reduced(),visualOnly:true};
 })();
