@@ -1,5 +1,34 @@
 (()=>{'use strict';
-/* Single runtime entrypoint. Functional runtime loads first; economy, performance profile, integrity, transactions, serialization, action bridge, polish, QA and final adaptive quality guard follow. */
-const perf=(()=>{const mq=q=>{try{return matchMedia(q).matches}catch{return false}};const cores=Number(navigator.hardwareConcurrency)||4;const mem=Number(navigator.deviceMemory)||4;const slow=mq('(update: slow)')||cores<=2||mem<=2||navigator.connection?.saveData===true;const reduced=mq('(prefers-reduced-motion: reduce)');const profile={version:1,lowEnd:slow,reduced,cores,memory:mem,reelItems:slow?24:56,reelTarget:slow?18:46,reelDuration:reduced?0:(slow?1250:2800),upgradeDuration:reduced?0:(slow?600:850),liveLimit:slow?6:10};window.__emojiDropsPerf=profile;return profile})();
-const runtime=document.createElement('script');runtime.src='js/functional-final.js?v=stable-functional-7';runtime.async=false;runtime.onload=()=>{const economy=document.createElement('script');economy.src='js/economy-balance.js?v=6';economy.async=false;economy.onload=()=>{const eq=document.createElement('script');eq.src='js/economy-sim-qa.js?v=5';eq.async=false;eq.onload=()=>{const hardening=document.createElement('script');hardening.src='js/runtime-hardening.js?v=7';hardening.async=false;hardening.onload=()=>{const tx=document.createElement('script');tx.src='js/transaction-guard.js?v=5';tx.async=false;tx.onload=()=>{const engine=document.createElement('script');engine.src='js/game-transaction-engine.js?v=7';engine.async=false;engine.onload=()=>{const serialization=document.createElement('script');serialization.src='js/transaction-serialization.js?v=2';serialization.async=false;serialization.onload=()=>{const bridge=document.createElement('script');bridge.src='js/runtime-action-bridge.js?v=1';bridge.async=false;bridge.onload=()=>{const polish=document.createElement('script');polish.src='js/case-upgrade-polish.js?v=8';polish.async=false;polish.onload=()=>{const quality=document.createElement('script');quality.src='js/final-quality-qa.js?v=2';quality.async=false;quality.onload=()=>{const qa=document.createElement('script');qa.src='js/runtime-qa.js?v=11';qa.async=false;qa.onload=()=>{const finalQA=document.createElement('script');finalQA.src='js/runtime-final-qa.js?v=3';finalQA.onerror=()=>console.error('Emoji Drops final runtime QA failed to load');document.body.appendChild(finalQA)};qa.onerror=()=>console.error('Emoji Drops runtime QA failed to load');document.body.appendChild(qa)};quality.onerror=()=>console.error('Emoji Drops final quality guard failed to load');document.body.appendChild(quality)};polish.onerror=()=>console.error('Emoji Drops case/upgrade polish failed to load');document.body.appendChild(polish)};bridge.onerror=()=>console.error('Emoji Drops action bridge failed to load');document.body.appendChild(bridge)};serialization.onerror=()=>console.error('Emoji Drops transaction serialization failed to load');document.body.appendChild(serialization)};engine.onerror=()=>console.error('Emoji Drops transaction engine failed to load');document.body.appendChild(engine)};tx.onerror=()=>console.error('Emoji Drops transaction guard failed to load');document.body.appendChild(tx)};hardening.onerror=()=>console.error('Emoji Drops hardening failed to load');document.body.appendChild(hardening)};eq.onerror=()=>console.error('Emoji Drops economy simulation QA failed to load');document.body.appendChild(eq)};economy.onerror=()=>console.error('Emoji Drops economy balancer failed to load');document.body.appendChild(economy)};runtime.onerror=()=>console.error('Emoji Drops runtime failed to load');document.body.appendChild(runtime);
+/* Emoji Drops — single runtime entrypoint. Scripts load in dependency order; a failed optional layer no longer stalls every layer after it. */
+const perf=(()=>{const mq=q=>{try{return matchMedia(q).matches}catch{return false}};const cores=Number(navigator.hardwareConcurrency)||4;const mem=Number(navigator.deviceMemory)||4;const slow=mq('(update: slow)')||cores<=2||mem<=2||navigator.connection?.saveData===true;const reduced=mq('(prefers-reduced-motion: reduce)');const profile={version:2,lowEnd:slow,reduced,cores,memory:mem,reelItems:slow?24:56,reelTarget:slow?18:46,reelDuration:reduced?0:(slow?1250:2800),upgradeDuration:reduced?0:(slow?600:850),liveLimit:slow?6:10};window.__emojiDropsPerf=profile;return profile})();
+const scripts=[
+ ['functional','js/functional-final.js?v=stable-functional-8'],
+ ['economy','js/economy-balance.js?v=6'],
+ ['economyQA','js/economy-sim-qa.js?v=5'],
+ ['hardening','js/runtime-hardening.js?v=7'],
+ ['transactionGuard','js/transaction-guard.js?v=5'],
+ ['engine','js/game-transaction-engine.js?v=7'],
+ ['serialization','js/transaction-serialization.js?v=2'],
+ ['actionBridge','js/runtime-action-bridge.js?v=2'],
+ ['polish','js/case-upgrade-polish.js?v=8'],
+ ['quality','js/final-quality-qa.js?v=2'],
+ ['runtimeQA','js/runtime-qa.js?v=12'],
+ ['finalQA','js/runtime-final-qa.js?v=4']
+];
+const failed=[];
+function load(i){
+ if(i>=scripts.length){
+  window.__emojiDropsRuntimeLoader={version:2,complete:true,failed:[...failed],count:scripts.length};
+  if(failed.length)console.warn('Emoji Drops runtime completed with failed layers:',failed);
+  return;
+ }
+ const [name,src]=scripts[i],s=document.createElement('script');
+ s.src=src;s.async=false;s.dataset.emojiDropsLayer=name;
+ const next=()=>load(i+1);
+ s.onload=()=>next();
+ s.onerror=()=>{failed.push(name);console.error(`Emoji Drops runtime layer failed to load: ${name}`);next()};
+ document.body.appendChild(s);
+}
+window.__emojiDropsRuntimeLoader={version:2,complete:false,failed:[],count:scripts.length};
+load(0);
 })();
