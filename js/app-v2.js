@@ -1,34 +1,7 @@
 (()=>{'use strict';
-/* Emoji Drops — single runtime entrypoint. Scripts load in dependency order; a failed optional layer no longer stalls every layer after it. */
-const perf=(()=>{const mq=q=>{try{return matchMedia(q).matches}catch{return false}};const cores=Number(navigator.hardwareConcurrency)||4;const mem=Number(navigator.deviceMemory)||4;const slow=mq('(update: slow)')||cores<=2||mem<=2||navigator.connection?.saveData===true;const reduced=mq('(prefers-reduced-motion: reduce)');const profile={version:2,lowEnd:slow,reduced,cores,memory:mem,reelItems:slow?24:56,reelTarget:slow?18:46,reelDuration:reduced?0:(slow?1250:2800),upgradeDuration:reduced?0:(slow?600:850),liveLimit:slow?6:10};window.__emojiDropsPerf=profile;return profile})();
-const scripts=[
- ['functional','js/functional-final.js?v=stable-functional-8'],
- ['economy','js/economy-balance.js?v=6'],
- ['economyQA','js/economy-sim-qa.js?v=5'],
- ['hardening','js/runtime-hardening.js?v=7'],
- ['transactionGuard','js/transaction-guard.js?v=5'],
- ['engine','js/game-transaction-engine.js?v=7'],
- ['serialization','js/transaction-serialization.js?v=2'],
- ['actionBridge','js/runtime-action-bridge.js?v=2'],
- ['polish','js/case-upgrade-polish.js?v=8'],
- ['quality','js/final-quality-qa.js?v=2'],
- ['runtimeQA','js/runtime-qa.js?v=12'],
- ['finalQA','js/runtime-final-qa.js?v=4']
-];
-const failed=[];
-function load(i){
- if(i>=scripts.length){
-  window.__emojiDropsRuntimeLoader={version:2,complete:true,failed:[...failed],count:scripts.length};
-  if(failed.length)console.warn('Emoji Drops runtime completed with failed layers:',failed);
-  return;
- }
- const [name,src]=scripts[i],s=document.createElement('script');
- s.src=src;s.async=false;s.dataset.emojiDropsLayer=name;
- const next=()=>load(i+1);
- s.onload=()=>next();
- s.onerror=()=>{failed.push(name);console.error(`Emoji Drops runtime layer failed to load: ${name}`);next()};
- document.body.appendChild(s);
-}
-window.__emojiDropsRuntimeLoader={version:2,complete:false,failed:[],count:scripts.length};
-load(0);
+/* Emoji Drops — single runtime entrypoint. */
+const perf=(()=>{const mq=q=>{try{return matchMedia(q).matches}catch{return false}};const cores=Number(navigator.hardwareConcurrency)||4;const mem=Number(navigator.deviceMemory)||4;const slow=mq('(update: slow)')||cores<=2||mem<=2||navigator.connection?.saveData===true;const reduced=mq('(prefers-reduced-motion: reduce)');const profile={version:3,lowEnd:slow,reduced,cores,memory:mem,reelItems:slow?24:56,reelTarget:slow?18:46,reelDuration:reduced?0:(slow?1250:2800),upgradeDuration:reduced?0:(slow?600:850),liveLimit:slow?6:10};window.__emojiDropsPerf=profile;return profile})();
+const scripts=[['functional','js/functional-final.js?v=stable-functional-8'],['economy','js/economy-balance.js?v=6'],['economyQA','js/economy-sim-qa.js?v=5'],['hardening','js/runtime-hardening.js?v=7'],['transactionGuard','js/transaction-guard.js?v=5'],['engine','js/game-transaction-engine.js?v=7'],['serialization','js/transaction-serialization.js?v=2'],['actionBridge','js/runtime-action-bridge.js?v=2'],['polish','js/case-upgrade-polish.js?v=8'],['motion','js/motion-system.js?v=1'],['quality','js/final-quality-qa.js?v=2'],['runtimeQA','js/runtime-qa.js?v=13'],['finalQA','js/runtime-final-qa.js?v=5']];
+const failed=[];function load(i){if(i>=scripts.length){window.__emojiDropsRuntimeLoader={version:3,complete:true,failed:[...failed],count:scripts.length};if(failed.length)console.warn('Emoji Drops runtime completed with failed layers:',failed);return}const[name,src]=scripts[i],s=document.createElement('script');s.src=src;s.async=false;s.dataset.emojiDropsLayer=name;const next=()=>load(i+1);s.onload=next;s.onerror=()=>{failed.push(name);console.error(`Emoji Drops runtime layer failed to load: ${name}`);next()};document.body.appendChild(s)}
+window.__emojiDropsRuntimeLoader={version:3,complete:false,failed:[],count:scripts.length};load(0);
 })();
