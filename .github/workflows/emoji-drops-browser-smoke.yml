@@ -17,13 +17,17 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
       - name: Install Playwright
         run: |
           npm init -y
           npm install --no-save playwright@1.55.0
           npx playwright install --with-deps chromium
-      - name: Run published browser smoke test
+      - name: Start local static server
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 >/tmp/emoji-drops-http.log 2>&1 &
+          echo $! >/tmp/emoji-drops-http.pid
+      - name: Run browser smoke test
         shell: bash
         run: |
           set -euo pipefail
@@ -40,7 +44,7 @@ jobs:
             const errors=[];
             page.on('pageerror',e=>errors.push(String(e)));
             page.on('console',m=>{ if(m.type()==='error') errors.push(m.text()); });
-            await page.goto('https://ordboybro.github.io/',{waitUntil:'networkidle',timeout:60000});
+            await page.goto('http://127.0.0.1:4173/',{waitUntil:'networkidle',timeout:60000});
             await page.waitForFunction(()=>window.__emojiDropsEngine && window.__emojiDropsQA,{timeout:30000});
             const qa=await page.evaluate(()=>({qa:window.__emojiDropsQA,econ:window.__emojiDropsEconomyQA,guard:window.__emojiDropsTxGuard,engine:window.__emojiDropsEngine}));
             if(!qa.engine) throw new Error('transaction engine missing');
