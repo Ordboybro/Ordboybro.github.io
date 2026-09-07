@@ -1,24 +1,58 @@
 (()=>{'use strict';
-/* Emoji Drops — final UI scope fix. Keeps canonical transaction handlers untouched. */
+/* Emoji Drops — final UI scope + layout guard. Keeps canonical transaction handlers untouched. */
 const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
 function css(){if($('#ed-final-ui-recovery-css'))return;const s=document.createElement('style');s.id='ed-final-ui-recovery-css';s.textContent=`
-/* Live Drops belong to the home screen only. */
-.live-section{position:fixed!important;left:50%!important;right:auto!important;top:auto!important;bottom:0!important;transform:translateX(-50%)!important;width:100%!important;margin:0!important;padding:18px 0 max(10px,env(safe-area-inset-bottom))!important;z-index:35!important;background:linear-gradient(180deg,transparent 0%,rgba(9,9,9,.78) 32%,rgba(9,9,9,.97) 100%)!important;border:0!important;box-shadow:none!important}
-.live-section:before{display:none!important}
-.live-container{width:min(1240px,calc(100vw - 20px))!important;margin:0 auto!important;background:linear-gradient(180deg,rgba(20,20,20,.92),rgba(10,10,10,.96))!important;border:1px solid #252525!important;border-radius:18px!important;box-shadow:0 12px 35px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.035)!important}
-/* Never show Live Drops over a game modal. */
+/* Live Drops: one bottom dock, never a top strip. */
+.live-section{position:fixed!important;left:0!important;right:0!important;top:auto!important;bottom:0!important;transform:none!important;width:100%!important;height:auto!important;min-height:112px!important;margin:0!important;padding:12px 0 max(12px,env(safe-area-inset-bottom))!important;z-index:35!important;background:#090909!important;border:0!important;border-top:0!important;box-shadow:0 -16px 38px rgba(0,0,0,.58)!important}
+.live-section:before,.live-section:after{display:none!important;content:none!important}
+.live-title{margin:0 0 8px!important;padding:0 2px!important}
+.live-container{width:min(1240px,calc(100vw - 20px))!important;min-height:70px!important;margin:0 auto!important;background:#111!important;border:1px solid #252525!important;border-radius:18px!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.035),0 12px 35px rgba(0,0,0,.55)!important}
+main{padding-bottom:145px!important}
+/* Modal/game screens must never show the home Live Drops dock. */
 body:has(.modal.show) .live-section{display:none!important}
 body:has(.modal.show)::after{display:none!important}
-/* Main-page case cards stay clean: name only. */
+/* Main case cards: name + item count only, no inline price. */
 .case-card .case-price{display:none!important}
 .case-card .case-name{display:block!important}
 .case-card .case-name::after{content:none!important}
-/* The total selected case price is shown in the modal title, not on the card. */
+/* The selected total stays in the case-opening modal title. */
 #edOpenModal .panel-head h2{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-@media(max-width:700px){.live-section{width:100%!important;padding:14px 0 max(8px,env(safe-area-inset-bottom))!important}.live-container{width:calc(100vw - 12px)!important}.live-drop{flex-basis:150px!important;height:58px!important}}
+@media(max-width:700px){
+ .live-section{min-height:92px!important;padding:9px 0 max(8px,env(safe-area-inset-bottom))!important}
+ .live-title{margin-bottom:6px!important}
+ .live-container{width:calc(100vw - 12px)!important;min-height:62px!important;border-radius:16px!important}
+ .live-drop{flex-basis:150px!important;height:58px!important}
+ main{padding-bottom:122px!important}
+}
 `;
 document.head.appendChild(s)}
-function titleForSelectedAmount(){const modal=$('#edOpenModal');const amounts=$('#edAmounts');const title=modal?.querySelector('.panel-head h2');if(!modal||!amounts||!title)return;const active=amounts.querySelector('.amount.active');if(!active)return;const m=title.textContent.match(/^(.+?)\s*·\s*([\d\s]+)₽/);if(!m)return;const base=Number(m[2].replace(/\s/g,''))||0;const amount=Math.max(1,Number(active.textContent)||1);const name=m[1].trim();title.textContent=`${name} · ${base*amount}₽`}
-function bind(){css();document.addEventListener('click',e=>{const amount=e.target?.closest?.('#edAmounts .amount');if(amount)setTimeout(titleForSelectedAmount,0)},false);window.__emojiDropsFinalUI={version:3,caseRecovery:false,homeOnlyLive:true,qa:()=>({caseButtons:$$('.case-card[data-ed-case]').length,openButton:!!$('#edOpen'),live:!!$('.live-section'),modalLiveHidden:!!document.querySelector('body:has(.modal.show) .live-section'),online:!!document.querySelector('.online-dot')})}}
+function titleForSelectedAmount(){
+ const modal=$('#edOpenModal'),amounts=$('#edAmounts'),title=modal?.querySelector('.panel-head h2');
+ if(!modal||!amounts||!title)return;
+ const active=amounts.querySelector('.amount.active');if(!active)return;
+ const amount=Math.max(1,Number(active.textContent)||1);
+ const costText=$('#edOpenCost')?.textContent||'';
+ const total=Number(costText.replace(/[^0-9.]/g,''))||0;
+ let base=Number(title.dataset.edBasePrice)||0;
+ if(!base&&total>0)base=total/amount;
+ const current=title.textContent.match(/^(.+?)\s*·\s*[\d\s]+₽$/);
+ if(!base||!current)return;
+ title.dataset.edBasePrice=String(base);
+ title.textContent=`${current[1].trim()} · ${Math.round(base*amount)}₽`;
+}
+function resetTitleBase(){const title=$('#edOpenModal .panel-head h2');if(title)delete title.dataset.edBasePrice}
+function cleanupDuplicateLives(){const lives=$$('.live-section');if(lives.length<=1)return;for(let i=1;i<lives.length;i++)lives[i].remove()}
+function bind(){
+ css();cleanupDuplicateLives();
+ document.addEventListener('click',e=>{
+  const amount=e.target?.closest?.('#edAmounts .amount');
+  if(amount)setTimeout(titleForSelectedAmount,0);
+  const card=e.target?.closest?.('.case-card[data-ed-case]');
+  if(card)setTimeout(resetTitleBase,0);
+ },false);
+ const mo=new MutationObserver(()=>{cleanupDuplicateLives();titleForSelectedAmount()});
+ mo.observe(document.body,{childList:true,subtree:true});
+ window.__emojiDropsFinalUI={version:4,caseRecovery:false,homeOnlyLive:true,qa:()=>({caseButtons:$$('.case-card[data-ed-case]').length,openButton:!!$('#edOpen'),live:$$('.live-section').length===1,modalLiveHidden:!!document.querySelector('body:has(.modal.show) .live-section'),online:!!document.querySelector('.online-dot')})}
+}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind,{once:true});else bind();
 })();
