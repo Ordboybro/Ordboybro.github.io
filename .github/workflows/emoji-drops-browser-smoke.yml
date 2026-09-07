@@ -1,0 +1,80 @@
+name: EmojiDrops browser smoke
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install Playwright
+        run: |
+          npm init -y
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Run published browser smoke test
+        shell: bash
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const { chromium } = require('playwright');
+          (async()=>{
+            const browser = await chromium.launch({headless:true});
+            const page = await browser.newPage({viewport:{width:1440,height:1000}});
+            await page.addInitScript(() => {
+              const u={email:'qa-browser@example.test',nickname:'QA',balance:100000,inventory:[],stats:{opened:0,upgrades:0,spent:0,received:0}};
+              localStorage.setItem('users',JSON.stringify([u]));
+              localStorage.setItem('currentUser',u.email);
+            });
+            const errors=[];
+            page.on('pageerror',e=>errors.push(String(e)));
+            page.on('console',m=>{ if(m.type()==='error') errors.push(m.text()); });
+            await page.goto('https://ordboybro.github.io/',{waitUntil:'networkidle',timeout:60000});
+            await page.waitForFunction(()=>window.__emojiDropsEngine && window.__emojiDropsQA,{timeout:30000});
+            const qa=await page.evaluate(()=>({qa:window.__emojiDropsQA,econ:window.__emojiDropsEconomyQA,guard:window.__emojiDropsTxGuard,engine:window.__emojiDropsEngine}));
+            if(!qa.engine) throw new Error('transaction engine missing');
+            if(!qa.qa?.pass) throw new Error('runtime QA failed: '+JSON.stringify(qa.qa?.errors||[]));
+            if(qa.econ?.errors?.length) throw new Error('economy QA failed: '+JSON.stringify(qa.econ.errors));
+            if(qa.guard?.mode!=='legacy-recovery-only') throw new Error('unexpected transaction guard mode');
+            if(await page.locator('.case-card').count()!==8) throw new Error('expected 8 case cards');
+
+            await page.locator('.case-card').first().click();
+            await page.locator('#edOpenModal.show').waitFor({state:'visible',timeout:10000});
+            await page.locator('#edOpen').click();
+            await page.locator('#edWinModal.show').waitFor({state:'visible',timeout:15000});
+            const afterCase=await page.evaluate(()=>JSON.parse(localStorage.getItem('users'))[0]);
+            if(afterCase.stats.opened!==1 || afterCase.inventory.length!==1 || afterCase.balance>=100000) throw new Error('case transaction did not commit correctly');
+            await page.locator('#edWinModal [data-ed-close]').click();
+
+            const upgradeOpen=page.locator('[data-ed-open="edUpgradeModal"]');
+            if(await upgradeOpen.count()!==1) throw new Error('upgrade opener missing');
+            await upgradeOpen.click();
+            await page.locator('#edUpgradeModal.show').waitFor({state:'visible',timeout:10000});
+            await page.locator('#edUpgradeInventory .ed-final-item-btn').first().click();
+            for(const mult of [1.5,2,3,5]){
+              await page.locator(`[data-ed-mult="${mult}"]`).click().catch(()=>{});
+              if(await page.locator('#edTargets .ed-final-item-btn').count()) break;
+            }
+            if(await page.locator('#edTargets .ed-final-item-btn').count()===0) throw new Error('no upgrade target available');
+            await page.locator('#edTargets .ed-final-item-btn').first().click();
+            await page.locator('#edDoUpgrade').click();
+            await page.waitForTimeout(1200);
+            const afterUpgrade=await page.evaluate(()=>JSON.parse(localStorage.getItem('users'))[0]);
+            if(afterUpgrade.stats.upgrades!==1) throw new Error('upgrade transaction did not commit');
+            if(await page.evaluate(()=>localStorage.getItem('emojiDrops.engineTx.v2'))!==null) throw new Error('transaction journal was not cleared');
+            if(errors.length) throw new Error('browser console errors: '+errors.join(' | '));
+            console.log('BROWSER SMOKE PASS');
+            await browser.close();
+          })().catch(async e=>{console.error(e);process.exit(1)});
+          NODE
