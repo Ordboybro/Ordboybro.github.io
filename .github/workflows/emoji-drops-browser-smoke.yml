@@ -49,7 +49,9 @@ jobs:
             if(qa.guard?.mode!=='legacy-recovery-only') throw new Error('unexpected transaction guard mode');
             if(await page.locator('.case-card').count()!==8) throw new Error('expected 8 case cards');
 
-            await page.locator('.case-card').first().click();
+            const caseTrigger=page.locator('[data-ed-case]').first();
+            if(await page.locator('[data-ed-case]').count()===0) throw new Error('case trigger missing');
+            await caseTrigger.click();
             await page.locator('#edOpenModal.show').waitFor({state:'visible',timeout:10000});
             await page.locator('#edOpen').click();
             await page.locator('#edWinModal.show').waitFor({state:'visible',timeout:15000});
