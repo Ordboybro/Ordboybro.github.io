@@ -44,7 +44,7 @@ jobs:
             await page.waitForFunction(()=>window.__emojiDropsEngine && window.__emojiDropsQA,{timeout:30000});
             const qa=await page.evaluate(()=>({qa:window.__emojiDropsQA,econ:window.__emojiDropsEconomyQA,guard:window.__emojiDropsTxGuard,engine:window.__emojiDropsEngine}));
             if(!qa.engine) throw new Error('transaction engine missing');
-            if(!qa.qa?.pass) throw new Error('runtime QA failed: '+JSON.stringify(qa.qa?.errors||[]));
+            if(!qa.qa?.ok) throw new Error('runtime QA failed: '+JSON.stringify(qa.qa?.failedCount??'?'));
             if(qa.econ?.errors?.length) throw new Error('economy QA failed: '+JSON.stringify(qa.econ.errors));
             if(qa.guard?.mode!=='legacy-recovery-only') throw new Error('unexpected transaction guard mode');
             if(await page.locator('.case-card').count()!==8) throw new Error('expected 8 case cards');
