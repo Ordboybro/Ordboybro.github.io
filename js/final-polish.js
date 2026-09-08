@@ -1,8 +1,7 @@
 (()=>{'use strict';
-const VERSION='final-polish-1';
+const VERSION='final-polish-2';
 const $=(s,r=document)=>r.querySelector(s);
 function addCSS(){if($('#emoji-drops-final-css'))return;const s=document.createElement('style');s.id='emoji-drops-final-css';s.textContent=`
-/* Final visual contract: one coherent shell, no competing legacy layers. */
 #cases{scroll-margin-top:92px}.ed-cases-heading{display:flex;align-items:center;justify-content:space-between;margin:4px 0 12px}.ed-cases-heading h2{margin:0;font-size:18px;letter-spacing:.08em;color:#ddd}.ed-cases-heading span{font-size:12px;color:#777}
 .case-price{display:none!important}.case-card{min-height:245px!important;height:245px;cursor:pointer;user-select:none}.case-card:focus-visible{outline:2px solid #ff9a2e;outline-offset:3px}.case-card:active{transform:translateY(-2px) scale(.992)!important}
 .modal{opacity:0;transition:opacity .18s ease}.modal.show{opacity:1}.modal .panel{transform:translateY(10px) scale(.985);transition:transform .22s cubic-bezier(.2,.8,.2,1)}.modal.show .panel{transform:none}
@@ -12,10 +11,9 @@ function addCSS(){if($('#emoji-drops-final-css'))return;const s=document.createE
 @media(max-width:700px){main{padding-left:14px!important;padding-right:14px!important;padding-bottom:138px!important}.ed-cases-heading{margin-top:0}.case-card{height:230px!important;min-height:230px!important;border-radius:20px!important}.case-art{font-size:64px!important}.top-pill{white-space:nowrap}.profile-top{white-space:nowrap}.live-section{padding-left:10px!important;padding-right:10px!important}}
 @media(max-width:420px){header{height:68px!important}.logo{font-size:20px!important}.top-pill:first-child{display:none}.top-pill{padding:8px 9px!important}.profile-top{padding:8px 9px!important}.reward-top{padding:8px 9px!important;font-size:12px}.case-card{height:215px!important;min-height:215px!important}.case-art{height:90px!important}}
 @media(prefers-reduced-motion:reduce){.modal,.modal .panel,.live-drop,.primary{transition:none!important}.ed-final-wheel-circle.ed-stable-spin:before{animation:none!important}}
-` ;document.head.appendChild(s)}
+`;document.head.appendChild(s)}
 function casesHeading(){const c=$('#cases');if(!c||$('.ed-cases-heading'))return;const h=document.createElement('div');h.className='ed-cases-heading';h.innerHTML='<h2>КЕЙСЫ</h2><span>Выбери коллекцию</span>';c.parentNode.insertBefore(h,c)}
-function hardenLegacyReward(){document.addEventListener('click',e=>{const b=e.target.closest('#rewardHeader,#edReward');if(!b)return;e.preventDefault();e.stopImmediatePropagation()},true)}
-function watchDynamicUI(){const root=new MutationObserver(()=>{const price=document.querySelectorAll('.case-price');price.forEach(x=>x.style.display='none');const r=$('#edReward');if(r&&!r.dataset.finalPolish){r.dataset.finalPolish='1';r.textContent='🎁 Получить 100₽'} });root.observe(document.body,{childList:true,subtree:true})}
-function boot(){addCSS();casesHeading();hardenLegacyReward();watchDynamicUI();document.documentElement.dataset.finalPolish=VERSION;window.__emojiDropsFinalPolish={version:VERSION,visualContract:true,pricesHidden:true,rewardGuard:true}}
+function watchDynamicUI(){const root=new MutationObserver(()=>{document.querySelectorAll('.case-price').forEach(x=>x.style.display='none')});root.observe(document.body,{childList:true,subtree:true})}
+function boot(){addCSS();casesHeading();watchDynamicUI();document.documentElement.dataset.finalPolish=VERSION;window.__emojiDropsFinalPolish={version:VERSION,visualContract:true,pricesHidden:true,rewardGuard:false}}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();
