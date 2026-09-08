@@ -6,11 +6,11 @@ function inject(){if(document.getElementById(STYLE_ID))return;const s=document.c
 `;
 document.head.appendChild(s)}
 function chanceValue(root){const node=root.querySelector('#edChance,.ed-final-chance');if(!node)return 50;const m=node.textContent.match(/(\d+(?:[.,]\d+)?)\s*%/);const n=m?Number(m[1].replace(',','.')):50;return Math.max(1,Math.min(99,n))}
-function syncChance(root){const wheel=root.querySelector('.ed-final-wheel-circle');if(!wheel)return;const chance=chanceValue(root);wheel.style.setProperty('--ed-chance',chance+'%');wheel.style.setProperty('--ed-arrow-angle',(-90+chance/2)+'deg')}
+function syncChance(root){const wheel=root.querySelector('.ed-final-wheel-circle');if(wheel)wheel.style.setProperty('--ed-chance',chanceValue(root)+'%')}
 function outcome(root){let n=root.querySelector('.ed-upgrade-outcome');if(!n){n=document.createElement('div');n.className='ed-upgrade-outcome';root.querySelector('.ed-final-wheel')?.appendChild(n)}return n}
 function syncState(root){const wheel=root.querySelector('.ed-final-wheel-circle'),chance=root.querySelector('#edChance');if(!wheel||!chance)return;syncChance(root);const text=chance.textContent.trim();if(/Прокрутка/i.test(text)){wheel.classList.remove('ed-upgrade-win','ed-upgrade-lose');void wheel.offsetWidth;wheel.classList.add('ed-upgrade-spin');const out=outcome(root);out.className='ed-upgrade-outcome show';out.textContent='КРУТИМ…';return}if(/WIN/i.test(text)){wheel.classList.remove('ed-upgrade-spin','ed-upgrade-lose');wheel.classList.add('ed-upgrade-win');const out=outcome(root);out.className='ed-upgrade-outcome show win';out.textContent='✓ УСПЕШНЫЙ АПГРЕЙД';return}if(/LOSE/i.test(text)){wheel.classList.remove('ed-upgrade-spin','ed-upgrade-win');wheel.classList.add('ed-upgrade-lose');const out=outcome(root);out.className='ed-upgrade-outcome show lose';out.textContent='✕ АПГРЕЙД НЕ УДАЛСЯ';return}wheel.classList.remove('ed-upgrade-spin','ed-upgrade-win','ed-upgrade-lose');const out=root.querySelector('.ed-upgrade-outcome');if(out)out.className='ed-upgrade-outcome'}
 function watch(){const root=document.getElementById('edUpgradeModal');if(!root||root.dataset.edPolishWatch==='1')return;root.dataset.edPolishWatch='1';const mo=new MutationObserver(()=>syncState(root));mo.observe(root,{subtree:true,childList:true,characterData:true,attributes:true});syncState(root)}
 function start(){inject();watch();const mo=new MutationObserver(()=>watch());mo.observe(document.body,{subtree:true,childList:true})}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
-window.__emojiDropsUpgradePolish={version:3,engineAuthoritative:true};
+window.__emojiDropsUpgradePolish={version:2,engineAuthoritative:true};
 })();
