@@ -2,13 +2,16 @@ const { chromium } = require('playwright');
 const { spawn } = require('node:child_process');
 const path = require('node:path');
 const root = path.resolve(__dirname, '..');
-const server = spawn(process.execPath, ['-e', `require('http').createServer((req,res)=>{const u=new URL(req.url,'http://127.0.0.1');const p=u.pathname==='/'?'index.html':u.pathname.slice(1);require('fs').createReadStream(require('path').join(${JSON.stringify(root)},p)).on('error',()=>{res.statusCode=404;res.end()}).pipe(res)}).listen(4173)`], { stdio: 'ignore' });
+const server = spawn(process.execPath, ['-e', `require('http').createServer((req,res)=>{const u=new URL(req.url,'http://127.0.0.1');const p=u.pathname==='/'?'index.html':u.pathname.slice(1);const file=require('path').join(${JSON.stringify(root)},p);require('fs').createReadStream(file).on('open',()=>{res.statusCode=200;res.setHeader('Content-Type',p.endsWith('.js')?'text/javascript; charset=utf-8':p.endsWith('.html')?'text/html; charset=utf-8':'application/octet-stream')}).on('error',()=>{res.statusCode=404;res.end()}).pipe(res)}).listen(4173)`], { stdio: 'ignore' });
 const sizes=[[320,844],[340,844],[375,812],[390,844],[430,932]];
 async function waitForServer(){for(let i=0;i<40;i++){try{await new Promise((resolve,reject)=>{const req=require('node:http').get('http://127.0.0.1:4173/',r=>{r.resume();r.statusCode===200?resolve():reject(Error('HTTP '+r.statusCode))});req.on('error',reject)});return}catch{await new Promise(r=>setTimeout(r,50))}}throw Error('Local test server did not start')}
 async function assertCore(page,width,height){
   const errors=[];page.on('pageerror',e=>errors.push(String(e.message||e)));
-  await page.goto('http://127.0.0.1:4173/',{waitUntil:'networkidle'});
-  await page.evaluate(()=>localStorage.clear()); await page.reload({waitUntil:'networkidle'});
+  await page.goto('http://127.0.0.1:4173/',{waitUntil:'domcontentloaded'});
+  await page.evaluate(()=>localStorage.clear()); await page.reload({waitUntil:'domcontentloaded'});
+  await page.waitForFunction(()=>window.__emojiDropsRuntimeLoader?.complete===true || (window.__emojiDropsRuntimeLoader?.failed||[]).length>0,{timeout:10000});
+  const loader=await page.evaluate(()=>({loader:window.__emojiDropsRuntimeLoader,hardening:window.__emojiDropsDiagnostics,core:!!window.__emojiDropsCore,transactions:window.__emojiDropsTransactions?window.__emojiDropsTransactions.version:null}));
+  if(!loader.loader?.complete)throw Error(`Runtime boot failed at ${width}x${height}: ${JSON.stringify(loader)}`);
   const balance=page.locator('#edBalance');await balance.waitFor({state:'visible',timeout:10000});
   const text=(await balance.textContent()).trim(); const numeric=(text.match(/\d[\d,]*/)||[''])[0].replace(/,/g,'');
   if(Number(numeric)!==250||!(await page.locator('.ed-coin').count()))throw Error(`Fresh Emoji Coin balance failed at ${width}x${height}: ${text}`);
