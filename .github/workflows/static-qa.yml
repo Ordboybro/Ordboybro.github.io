@@ -14,6 +14,7 @@ jobs:
         run: |
           set -euo pipefail
           while IFS= read -r -d '' f; do node --check "$f"; done < <(find js -type f -name '*.js' -print0 | sort -z)
+          node --check data.js
       - name: Runtime and assets
         run: |
           python3 - <<'PY'
@@ -25,9 +26,14 @@ jobs:
           if missing: raise SystemExit('Missing assets: '+str(missing))
           app=Path('js/app-v2.js').read_text()
           if app.index('emoji-drops-hardening.js')>app.index('emoji-drops-core.js'): raise SystemExit('Hardening must boot before core')
+          if '<scr' not in app or '<\\/scr' not in app: raise SystemExit('Runtime loader is not parser-safe')
+          bootstrap=Path('data.js').read_text()
+          if 'src="js/data.js' not in bootstrap: raise SystemExit('Dataset bootstrap target missing')
+          if 'src="data.js' in bootstrap: raise SystemExit('Root data.js recursively loads itself')
+          if '<scr' not in bootstrap or '<\\/scr' not in bootstrap: raise SystemExit('Dataset bootstrap is not parser-safe')
           runtime=[x.split('?',1)[0] for x in re.findall(r'<script[^>]+src=["\']([^"\']+)',h,re.I) if 'app-v2.js' in x]
           if runtime!=['js/app-v2.js']: raise SystemExit('Unexpected runtime entry')
-          print('Runtime/assets OK')
+          print('Runtime/assets/bootstrap OK')
           PY
       - name: Odds, dataset and economy
         run: |
