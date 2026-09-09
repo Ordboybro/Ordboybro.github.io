@@ -23,13 +23,14 @@ jobs:
           from pathlib import Path
           import re, subprocess
           h=Path('index.html').read_text()
-          scripts=re.findall(r"<script(?![^>]*\\bsrc=)[^>]*>([\\s\\S]*?)</script>",h,re.I)
+          scripts=re.findall(r"<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)</script>",h,re.I)
           for i,s in enumerate(scripts,1):
               if s.strip():
                   p=Path(f'/tmp/inline-{i}.js'); p.write_text(s); subprocess.run(['node','--check',str(p)],check=True)
           PY
       - name: Assets and boot
         run: |
+          set -euo pipefail
           python3 - <<'PY'
           from pathlib import Path
           import re
@@ -46,9 +47,9 @@ jobs:
           PY
           node - <<'NODE'
           const fs=require('fs'),vm=require('vm'),w=[];
-          const document={write:s=>w.push(s),getElementById:()=>null,head:{appendChild:()=>{}},addEventListener:()=>{},querySelector:()=>null};
+          const document={write:s=>w.push(s),getElementById:()=>null,head:{appendChild:()=>{}},addEventListener:()=>{},querySelector:()=>null,body:{}};
           const window={cases:null,casePrices:null,rarities:null};
-          const c={window,document,localStorage:{getItem:()=>null,setItem:()=>{}},console,getUsers:()=>[],setInterval:()=>0,clearInterval:()=>{}};
+          const c={window,document,localStorage:{getItem:()=>null,setItem:()=>{}},console,getUsers:()=>[],setInterval:()=>0,clearInterval:()=>{},clearTimeout:()=>{},NodeFilter:{SHOW_TEXT:4},MutationObserver:function(){this.observe=()=>{}},requestAnimationFrame:fn=>fn()};
           vm.createContext(c); vm.runInContext(fs.readFileSync('data.js','utf8'),c); if(w.length!==1||!w[0].includes('js/data.js'))throw Error('root bootstrap'); vm.runInContext(fs.readFileSync('js/data.js','utf8'),c); vm.runInContext(fs.readFileSync('js/app-v2.js','utf8'),c); if(Object.keys(window.cases||{}).length!==8||Object.keys(window.casePrices||{}).length!==8)throw Error('dataset bridge'); if(w.length!==5)throw Error('runtime writes: '+w.join(' | ')); if(!w[4].includes('emoji-drops-ui-polish.js'))throw Error('UI polish was not loaded'); console.log('Boot OK: dataset -> bridge -> hardening -> core -> guards -> UI');
           NODE
       - name: Economy
@@ -67,6 +68,12 @@ jobs:
           node --check js/emoji-drops-ui-polish.js
           node - <<'NODE'
           const fs=require('fs'),s=fs.readFileSync('js/emoji-drops-ui-polish.js','utf8');
-          for(const x of ['ed-online','ed-coin','live-section','Emoji Coin']) if(!s.includes(x)) throw new Error('UI polish marker missing: '+x);
+          for(const x of ['ed-online','ed-coin','live-section','Emoji Coin','relevantMutation','requestAnimationFrame']) if(!s.includes(x)) throw new Error('UI polish marker missing: '+x);
           console.log('UI polish OK');
           NODE
+      - name: Browser E2E smoke
+        run: |
+          set -euo pipefail
+          npm install --no-save --no-package-lock playwright@1.55.0
+          npx playwright install --with-deps chromium
+          node tests/emoji-drops-browser-e2e.js
