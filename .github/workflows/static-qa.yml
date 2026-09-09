@@ -23,7 +23,8 @@ jobs:
           from pathlib import Path
           import re, subprocess
           h=Path('index.html').read_text()
-          for i,s in enumerate(re.findall(r'<script(?![^>]*\\bsrc=)[^>]*>([\\s\\S]*?)</script>',h,re.I),1):
+          scripts=re.findall(r"<script(?![^>]*\\bsrc=)[^>]*>([\\s\\S]*?)</script>",h,re.I)
+          for i,s in enumerate(scripts,1):
               if s.strip():
                   p=Path(f'/tmp/inline-{i}.js'); p.write_text(s); subprocess.run(['node','--check',str(p)],check=True)
           PY
@@ -33,7 +34,7 @@ jobs:
           from pathlib import Path
           import re
           h=Path('index.html').read_text()
-          refs=re.findall(r'<script[^>]+src=["\\']([^"\\']+)',h,re.I)
+          refs=re.findall(r"<script[^>]+src=['\"]([^'\"]+)",h,re.I)
           missing=[x for x in refs if not x.split('?',1)[0].startswith(('http://','https://','//','data:')) and not Path(x.split('?',1)[0].lstrip('/')).exists()]
           if missing: raise SystemExit('Missing assets: '+str(missing))
           a=Path('js/app-v2.js').read_text(); boot=Path('data.js').read_text()
@@ -46,7 +47,7 @@ jobs:
           const document={write:s=>w.push(s),getElementById:()=>null,head:{appendChild:()=>{}},addEventListener:()=>{},querySelector:()=>null};
           const window={cases:null,casePrices:null,rarities:null};
           const c={window,document,localStorage:{getItem:()=>null,setItem:()=>{}},console,getUsers:()=>[],setInterval:()=>0,clearInterval:()=>{}};
-          vm.createContext(c); vm.runInContext(fs.readFileSync('data.js','utf8'),c); if(w.length!==1)throw Error('root bootstrap'); vm.runInContext(fs.readFileSync('js/data.js','utf8'),c); vm.runInContext(fs.readFileSync('js/app-v2.js','utf8'),c); if(Object.keys(window.cases||{}).length!==8||Object.keys(window.casePrices||{}).length!==8)throw Error('dataset bridge'); if(w.length!==4)throw Error('runtime writes'); console.log('Boot OK');
+          vm.createContext(c); vm.runInContext(fs.readFileSync('data.js','utf8'),c); if(w.length!==1||!w[0].includes('js/data.js'))throw Error('root bootstrap'); vm.runInContext(fs.readFileSync('js/data.js','utf8'),c); vm.runInContext(fs.readFileSync('js/app-v2.js','utf8'),c); if(Object.keys(window.cases||{}).length!==8||Object.keys(window.casePrices||{}).length!==8)throw Error('dataset bridge'); if(w.length!==4)throw Error('runtime writes'); console.log('Boot OK');
           NODE
       - name: Economy
         run: node tests/emoji-drops-economy-self-test.js
