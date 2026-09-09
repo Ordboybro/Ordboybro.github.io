@@ -15,6 +15,16 @@ jobs:
           set -euo pipefail
           while IFS= read -r -d '' f; do node --check "$f"; done < <(find js -type f -name '*.js' -print0 | sort -z)
           node --check data.js
+          python3 - <<'PY'
+          from pathlib import Path
+          import re,subprocess,tempfile
+          h=Path('index.html').read_text()
+          for i,src in enumerate(re.findall(r'<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)</script>',h,re.I),1):
+              if not src.strip(): continue
+              p=Path(f'/tmp/emoji-inline-{i}.js');p.write_text(src)
+              subprocess.run(['node','--check',str(p)],check=True)
+          print('Inline JavaScript syntax OK')
+          PY
       - name: Runtime and assets
         run: |
           python3 - <<'PY'
@@ -27,6 +37,7 @@ jobs:
           app=Path('js/app-v2.js').read_text()
           if app.index('emoji-drops-hardening.js')>app.index('emoji-drops-core.js'): raise SystemExit('Hardening must boot before core')
           if '<scr' not in app or '<\\/scr' not in app: raise SystemExit('Runtime loader is not parser-safe')
+          if 'dataset-bridge' not in app or 'window.cases=cases' not in app or 'window.casePrices=casePrices' not in app: raise SystemExit('Dataset bridge missing')
           bootstrap=Path('data.js').read_text()
           if 'src="js/data.js' not in bootstrap: raise SystemExit('Dataset bootstrap target missing')
           if 'src="data.js' in bootstrap: raise SystemExit('Root data.js recursively loads itself')
@@ -35,6 +46,23 @@ jobs:
           if runtime!=['js/app-v2.js']: raise SystemExit('Unexpected runtime entry')
           print('Runtime/assets/bootstrap OK')
           PY
+      - name: Boot contract
+        run: |
+          node - <<'NODE'
+          const fs=require('fs'),vm=require('vm');
+          const writes=[];
+          const document={write:s=>writes.push(s),getElementById:()=>null,head:{appendChild:()=>{}}};
+          const window={cases:null,casePrices:null,rarities:null};
+          const ctx={window,document,localStorage:{getItem:()=>null,setItem:()=>{}},console,getUsers:()=>[],Date,Number,JSON};
+          vm.createContext(ctx);
+          vm.runInContext(fs.readFileSync('js/data.js','utf8'),ctx,{timeout:2000});
+          if(!ctx.cases||!ctx.casePrices)throw new Error('Canonical dataset lexical bindings missing');
+          vm.runInContext(fs.readFileSync('js/app-v2.js','utf8'),ctx,{timeout:2000});
+          if(!window.cases||Object.keys(window.cases).length!==8)throw new Error('Dataset bridge did not expose 8 cases');
+          if(!window.casePrices||Object.keys(window.casePrices).length!==8)throw new Error('Dataset bridge did not expose 8 case prices');
+          if(writes.length!==2||!writes[0].includes('emoji-drops-hardening.js')||!writes[1].includes('emoji-drops-core.js'))throw new Error('Runtime loader order failed: '+writes.join(' | '));
+          console.log('Boot contract OK: dataset -> bridge -> hardening -> core');
+          NODE
       - name: Odds, dataset and economy
         run: |
           node - <<'NODE'
