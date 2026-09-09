@@ -17,7 +17,7 @@ jobs:
           node --check data.js
           python3 - <<'PY'
           from pathlib import Path
-          import re,subprocess,tempfile
+          import re,subprocess
           h=Path('index.html').read_text()
           for i,src in enumerate(re.findall(r'<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)</script>',h,re.I),1):
               if not src.strip(): continue
@@ -55,8 +55,8 @@ jobs:
           const window={cases:null,casePrices:null,rarities:null};
           const ctx={window,document,localStorage:{getItem:()=>null,setItem:()=>{}},console,getUsers:()=>[],Date,Number,JSON};
           vm.createContext(ctx);
-          vm.runInContext(fs.readFileSync('js/data.js','utf8'),ctx,{timeout:2000});
-          if(!ctx.cases||!ctx.casePrices)throw new Error('Canonical dataset lexical bindings missing');
+          vm.runInContext(fs.readFileSync('js/data.js','utf8')+'\nthis.__dataset={cases,casePrices,rarities};',ctx,{timeout:2000});
+          if(!ctx.__dataset?.cases||!ctx.__dataset?.casePrices)throw new Error('Canonical dataset bindings missing');
           vm.runInContext(fs.readFileSync('js/app-v2.js','utf8'),ctx,{timeout:2000});
           if(!window.cases||Object.keys(window.cases).length!==8)throw new Error('Dataset bridge did not expose 8 cases');
           if(!window.casePrices||Object.keys(window.casePrices).length!==8)throw new Error('Dataset bridge did not expose 8 case prices');
