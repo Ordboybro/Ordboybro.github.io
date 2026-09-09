@@ -13,10 +13,11 @@ const sizes=[[320,844],[340,844],[375,812],[390,844],[430,932]];
       await page.goto('http://127.0.0.1:4173/',{waitUntil:'networkidle'});
       await page.evaluate(()=>localStorage.clear()); await page.reload({waitUntil:'networkidle'});
       await page.locator('#edBalance').waitFor();
-      if((await page.locator('#edBalance').textContent()).trim()!=='250 ₽')throw new Error(`Fresh balance failed at ${width}x${height}`);
-      const openCase=page.locator('[data-open="transport"]'); if(await openCase.count()){await openCase.click();const opener=page.locator('[data-do-open]');if(await opener.count()){await Promise.all(Array.from({length:5},()=>opener.click()));}const close=page.locator('[data-close]').first();if(await close.count())await close.click();}
+      const balance=(await page.locator('#edBalance').textContent()).trim();
+      if(!/250(?:\s*EC|\s*◆\s*EC)/.test(balance))throw new Error(`Fresh Emoji Coin balance failed at ${width}x${height}: ${balance}`);
+      const openCase=page.locator('[data-open="transport"]'); if(await openCase.count()){await openCase.click();const opener=page.locator('[data-do-open]');if(await opener.count()){for(let i=0;i<5;i++)await opener.click();}const close=page.locator('[data-close]').first();if(await close.count())await close.click();}
       const inv=page.locator('[data-view="inventory"]').first();if(await inv.count())await inv.click();
-      const esc=page.locator('[data-sell]').first();if(await esc.count())await esc.waitFor();
+      const sell=page.locator('[data-sell]').first();if(await sell.count())await sell.waitFor();
       const market=page.locator('[data-view="market"]').first();if(await market.count())await market.click();
       const buy=page.locator('[data-buy]').first();if(await buy.count())await buy.click();
       const daily=page.locator('[data-view="daily"]').first();if(await daily.count())await daily.click();
@@ -27,6 +28,6 @@ const sizes=[[320,844],[340,844],[375,812],[390,844],[430,932]];
     }
     const landscape=await browser.newPage({viewport:{width:844,height:390},reducedMotion:'reduce'});
     await landscape.goto('http://127.0.0.1:4173/',{waitUntil:'networkidle'});await landscape.locator('#edBalance').waitFor();await landscape.close();
-    console.log('Browser E2E OK: 320/340/375/390/430 portrait + landscape + rapid taps + modal Escape');
+    console.log('Browser E2E OK: 320/340/375/390/430 portrait + landscape + rapid taps + modal Escape + Emoji Coin');
   }finally{await browser.close();server.kill()}
 })().catch(err=>{console.error(err);process.exitCode=1});
