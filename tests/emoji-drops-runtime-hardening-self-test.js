@@ -1,39 +1,19 @@
 const fs=require('fs'),vm=require('vm');
 const storage=new Map();
 const listeners={document:{},window:{}};
-const document={
-  write:()=>{},getElementById:()=>null,querySelector:()=>null,body:{},
-  addEventListener:(name,fn)=>{(listeners.document[name]??=[]).push(fn)},
-  visibilityState:'visible'
-};
+const document={write:()=>{},getElementById:()=>null,querySelector:()=>null,body:{},addEventListener:(name,fn)=>{(listeners.document[name]??=[]).push(fn)},visibilityState:'visible'};
 const window={cases:{},casePrices:{transport:10},addEventListener:(name,fn)=>{(listeners.window[name]??=[]).push(fn)}};
 const ctx={window,document,localStorage:{getItem:k=>storage.get(k)??null,setItem:(k,v)=>storage.set(k,String(v))},console,setInterval:()=>0,clearTimeout:()=>{},Date,Number,JSON};
-window.__emojiDropsCore={
-  _s:{balance:0,inventory:[{id:'x',emoji:'😀',rarity:'common',price:'10₽'},{id:'x',emoji:'🔥',rarity:'rare',price:'20₽'}],market:null,stats:{opens:-1,wins:0,spent:0,earned:0,upgrades:0},xp:-1,level:0,lastReward:0,bonusDay:'2000-01-01',bonusClaims:99},
-  state(){return this._s},render(){}
-};
-vm.createContext(ctx);
-vm.runInContext(fs.readFileSync('js/emoji-drops-runtime-guards.js','utf8'),ctx,{timeout:2000});
-const g=window.__emojiDropsRuntimeGuards;
+window.__emojiDropsCore={_s:{balance:0,inventory:[{id:'x',emoji:'😀',rarity:'common',price:'10₽'},{id:'x',emoji:'🔥',rarity:'rare',price:'20₽'}],market:null,stats:{opens:-1,wins:0,spent:0,earned:0,upgrades:0},xp:-1,level:0,lastReward:0,bonusDay:'2000-01-01',bonusClaims:99},state(){return this._s},render(){}};
+vm.createContext(ctx);vm.runInContext(fs.readFileSync('js/emoji-drops-runtime-guards.js','utf8'),ctx,{timeout:2000});
+const g=window.__emojiDropsRuntimeGuards,s=window.__emojiDropsCore._s;
 if(!g||g.version!==4)throw new Error('Expected runtime guards v8/version 4');
-const s=window.__emojiDropsCore._s;
 if(s.balance<0||s.inventory.length!==2||s.inventory[0].id===s.inventory[1].id||s.stats.opens<0||s.xp<0||s.level<1||s.bonusClaims>3)throw new Error('Repair invariant failed');
-if(g.eligible())throw new Error('Bonus must not be eligible while balance can afford cheapest case');
-s.balance=0;s.bonusClaims=0;
-if(!g.eligible())throw new Error('Bonus should be eligible below cheapest case');
+s.balance=10;s.bonusClaims=0;if(g.eligible())throw new Error('Bonus must be unavailable at cheapest-case price');
+s.balance=0;if(!g.eligible())throw new Error('Bonus should be eligible below cheapest case');
 if(!g.claimDue())throw new Error('Bonus claim failed');
 if(s.balance!==250||s.bonusClaims!==1||s.stats.earned!==250)throw new Error('Bonus transaction invariant failed');
-s.balance=0;s.bonusClaims=3;
-if(g.eligible())throw new Error('Bonus must stop at 3 claims');
-// Verify a failed persistence does not mint money in memory.
-const before={...s,stats:{...s.stats}};
-const oldSet=ctx.localStorage.setItem;ctx.localStorage.setItem=()=>{throw new Error('quota')};
-s.balance=0;s.bonusClaims=0;s.stats.earned=0;
-if(g.claimDue()!==false)throw new Error('Failed persistence must report false');
-if(s.balance!==0||s.bonusClaims!==0||s.stats.earned!==0)throw new Error('Failed persistence rollback invariant failed');
-ctx.localStorage.setItem=oldSet;
-// Verify duplicate action protection uses the same action key and blocks only the rapid repeat.
-let prevented=0,stopped=0;const btn={hasAttribute:a=>a==='data-buy',getAttribute:a=>a==='data-buy'?'item-1':null};const ev={target:{closest:()=>btn},preventDefault:()=>prevented++,stopImmediatePropagation:()=>stopped++};
-for(const fn of listeners.document.click||[])fn(ev);for(const fn of listeners.document.click||[])fn(ev);
-if(prevented===0||stopped===0)throw new Error('Duplicate action guard did not block rapid repeat');
+s.balance=0;s.bonusClaims=3;if(g.eligible())throw new Error('Bonus must stop at 3 claims');
+const oldSet=ctx.localStorage.setItem;ctx.localStorage.setItem=()=>{throw new Error('quota')};s.balance=0;s.bonusClaims=0;s.stats.earned=0;if(g.claimDue()!==false)throw new Error('Failed persistence must report false');if(s.balance!==0||s.bonusClaims!==0||s.stats.earned!==0)throw new Error('Failed persistence rollback invariant failed');ctx.localStorage.setItem=oldSet;
+let prevented=0,stopped=0;const btn={hasAttribute:a=>a==='data-buy',getAttribute:a=>a==='data-buy'?'item-1':null};const ev={target:{closest:()=>btn},preventDefault:()=>prevented++,stopImmediatePropagation:()=>stopped++};for(const fn of listeners.document.click||[])fn(ev);for(const fn of listeners.document.click||[])fn(ev);if(prevented===0||stopped===0)throw new Error('Duplicate action guard did not block rapid repeat');
 console.log('Runtime hardening self-test OK: repair, bonus eligibility, 3/day, persistence rollback, duplicate-action guard');
