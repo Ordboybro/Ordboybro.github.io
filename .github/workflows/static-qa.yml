@@ -85,9 +85,9 @@ jobs:
           const fs=require('fs'),vm=require('vm'),storage=new Map(),ctx={window:{cases:{},casePrices:{smile:100,moves:80,nature:60,food:40,animals:20,transport:10,sport:250,games:500}},document:{getElementById:()=>null,addEventListener:()=>{},querySelector:()=>null},localStorage:{getItem:k=>storage.get(k)??null,setItem:(k,v)=>storage.set(k,String(v))},Date,Number,JSON,console,setInterval:()=>0,clearTimeout:()=>{}};
           ctx.window.addEventListener=()=>{};ctx.window.__emojiDropsCore={state:()=>({balance:0,inventory:[],market:[],stats:{opens:0,wins:0,spent:0,earned:0,upgrades:0},xp:0,level:1,lastReward:Date.now(),bonusDay:'',bonusClaims:0}),render:()=>{}};
           vm.createContext(ctx);vm.runInContext(fs.readFileSync('js/emoji-drops-hardening.js','utf8'),ctx,{timeout:2000});
-          const d=ctx.window.__emojiDropsDiagnostics;if(!d||d.schemaVersion!==3||d.totalOdds!==100||d.runtime!=='hardened-v5')throw new Error('Hardening contract failed');
+          const d=ctx.window.__emojiDropsDiagnostics;if(!d||d.schemaVersion!==3||d.totalOdds!==100||d.runtime!=='hardened-v6')throw new Error('Hardening contract failed');
           if(typeof ctx.window.__emojiDropsExportState!=='function')throw new Error('Export hook missing');
           vm.runInContext(fs.readFileSync('js/emoji-drops-runtime-guards.js','utf8'),ctx,{timeout:2000});
           const g=ctx.window.__emojiDropsRuntimeGuards;if(!g||g.version!==1||typeof g.claimDue!=='function'||typeof g.eligible!=='function')throw new Error('Runtime guard contract failed');
-          console.log('Hardening/guards OK: bonus is eligibility-based and capped at 5/day');
+          console.log('Hardening/guards OK: legacy timer blocked, bonus is low-balance only, max 5/day');
           NODE
