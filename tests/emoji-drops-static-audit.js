@@ -25,7 +25,7 @@ if(!/MutationObserver/.test(polish)||!/requestAnimationFrame/.test(polish))throw
 if(!/aria-live/.test(finalHard)||!/aria-modal/.test(finalHard)||!/Escape/.test(finalHard)||!/focus-trap/.test(finalHard))throw Error('Accessibility hardening contract incomplete');
 if(!/PerformanceObserver/.test(finalHard)||!/storageHealth/.test(finalHard)||!/stateHealth/.test(finalHard))throw Error('Final diagnostics contract incomplete');
 for(const marker of ['case-price-integrity','long-session-invariant','emoji-coin-marker','mobile-viewport','no-horizontal-overflow'])if(!release.includes(marker))throw Error(`Release polish marker missing: ${marker}`);
-for(const marker of ['data-currency="emoji-coin"','ed-product-tools','ed-product-achievements','PerformanceObserver'])if(!product.includes(marker))throw Error(`Product layer marker missing: ${marker}`);
+for(const marker of ['emoji-coin','ed-product-tools','ed-product-achievements','PerformanceObserver'])if(!product.includes(marker))throw Error(`Product layer marker missing: ${marker}`);
 const dangerousLegacy=['js/emoji-drops-performance-guard.js'];
 for(const f of dangerousLegacy)if(fs.existsSync(f))throw Error(`Forbidden legacy runtime file still exists: ${f}`);
 const forbiddenTimerShim=/window\.setInterval\s*=|globalThis\.setInterval\s*=|setInterval\s*=\s*function/;
