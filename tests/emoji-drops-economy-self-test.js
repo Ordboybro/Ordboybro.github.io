@@ -34,7 +34,7 @@ const opened=openModel(100,item.price,item);if(opened.balance!==90||opened.inven
 const sold=sellModel(opened.balance,opened.inventory,0);if(sold.balance!==100||sold.inventory.length!==0)throw new Error('sell invariant');
 if(upgradeModel(item,{emoji:'🔥',rarity:'rare',price:30},true).length!==1)throw new Error('upgrade win invariant');
 if(upgradeModel(item,{emoji:'🔥',rarity:'rare',price:30},false).length!==1)throw new Error('upgrade loss invariant');
-for(const n of [0,1,250,Number.MAX_SAFE_INTEGER]){const r=openModel(n,10,item);if(r.balance!==n-10)throw new Error('extreme balance invariant failed')}
+for(const n of [10,11,250,Number.MAX_SAFE_INTEGER]){const r=openModel(n,10,item);if(r.balance!==n-10)throw new Error('extreme balance invariant failed')}
 if(openModel(10,10,item).balance!==0)throw new Error('exact-price open invariant');
 let rejected=false;try{openModel(9,10,item)}catch{rejected=true}if(!rejected)throw new Error('below-price open was accepted');
 const cheapest=Math.min(...Object.values(casePrices).map(Number));
