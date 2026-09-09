@@ -13,6 +13,7 @@ function formatOnline(){const existing=all(document,'*').find(el=>text(el).toUpp
 function moveLiveAndNav(){const live=document.querySelector('.live-section'),nav=findNav();if(!live||!nav)return;let slot=live.parentElement?.classList.contains('ed-live-slot')?live.parentElement:null;if(!slot){slot=document.createElement('div');slot.className='ed-live-slot';live.parentNode.insertBefore(slot,live);slot.appendChild(live)}if(slot.nextElementSibling!==nav)nav.parentNode.insertBefore(slot,nav)}
 function removeMarkedHeader(){const cases=document.querySelector('.cases');if(!cases)return;const title=document.querySelector('.section-title');if(title&&text(title)==='Кейсы')title.remove();const bonus=all(document,'*').find(el=>text(el).startsWith('Бонус: при нехватке'));if(bonus)bonus.remove();const sub=all(document,'*').find(el=>text(el)==='Внутриигровая экономика • только локальное сохранение');if(sub)sub.remove()}
 function run(){injectStyle();formatOnline();moveLiveAndNav();removeMarkedHeader();replaceCurrency();window.__emojiDropsUiPolish={version:1,run}}
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run,{once:true});else run();
-let busy=false;const obs=new MutationObserver(()=>{if(busy)return;busy=true;try{run()}finally{busy=false}});obs.observe(document.body,{childList:true,subtree:true});
+const scheduleRun=()=>{if(scheduleRun.pending)return;scheduleRun.pending=true;const flush=()=>{scheduleRun.pending=false;run()};if(typeof requestAnimationFrame==='function')requestAnimationFrame(flush);else setTimeout(flush,0)};
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',scheduleRun,{once:true});else scheduleRun();
+const obs=new MutationObserver(scheduleRun);obs.observe(document.body,{childList:true,subtree:true});
 })();
