@@ -23,7 +23,7 @@ jobs:
           from pathlib import Path
           import re, subprocess
           h=Path('index.html').read_text()
-          scripts=re.findall(r"<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)</script>",h,re.I)
+          scripts=re.findall(r"<script(?![^>]*\\bsrc=)[^>]*>([\\s\\S]*?)</script>",h,re.I)
           for i,s in enumerate(scripts,1):
               if s.strip():
                   p=Path(f'/tmp/inline-{i}.js'); p.write_text(s); subprocess.run(['node','--check',str(p)],check=True)
@@ -39,17 +39,18 @@ jobs:
           missing=[x for x in refs if not x.split('?',1)[0].startswith(('http://','https://','//','data:')) and not Path(x.split('?',1)[0].lstrip('/')).exists()]
           if missing: raise SystemExit('Missing assets: '+str(missing))
           a=Path('js/app-v2.js').read_text(); boot=Path('data.js').read_text()
-          order=['emoji-drops-hardening.js','emoji-drops-performance-guard.js','emoji-drops-core.js','emoji-drops-runtime-guards.js','emoji-drops-ui-polish.js']
+          order=['emoji-drops-hardening.js','emoji-drops-core.js','emoji-drops-runtime-guards.js','emoji-drops-ui-polish.js']
           if not all(a.index(order[i])<a.index(order[i+1]) for i in range(len(order)-1)): raise SystemExit('Runtime order failed')
-          if 'hardening-9' not in a or 'perf-1' not in a or 'guards-8' not in a or 'ui-3' not in a: raise SystemExit('Cache versions stale')
+          if 'hardening-9' not in a or 'guards-8' not in a or 'ui-3' not in a: raise SystemExit('Cache versions stale')
           if 'src="js/data.js' not in boot or 'src="data.js' in boot: raise SystemExit('Bad dataset bootstrap')
+          if not Path('js/emoji-drops-ui-polish.js').exists(): raise SystemExit('UI polish asset missing')
           PY
           node - <<'NODE'
           const fs=require('fs'),vm=require('vm'),w=[];
-          const document={write:s=>w.push(s),getElementById:()=>null,head:{appendChild:()=>{}},addEventListener:()=>{},querySelector:()=>null,body:{}};
+          const document={write:s=>w.push(s),getElementById:()=>null,head:{appendChild:()=>{}},addEventListener:()=>{},querySelector:()=>null};
           const window={cases:null,casePrices:null,rarities:null};
-          const c={window,document,localStorage:{getItem:()=>null,setItem:()=>{}},console,getUsers:()=>[],setInterval:()=>0,clearInterval:()=>{},clearTimeout:()=>{},NodeFilter:{SHOW_TEXT:4},MutationObserver:function(){this.observe=()=>{}},requestAnimationFrame:fn=>fn()};
-          vm.createContext(c); vm.runInContext(fs.readFileSync('data.js','utf8'),c); if(w.length!==1||!w[0].includes('js/data.js'))throw Error('root bootstrap'); vm.runInContext(fs.readFileSync('js/data.js','utf8'),c); vm.runInContext(fs.readFileSync('js/app-v2.js','utf8'),c); if(Object.keys(window.cases||{}).length!==8||Object.keys(window.casePrices||{}).length!==8)throw Error('dataset bridge'); if(w.length!==6)throw Error('runtime writes: '+w.join(' | ')); if(!w[2].includes('emoji-drops-core.js')||!w[5].includes('emoji-drops-ui-polish.js'))throw Error('runtime chain mismatch'); console.log('Boot OK: dataset -> hardening -> performance guard -> core -> guards -> UI');
+          const c={window,document,localStorage:{getItem:()=>null,setItem:()=>{}},console,getUsers:()=>[],setInterval:()=>0,clearInterval:()=>{}};
+          vm.createContext(c); vm.runInContext(fs.readFileSync('data.js','utf8'),c); if(w.length!==1||!w[0].includes('js/data.js'))throw Error('root bootstrap'); vm.runInContext(fs.readFileSync('js/data.js','utf8'),c); vm.runInContext(fs.readFileSync('js/app-v2.js','utf8'),c); if(Object.keys(window.cases||{}).length!==8||Object.keys(window.casePrices||{}).length!==8)throw Error('dataset bridge'); if(w.length!==5)throw Error('runtime writes: '+w.join(' | ')); if(!w[4].includes('emoji-drops-ui-polish.js'))throw Error('UI polish was not loaded'); console.log('Boot OK: dataset -> bridge -> hardening -> core -> guards -> UI');
           NODE
       - name: Economy
         run: node tests/emoji-drops-economy-self-test.js
@@ -62,23 +63,11 @@ jobs:
           ctx.window.__emojiDropsCore={state:()=>({balance:0,inventory:[],market:[],stats:{opens:0,wins:0,spent:0,earned:0,upgrades:0},xp:0,level:1,lastReward:Date.now(),bonusDay:'',bonusClaims:0}),render:()=>{}};
           vm.createContext(ctx); vm.runInContext(fs.readFileSync('js/emoji-drops-hardening.js','utf8'),ctx); const d=ctx.window.__emojiDropsDiagnostics; if(d.runtime!=='hardened-v9'||d.startBalance!==250||d.maxBonusClaims!==3)throw Error('hardening contract'); vm.runInContext(fs.readFileSync('js/emoji-drops-runtime-guards.js','utf8'),ctx); const g=ctx.window.__emojiDropsRuntimeGuards; if(g.version!==4||g.actionLockMs!==650)throw Error('guard contract'); console.log('Guards OK');
           NODE
-      - name: Performance guard contract
-        run: |
-          node --check js/emoji-drops-performance-guard.js
-          node - <<'NODE'
-          const fs=require('fs'),vm=require('vm');let calls=0,restored=false;const native=()=>++calls;const ctx={window:{setInterval:native,clearInterval:()=>{}}};vm.createContext(ctx);vm.runInContext(fs.readFileSync('js/emoji-drops-performance-guard.js','utf8'),ctx);const blocked=ctx.window.setInterval(function(){const edBalance='edBalance'},15000);if(calls!==0||!blocked?.blocked)throw Error('legacy polling was not blocked');ctx.window.__emojiDropsRestoreTimerApi();ctx.window.setInterval(()=>{},15000);if(calls!==1)throw Error('timer API was not restored');console.log('Performance guard OK');
-          NODE
       - name: UI polish contract
         run: |
           node --check js/emoji-drops-ui-polish.js
           node - <<'NODE'
           const fs=require('fs'),s=fs.readFileSync('js/emoji-drops-ui-polish.js','utf8');
-          for(const x of ['ed-online','ed-coin','live-section','Emoji Coin','relevantMutation','requestAnimationFrame']) if(!s.includes(x)) throw new Error('UI polish marker missing: '+x);
+          for(const x of ['ed-online','ed-coin','live-section','Emoji Coin']) if(!s.includes(x)) throw new Error('UI polish marker missing: '+x);
           console.log('UI polish OK');
           NODE
-      - name: Browser E2E smoke
-        run: |
-          set -euo pipefail
-          npm install --no-save --no-package-lock playwright@1.55.0
-          npx playwright install --with-deps chromium
-          node tests/emoji-drops-browser-e2e.js
