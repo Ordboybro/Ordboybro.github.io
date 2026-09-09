@@ -28,7 +28,7 @@ document.addEventListener?.('click',e=>{const b=e.target?.closest?.('[data-rewar
 document.addEventListener?.('click',e=>{const b=e.target?.closest?.('[data-open],[data-do-open],[data-sell],[data-sell-all],[data-up-from],[data-up-to],[data-upgrade],[data-buy],[data-list-random],[data-daily]');if(!b)return;const k=actionKey(b);if(!k)return;const now=Date.now(),last=actionTimes.get(k)||0;if(now-last<ACTION_LOCK_MS){e.preventDefault?.();e.stopImmediatePropagation?.();return}actionTimes.set(k,now);if(actionTimes.size>100){for(const [key,t] of actionTimes)if(now-t>ACTION_LOCK_MS*4)actionTimes.delete(key)}},true);
 const refresh=()=>{repair();neutralizeLegacyTimer();updateRewardLabel()};
 const scheduleRefresh=()=>{if(scheduleRefresh.pending)return;scheduleRefresh.pending=true;const run=()=>{scheduleRefresh.pending=false;refresh()};if(typeof requestAnimationFrame==='function')requestAnimationFrame(run);else setTimeout(run,0)};
-document.addEventListener?.('visibilitychange',()=>{if(document.visibilityState==='hidden')scheduleRefresh();else scheduleRefresh()});window.addEventListener?.('pagehide',scheduleRefresh);window.addEventListener?.('pageshow',scheduleRefresh);
+document.addEventListener?.('visibilitychange',()=>{if(document.visibilityState==='visible')scheduleRefresh()});window.addEventListener?.('pageshow',scheduleRefresh);
 refresh();
 window.__emojiDropsRuntimeGuards={version:4,repair,claimDue,eligible,actionLockMs:ACTION_LOCK_MS};
 })();
