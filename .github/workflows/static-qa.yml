@@ -49,7 +49,7 @@ jobs:
           const document={write:s=>w.push(s),getElementById:()=>null,head:{appendChild:()=>{}},addEventListener:()=>{},querySelector:()=>null};
           const window={cases:null,casePrices:null,rarities:null};
           const c={window,document,localStorage:{getItem:()=>null,setItem:()=>{}},console,getUsers:()=>[],setInterval:()=>0,clearInterval:()=>{}};
-          vm.createContext(c); vm.runInContext(fs.readFileSync('data.js','utf8'),c); if(w.length!==1||!w[0].includes('js/data.js'))throw Error('root bootstrap'); vm.runInContext(fs.readFileSync('js/data.js','utf8'),c); vm.runInContext(fs.readFileSync('js/app-v2.js','utf8'),c); if(Object.keys(window.cases||{}).length!==8||Object.keys(window.casePrices||{}).length!==8)throw Error('dataset bridge'); if(w.length!==4)throw Error('runtime writes: '+w.join(' | ')); console.log('Boot OK: dataset -> bridge -> hardening -> core -> guards -> UI');
+          vm.createContext(c); vm.runInContext(fs.readFileSync('data.js','utf8'),c); if(w.length!==1||!w[0].includes('js/data.js'))throw Error('root bootstrap'); vm.runInContext(fs.readFileSync('js/data.js','utf8'),c); vm.runInContext(fs.readFileSync('js/app-v2.js','utf8'),c); if(Object.keys(window.cases||{}).length!==8||Object.keys(window.casePrices||{}).length!==8)throw Error('dataset bridge'); if(w.length!==5)throw Error('runtime writes: '+w.join(' | ')); if(!w[4].includes('emoji-drops-ui-polish.js'))throw Error('UI polish was not loaded'); console.log('Boot OK: dataset -> bridge -> hardening -> core -> guards -> UI');
           NODE
       - name: Economy
         run: node tests/emoji-drops-economy-self-test.js
