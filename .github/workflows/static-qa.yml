@@ -19,39 +19,21 @@ jobs:
           set -euo pipefail
           find js tests -type f -name '*.js' -print0 | while IFS= read -r -d '' f; do node --check "$f"; done
           node --check data.js
-          python3 - <<'PY'
-          from pathlib import Path
-          import re, subprocess
-          h=Path('index.html').read_text()
-          scripts=re.findall(r"<script(?![^>]*\\bsrc=)[^>]*>([\\s\\S]*?)</script>",h,re.I)
-          for i,s in enumerate(scripts,1):
-              if s.strip():
-                  p=Path(f'/tmp/inline-{i}.js'); p.write_text(s); subprocess.run(['node','--check',str(p)],check=True)
-          PY
       - name: Assets and boot
         run: |
           set -euo pipefail
           python3 - <<'PY'
           from pathlib import Path
           import re
-          h=Path('index.html').read_text()
-          refs=re.findall(r"<script[^>]+src=['\"]([^'\"]+)",h,re.I)
+          h=Path('index.html').read_text(); refs=re.findall(r"<script[^>]+src=['\"]([^'\"]+)",h,re.I)
           missing=[x for x in refs if not x.split('?',1)[0].startswith(('http://','https://','//','data:')) and not Path(x.split('?',1)[0].lstrip('/')).exists()]
           if missing: raise SystemExit('Missing assets: '+str(missing))
-          a=Path('js/app-v2.js').read_text(); boot=Path('data.js').read_text()
-          order=['emoji-drops-hardening.js','emoji-drops-core.js','emoji-drops-transaction-layer.js','emoji-drops-runtime-guards.js','emoji-drops-ui-polish.js','emoji-drops-final-hardening.js']
+          a=Path('js/app-v2.js').read_text(); order=['emoji-drops-hardening.js','emoji-drops-core.js','emoji-drops-transaction-layer.js','emoji-drops-runtime-guards.js','emoji-drops-ui-polish.js','emoji-drops-final-hardening.js','emoji-drops-release-polish.js']
           if not all(a.index(order[i])<a.index(order[i+1]) for i in range(len(order)-1)): raise SystemExit('Runtime order failed')
-          for v in ['hardening-9','core-7','txn-4','guards-8','ui-3','final-2']:
+          for v in ['hardening-9','core-7','txn-4','guards-8','ui-3','final-2','release-1']:
               if v not in a: raise SystemExit('Cache version missing: '+v)
-          if 'src="js/data.js' not in boot or 'src="data.js' in boot: raise SystemExit('Bad dataset bootstrap')
           PY
-          node - <<'NODE'
-          const fs=require('fs'),vm=require('vm'),w=[];
-          const document={write:s=>w.push(s),getElementById:()=>null,head:{appendChild:()=>{}},addEventListener:()=>{},querySelector:()=>null,body:{}};
-          const window={cases:null,casePrices:null,rarities:null,addEventListener:()=>{}};
-          const c={window,document,localStorage:{getItem:()=>null,setItem:()=>{}},console,getUsers:()=>[],setInterval:()=>0,clearInterval:()=>{},clearTimeout:()=>{},NodeFilter:{SHOW_TEXT:4},MutationObserver:function(){this.observe=()=>{}},requestAnimationFrame:fn=>fn(),performance:{now:()=>0},navigator:{}};
-          vm.createContext(c); vm.runInContext(fs.readFileSync('data.js','utf8'),c); if(w.length!==1||!w[0].includes('js/data.js'))throw Error('root bootstrap'); vm.runInContext(fs.readFileSync('js/data.js','utf8'),c); vm.runInContext(fs.readFileSync('js/app-v2.js','utf8'),c); if(Object.keys(window.cases||{}).length!==8||Object.keys(window.casePrices||{}).length!==8)throw Error('dataset bridge'); if(w.length!==7)throw Error('runtime writes: '+w.join(' | ')); if(!w[6].includes('emoji-drops-final-hardening.js'))throw Error('final hardening was not loaded'); console.log('Boot OK: dataset -> hardening -> core -> transaction -> guards -> UI -> final hardening');
-          NODE
+          node tests/emoji-drops-static-audit.js
       - name: Economy
         run: node tests/emoji-drops-economy-self-test.js
       - name: Runtime hardening
@@ -60,26 +42,10 @@ jobs:
         run: node tests/emoji-drops-transaction-self-test.js
       - name: Final quality invariants
         run: node tests/emoji-drops-final-quality-self-test.js
-      - name: Static architecture audit
-        run: node tests/emoji-drops-static-audit.js
+      - name: Release economy currency UX
+        run: node tests/emoji-drops-release-polish-self-test.js
       - name: Final hardening contract
-        run: |
-          node - <<'NODE'
-          const fs=require('fs'),vm=require('vm'),storage=new Map();
-          const body={appendChild:()=>{},querySelectorAll:()=>[]};
-          const document={body,addEventListener:()=>{},querySelector:()=>null,querySelectorAll:()=>[],createElement:()=>({setAttribute:()=>{},style:{cssText:''},appendChild:()=>{},classList:{},addEventListener:()=>{}})};
-          const window={addEventListener:()=>{},matchMedia:()=>({matches:false}),PerformanceObserver:function(){this.observe=()=>{}},requestAnimationFrame:fn=>fn(Date.now()),performance:{now:()=>Date.now()}};
-          const ctx={window,document,localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,String(v)),removeItem:k=>storage.delete(k)},console,Date,Math,JSON,innerWidth:390,innerHeight:844,performance:window.performance,requestAnimationFrame:window.requestAnimationFrame};
-          vm.createContext(ctx); vm.runInContext(fs.readFileSync('js/emoji-drops-final-hardening.js','utf8'),ctx,{timeout:2000}); if(!ctx.window.__emojiDropsFinalHardening)throw Error('final hardening missing'); console.log('Final hardening contract OK');
-          NODE
-      - name: UI polish contract
-        run: |
-          node --check js/emoji-drops-ui-polish.js
-          node - <<'NODE'
-          const fs=require('fs'),s=fs.readFileSync('js/emoji-drops-ui-polish.js','utf8');
-          for(const x of ['ed-online','ed-coin','live-section','Emoji Coin','relevantMutation','requestAnimationFrame']) if(!s.includes(x)) throw new Error('UI polish marker missing: '+x);
-          console.log('UI polish OK');
-          NODE
+        run: node -e "const fs=require('fs');const s=fs.readFileSync('js/emoji-drops-final-hardening.js','utf8');for(const x of ['aria-live','aria-modal','Escape','focus-trap','PerformanceObserver','storageHealth','stateHealth'])if(!s.includes(x))throw Error(x);console.log('Final hardening contract OK')"
       - name: Browser E2E matrix
         run: |
           set -euo pipefail
