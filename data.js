@@ -1,6 +1,7 @@
 /* Emoji Drops compatibility bootstrap.
-   index.html historically loads /data.js while the canonical dataset lives in /js/data.js.
-   Keep this tiny shim so a missing path can never prevent the game dataset from booting. */
+   The page loads /data.js; the canonical dataset lives in /js/data.js.
+   This shim defines the tiny legacy dependency first, then uses document.write
+   so the dataset is available before the main runtime starts. */
 (function(){
   'use strict';
   if(typeof window.getUsers!=='function'){
@@ -12,11 +13,5 @@
       }catch(_){return []}
     };
   }
-  const s=document.createElement('script');
-  s.src='js/data.js?v=data-compat-1';
-  s.async=false;
-  s.onerror=function(){
-    console.warn('Emoji Drops: canonical dataset failed to load; runtime fallback will be used.');
-  };
-  document.head.appendChild(s);
+  document.write('<script src="js/data.js?v=data-compat-2"><\\/script>');
 })();
