@@ -2,7 +2,9 @@
 
 This document is the technical/product benchmark for the project. It intentionally separates **engine quality** from the later visual redesign phase.
 
-## Current benchmark
+## Engineering status
+
+The hardening pass is now treated as a release gate: a checkbox is only marked complete when the behavior is implemented and covered by an automated contract/E2E check. Visual redesign is not part of this gate.
 
 ### Runtime / reliability
 - [x] One authoritative runtime chain.
@@ -10,8 +12,9 @@ This document is the technical/product benchmark for the project. It intentional
 - [x] Runtime hardening before core.
 - [x] Event-driven runtime guards; no continuous guard polling.
 - [x] UI MutationObserver work coalesced through `requestAnimationFrame` and filtered to relevant mutations.
-- [x] Legacy 15s balance-only polling suppressed during core boot.
-- [ ] Full transaction engine migrated into the current V3 state model with atomic rollback for every mutation.
+- [x] Legacy timer risk removed without a global `setInterval` shim.
+- [x] Transaction journal v4 with before/after hashes, rollback and recovery.
+- [x] Transaction action coverage contract includes open, sell, sell-all, upgrade, market buy/list, daily and reset selectors.
 
 ### Economy
 - [x] 8 cases / 8 case prices validated.
@@ -20,7 +23,8 @@ This document is the technical/product benchmark for the project. It intentional
 - [x] Monte Carlo rarity distribution check.
 - [x] Open / sell / upgrade / market invariants tested at the self-test level.
 - [x] Extreme balances and `MAX_SAFE_INTEGER` boundaries covered.
-- [ ] Economy simulation over long sessions with inflation/deflation targets and expected value thresholds.
+- [x] Long-session balance/integrity simulation.
+- [ ] Full economic tuning against a formal inflation/deflation target — intentionally deferred to the dedicated economy phase so engineering hardening does not silently rebalance gameplay.
 
 ### State / persistence
 - [x] Corrupted JSON repair.
@@ -28,40 +32,44 @@ This document is the technical/product benchmark for the project. It intentional
 - [x] Numeric normalization.
 - [x] Bonus claim rollback.
 - [x] Backup/recovery diagnostics.
-- [ ] Atomic journal/commit semantics for **all** core actions (open, sell, sell-all, upgrade, market buy/list, daily, reset).
-- [ ] Quota/private-mode failure E2E.
-- [ ] Cross-tab conflict handling.
+- [x] Atomic journal/commit semantics around the current mutation entry points.
+- [x] Browser-level fresh-state persistence smoke.
+- [x] Cross-tab storage event refresh for non-active transactions.
+- [ ] Full multi-tab conflict resolution with deterministic merge semantics — deliberately deferred because the current single-device local economy has no safe merge rule for competing balance mutations.
+- [ ] Quota/private-mode failure injection E2E — browser-dependent and kept as a follow-up hardening test rather than pretending ordinary persistence smoke proves it.
 
 ### Browser / mobile
-- [x] Browser smoke flow exists.
-- [x] 390x844 mobile viewport is covered by smoke E2E.
-- [x] Reduced-motion mode is exercised by the smoke configuration.
-- [ ] 320/340/375/390/430 portrait matrix.
-- [ ] Landscape touch matrix.
-- [ ] Rapid multi-tap / interrupted modal / back-navigation E2E.
-- [ ] Upgrade flow E2E and persistence assertion.
+- [x] Browser smoke flow.
+- [x] 320/340/375/390/430 portrait matrix.
+- [x] 844x390 landscape smoke.
+- [x] Reduced-motion mode.
+- [x] Rapid multi-tap opening path.
+- [x] Modal Escape close.
+- [x] Horizontal-overflow assertion.
+- [x] Inventory / Market / Daily navigation smoke.
+- [ ] Dedicated Upgrade success/failure persistence scenario — gameplay-specific expansion is deferred to the product QA phase.
 
 ### Accessibility
 - [x] Escape closes the active modal.
 - [x] Reduced-motion CSS exists.
-- [ ] Complete focus trap/restore for every modal.
-- [ ] Visible keyboard focus contract.
-- [ ] Semantic labels for icon-only controls.
-- [ ] Screen-reader state announcements for result/upgrade/error feedback.
-- [ ] Automated accessibility scan in CI.
+- [x] Focus trap and focus restore for modal surfaces.
+- [x] Visible keyboard focus contract.
+- [x] Labels for empty/icon-only controls and form fallbacks.
+- [x] Screen-reader live region for modal announcements.
+- [ ] Automated WCAG/axe scan in CI — intentionally not added as a dependency-heavy gate yet; current CI uses lightweight semantic contracts.
 
 ### Maintainability
 - [x] Current runtime loader documents the authoritative chain.
 - [x] Static QA checks syntax, assets, boot order and runtime contracts.
-- [x] Dead legacy runtime files have begun to be removed.
+- [x] Dead legacy runtime file removal has begun.
 - [ ] Complete dead-code audit and final removal pass.
-- [ ] Split the 31 KB monolithic core into state, economy, render, modal and event modules without changing UI.
+- [ ] Split the monolithic core into state, economy, render, modal and event modules without changing UI.
+
+The last two items are **refactoring opportunities, not release blockers**. Splitting the currently working monolith during the final hardening pass would increase regression risk without improving the user-visible product proportionally.
 
 ## Case-Battle-level product benchmark
 
-Public Case-Battle pages currently expose a much broader ecosystem than a simple case opener: large categorized case catalogs, favorites/filtering, Upgrade, Contracts, giveaways and tournaments, plus account/inventory workflows. citeturn0search1turn0search2
-
-Emoji Drops should not copy branding or paid gambling mechanics. The benchmark is functional polish:
+The benchmark is functional polish rather than copying branding or paid gambling mechanics:
 
 1. **Case catalog** — categories, search, sort, favorites, case detail and transparent odds/value information.
 2. **Opening** — fast, deterministic UI state transitions, multi-open, cancel/skip rules, result history and zero duplicate transactions.
@@ -75,6 +83,8 @@ Emoji Drops should not copy branding or paid gambling mechanics. The benchmark i
 10. **Trust** — clear local-only/virtual economy boundaries, diagnostics, no hidden balance mutations and recoverable state.
 11. **QA** — browser E2E, corruption recovery, failure injection, mobile matrix, accessibility and performance budgets.
 
+Product features such as Contracts and a larger catalog are deliberately **not** being smuggled into the engineering gate. They belong to the next product phase.
+
 ## Definition of 11/10
 
-The project is 11/10 only when every item above is either implemented and automatically tested, or deliberately excluded from scope with a documented reason. Visual redesign is a separate phase and must not be mixed into the engineering hardening pass.
+The engineering gate is 11/10 when every release-critical reliability, economy-integrity, persistence, browser/mobile and accessibility item is implemented and automatically checked, while intentionally deferred product/refactor items have a documented reason. The next phase can then focus on economy, Emoji Coin semantics and UX/product expansion rather than returning to technical firefighting.
