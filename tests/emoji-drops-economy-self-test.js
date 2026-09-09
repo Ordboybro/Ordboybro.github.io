@@ -1,6 +1,6 @@
 const fs=require('fs'),vm=require('vm');
 const writes=[];
-const ctx={window:{cases:null,casePrices:null,rarities:null},document:{write:s=>writes.push(s),getElementById:()=>null,addEventListener:()=>{},querySelector:()=>null},localStorage:{getItem:()=>null,setItem:()=>{}},console,getUsers:()=>[],setInterval:()=>0,clearInterval:()=>{},Date,Number,JSON};
+const ctx={window:{cases:null,casePrices:null,rarities:null},document:{write:s=>writes.push(s),getElementById:()=>null,addEventListener:()=>{},querySelector:()=>null,head:{appendChild:()=>{}},body:{}},localStorage:{getItem:()=>null,setItem:()=>{}},console,getUsers:()=>[],setInterval:()=>0,clearInterval:()=>{},clearTimeout:()=>{},Date,Number,JSON,NodeFilter:{SHOW_TEXT:4},MutationObserver:function(){this.observe=()=>{}},requestAnimationFrame:fn=>fn(),crypto:{randomUUID:()=>`test-${Math.random()}`}};
 vm.createContext(ctx);
 const dataset=vm.runInContext(`(()=>{${fs.readFileSync('js/data.js','utf8')}\nreturn {cases,casePrices,rarities};})()`,ctx,{timeout:2000});
 const {cases,casePrices}=dataset;
@@ -41,12 +41,15 @@ const cheapest=Math.min(...Object.values(casePrices).map(Number));
 if(!(cheapest>0))throw new Error('Cheapest case price invalid');
 function bonusAllowed(balance,claims){return Number.isFinite(balance)&&balance>=0&&balance<cheapest&&Number.isInteger(claims)&&claims>=0&&claims<3}
 if(!bonusAllowed(0,0)||bonusAllowed(cheapest,0)||bonusAllowed(0,3)||bonusAllowed(cheapest+1,2)||bonusAllowed(NaN,0))throw new Error('Bonus eligibility invariant failed');
-console.log(`Bonus rules OK: cheapest=${cheapest}, maxDaily=3, amount=250`);
 if(!/return\s*\{balance:250,/.test(core))throw new Error('Core fresh balance must be 250');
-if(!/function grantReward\(\)\s*\{return 0\}/.test(core))throw new Error('Legacy timed reward is still active');
+if(!/function grantReward\(\)\s*\{return 0\}/.test(core))throw new Error('Legacy timed reward contract changed unexpectedly');
 const hardening=fs.readFileSync('js/emoji-drops-hardening.js','utf8');
 if(!/START_BALANCE=250/.test(hardening)||!/MAX_BONUS_CLAIMS=3/.test(hardening))throw new Error('Hardening defaults mismatch');
 const guards=fs.readFileSync('js/emoji-drops-runtime-guards.js','utf8');
 if(!/MAX_DAILY=3/.test(guards)||!/BONUS=250/.test(guards)||!/function eligible\(/.test(guards)||!/function claimDue\(/.test(guards))throw new Error('Runtime guard contract mismatch');
-console.log('Fresh-state contract OK: 250; legacy timed reward disabled');
-console.log('Economy self-test OK: dataset, odds, open/sell/upgrade invariants, extreme values, bonus rules, legacy timer, guards');
+if(/setInterval\s*\(/.test(guards))throw new Error('Runtime guards must not poll continuously');
+const polish=fs.readFileSync('js/emoji-drops-ui-polish.js','utf8');
+if(!/MutationObserver/.test(polish)||!/relevantMutation/.test(polish)||!/requestAnimationFrame/.test(polish))throw new Error('UI observer optimization contract failed');
+console.log(`Bonus rules OK: cheapest=${cheapest}, maxDaily=3, amount=250`);
+console.log('Runtime optimization contract OK: no guard polling; mutation observer is filtered/coalesced');
+console.log('Economy self-test OK: dataset, odds, open/sell/upgrade invariants, extreme values, bonus rules, runtime optimization');
