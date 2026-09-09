@@ -70,6 +70,8 @@ jobs:
           const core=fs.readFileSync('js/emoji-drops-core.js','utf8');
           const m=core.match(/const R=\{([\s\S]*?)\};/); if(!m) throw new Error('Rarity table missing');
           const odds=[...m[1].matchAll(/w:(\d+)/g)].map(x=>+x[1]); if(odds.length!==5||odds.reduce((a,b)=>a+b,0)!==100) throw new Error('Invalid rarity odds: '+odds);
+          if(!/return \{balance:250,/.test(core)) throw new Error('Fresh balance must be 250');
+          if(!/function grantReward\(\)\{return 0\}/.test(core)) throw new Error('Legacy timed reward must stay disabled');
           const ctx={window:{},document:{getElementById:()=>null},localStorage:{getItem:()=>null,setItem:()=>{}},console,getUsers:()=>[]};
           vm.createContext(ctx); vm.runInContext(fs.readFileSync('data.js','utf8')+'\nthis.__dataset={cases,casePrices};',ctx,{timeout:2000});
           const {cases,casePrices}=ctx.__dataset,rar=['common','rare','epic','mythical','legendary'],w={common:.55,rare:.27,epic:.12,mythical:.05,legendary:.01}; let total=0;
@@ -84,7 +86,7 @@ jobs:
           const fs=require('fs'),vm=require('vm'),storage=new Map(),ctx={window:{cases:{},casePrices:{smile:100,moves:80,nature:60,food:40,animals:20,transport:10,sport:250,games:500}},document:{getElementById:()=>null,addEventListener:()=>{},querySelector:()=>null},localStorage:{getItem:k=>storage.get(k)??null,setItem:(k,v)=>storage.set(k,String(v))},Date,Number,JSON,console,setInterval:()=>0,clearTimeout:()=>{}};
           ctx.window.addEventListener=()=>{};ctx.window.__emojiDropsCore={state:()=>({balance:0,inventory:[],market:[],stats:{opens:0,wins:0,spent:0,earned:0,upgrades:0},xp:0,level:1,lastReward:Date.now(),bonusDay:'',bonusClaims:0}),render:()=>{}};
           vm.createContext(ctx);vm.runInContext(fs.readFileSync('js/emoji-drops-hardening.js','utf8'),ctx,{timeout:2000});
-          const d=ctx.window.__emojiDropsDiagnostics;if(!d||d.schemaVersion!==3||d.totalOdds!==100||d.runtime!=='hardened-v7'||d.startBalance!==250||d.maxBonusClaims!==3)throw new Error('Hardening contract failed');
+          const d=ctx.window.__emojiDropsDiagnostics;if(!d||d.schemaVersion!==3||d.totalOdds!==100||d.runtime!=='hardened-v8'||d.startBalance!==250||d.maxBonusClaims!==3)throw new Error('Hardening contract failed');
           if(typeof ctx.window.__emojiDropsExportState!=='function')throw new Error('Export hook missing');
           vm.runInContext(fs.readFileSync('js/emoji-drops-runtime-guards.js','utf8'),ctx,{timeout:2000});
           const g=ctx.window.__emojiDropsRuntimeGuards;if(!g||g.version!==1||typeof g.claimDue!=='function'||typeof g.eligible!=='function')throw new Error('Runtime guard contract failed');
