@@ -28,9 +28,9 @@ jobs:
           h=Path('index.html').read_text(); refs=re.findall(r"<script[^>]+src=['\"]([^'\"]+)",h,re.I)
           missing=[x for x in refs if not x.split('?',1)[0].startswith(('http://','https://','//','data:')) and not Path(x.split('?',1)[0].lstrip('/')).exists()]
           if missing: raise SystemExit('Missing assets: '+str(missing))
-          a=Path('js/app-v2.js').read_text(); order=['emoji-drops-hardening.js','emoji-drops-core.js','emoji-drops-transaction-layer.js','emoji-drops-runtime-guards.js','emoji-drops-ui-polish.js','emoji-drops-final-hardening.js','emoji-drops-release-polish.js']
+          a=Path('js/app-v2.js').read_text(); order=['emoji-drops-hardening.js','emoji-drops-core.js','emoji-drops-transaction-layer.js','emoji-drops-runtime-guards.js','emoji-drops-ui-polish.js','emoji-drops-final-hardening.js','emoji-drops-release-polish.js','emoji-drops-product-layer.js','emoji-drops-product-plus.js']
           if not all(a.index(order[i])<a.index(order[i+1]) for i in range(len(order)-1)): raise SystemExit('Runtime order failed')
-          for v in ['hardening-9','core-7','txn-4','guards-8','ui-3','final-2','release-1']:
+          for v in ['hardening-9','core-7','txn-4','guards-8','ui-3','final-2','release-1','product-1','product-plus-1']:
               if v not in a: raise SystemExit('Cache version missing: '+v)
           PY
           node tests/emoji-drops-static-audit.js
@@ -44,6 +44,10 @@ jobs:
         run: node tests/emoji-drops-final-quality-self-test.js
       - name: Release economy currency UX
         run: node tests/emoji-drops-release-polish-self-test.js
+      - name: Product quality
+        run: node tests/emoji-drops-product-self-test.js
+      - name: Product-plus workflows
+        run: node tests/emoji-drops-product-plus-self-test.js
       - name: Final hardening contract
         run: node -e "const fs=require('fs');const s=fs.readFileSync('js/emoji-drops-final-hardening.js','utf8');for(const x of ['aria-live','aria-modal','Escape','focus-trap','PerformanceObserver','storageHealth','stateHealth'])if(!s.includes(x))throw Error(x);console.log('Final hardening contract OK')"
       - name: Browser E2E matrix
