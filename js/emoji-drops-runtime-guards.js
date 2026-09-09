@@ -1,5 +1,5 @@
 (()=>{'use strict';
-/* Emoji Drops runtime guards v7. No UI redesign. Protects bonus, state integrity and duplicate action clicks. */
+/* Emoji Drops runtime guards v8. No UI redesign. Protects bonus, state integrity, duplicate action clicks and failed bonus persistence. */
 const KEY='emojiDropsStateV3',MAX_DAILY=3,BONUS=250,BLOCK_MS=100*365*24*60*60*1000,MAX_SAFE=Number.MAX_SAFE_INTEGER,ACTION_LOCK_MS=650;
 const VALID_RARITY=new Set(['common','rare','epic','mythical','legendary']);
 const core=()=>window.__emojiDropsCore&&typeof window.__emojiDropsCore.state==='function'?window.__emojiDropsCore:null;
@@ -21,7 +21,7 @@ if(changed)persist(s);return changed}
 function eligible(){repair();const s=state();return !!s&&Number.isFinite(Number(s.balance))&&Number(s.balance)>=0&&Number(s.balance)<cheapest()&&Number.isInteger(Number(s.bonusClaims))&&Number(s.bonusClaims)<MAX_DAILY}
 function updateRewardLabel(){const q=document.querySelector;if(typeof q!=='function')return;const b=q.call(document,'[data-reward]');if(!b)return;repair();const s=state();if(!s)return;if(Number(s.balance)>=cheapest()){b.textContent=`Бонус: при нехватке ${money(cheapest())}`;return}if(Number(s.bonusClaims||0)>=MAX_DAILY){b.textContent=`Бонус: ${MAX_DAILY}/${MAX_DAILY} сегодня`;return}b.textContent=`+250 ₽ · ${Number(s.bonusClaims||0)}/${MAX_DAILY} сегодня`}
 function neutralizeLegacyTimer(){const s=state();if(!s)return false;const blocked=Date.now()+BLOCK_MS;if(Number(s.lastReward)!==blocked){s.lastReward=blocked;persist(s);return true}return false}
-function claimDue(){repair();const s=state();if(!s)return false;if(Number(s.balance)>=cheapest()){toast(`Сначала потрать деньги: минимум ${money(cheapest())}`);updateRewardLabel();return true}if(Number(s.bonusClaims||0)>=MAX_DAILY){toast(`Лимит бонусов на сегодня: ${MAX_DAILY}/${MAX_DAILY}`);updateRewardLabel();return true}s.balance=Math.min(MAX_SAFE,(Number(s.balance)||0)+BONUS);s.stats=s.stats||{};s.stats.earned=Math.min(MAX_SAFE,(Number(s.stats.earned)||0)+BONUS);s.xp=Math.min(MAX_SAFE,(Number(s.xp)||0)+10);s.bonusClaims=(Number(s.bonusClaims)||0)+1;s.bonusDay=dayKey();s.lastReward=Date.now()+BLOCK_MS;if(!persist(s)){toast('Не удалось сохранить бонус');return false}core()?.render?.();toast(`Получено ${money(BONUS)}`);updateRewardLabel();return true}
+function claimDue(){repair();const s=state();if(!s)return false;if(Number(s.balance)>=cheapest()){toast(`Сначала потрать деньги: минимум ${money(cheapest())}`);updateRewardLabel();return true}if(Number(s.bonusClaims||0)>=MAX_DAILY){toast(`Лимит бонусов на сегодня: ${MAX_DAILY}/${MAX_DAILY}`);updateRewardLabel();return true}const before={balance:s.balance,earned:s.stats?.earned||0,xp:s.xp,bonusClaims:s.bonusClaims,bonusDay:s.bonusDay,lastReward:s.lastReward};s.balance=Math.min(MAX_SAFE,(Number(s.balance)||0)+BONUS);s.stats=s.stats||{};s.stats.earned=Math.min(MAX_SAFE,(Number(s.stats.earned)||0)+BONUS);s.xp=Math.min(MAX_SAFE,(Number(s.xp)||0)+10);s.bonusClaims=(Number(s.bonusClaims)||0)+1;s.bonusDay=dayKey();s.lastReward=Date.now()+BLOCK_MS;if(!persist(s)){s.balance=before.balance;s.stats.earned=before.earned;s.xp=before.xp;s.bonusClaims=before.bonusClaims;s.bonusDay=before.bonusDay;s.lastReward=before.lastReward;toast('Не удалось сохранить бонус');updateRewardLabel();return false}core()?.render?.();toast(`Получено ${money(BONUS)}`);updateRewardLabel();return true}
 const actionTimes=new Map();
 function actionKey(b){return ['data-open','data-do-open','data-sell','data-sell-all','data-up-from','data-up-to','data-upgrade','data-buy','data-list-random','data-daily'].map(k=>b.hasAttribute?.(k)?`${k}:${b.getAttribute(k)||'1'}`:'').find(Boolean)||''}
 document.addEventListener?.('click',e=>{const b=e.target?.closest?.('[data-reward]');if(!b)return;e.preventDefault?.();e.stopImmediatePropagation?.();claimDue()},true);
@@ -29,5 +29,5 @@ document.addEventListener?.('click',e=>{const b=e.target?.closest?.('[data-open]
 const refresh=()=>{repair();neutralizeLegacyTimer();updateRewardLabel()};
 document.addEventListener?.('visibilitychange',()=>{if(document.visibilityState==='hidden')refresh()});window.addEventListener?.('pagehide',refresh);window.addEventListener?.('pageshow',refresh);
 setInterval(refresh,250);refresh();
-window.__emojiDropsRuntimeGuards={version:3,repair,claimDue,eligible,actionLockMs:ACTION_LOCK_MS};
+window.__emojiDropsRuntimeGuards={version:4,repair,claimDue,eligible,actionLockMs:ACTION_LOCK_MS};
 })();
