@@ -5,7 +5,7 @@ const tx=fs.readFileSync('js/emoji-drops-transaction-layer.js','utf8');
 const storage=new Map();
 const w={cases:null,casePrices:null,rarities:null,addEventListener:()=>{}};
 const d={write:()=>{},addEventListener:()=>{},getElementById:()=>null,querySelector:()=>null,querySelectorAll:()=>[],body:{},head:{appendChild:()=>{}}};
-const ctx={window:w,document:d,localStorage:{getItem:k=>storage.get(k)??null,setItem:(k,v)=>storage.set(k,String(v)),removeItem:k=>storage.delete(k)},console,Date,JSON,Math,setInterval:()=>0,clearInterval:()=>{},clearTimeout:()=>{},requestAnimationFrame:f=>f(Date.now()),NodeFilter:{SHOW_TEXT:4},MutationObserver:function(){this.observe=()=>{}},navigator:{}};
+const ctx={window:w,document:d,localStorage:{getItem:k=>storage.get(k)??null,setItem:(k,v)=>storage.set(k,String(v)),removeItem:k=>storage.delete(k)},console,Date,JSON,Math,setInterval:()=>0,clearInterval:()=>{},clearTimeout:()=>{},requestAnimationFrame:f=>f(Date.now()),NodeFilter:{SHOW_TEXT:4},MutationObserver:function(){this.observe=()=>{}},navigator:{},getUsers:()=>[]};
 vm.createContext(ctx);vm.runInContext(data,ctx,{timeout:2000});
 if(Object.keys(w.cases||{}).length!==8)throw Error('Expected 8 cases');
 if(Object.keys(w.casePrices||{}).length!==8)throw Error('Expected 8 case prices');
