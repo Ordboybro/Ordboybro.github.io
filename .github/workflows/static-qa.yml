@@ -25,7 +25,8 @@ jobs:
           if missing: raise SystemExit('Missing assets: '+str(missing))
           app=Path('js/app-v2.js').read_text()
           if app.index('emoji-drops-hardening.js')>app.index('emoji-drops-core.js'): raise SystemExit('Hardening must boot before core')
-          if [x.split('?',1)[0] for x in re.findall(r'<script[^>]+src=["\']([^"\']+)',h,re.I) if 'app-v2.js' in x]!=['js/app-v2.js']: raise SystemExit('Unexpected runtime entry')
+          runtime=[x.split('?',1)[0] for x in re.findall(r'<script[^>]+src=["\']([^"\']+)',h,re.I) if 'app-v2.js' in x]
+          if runtime!=['js/app-v2.js']: raise SystemExit('Unexpected runtime entry')
           print('Runtime/assets OK')
           PY
       - name: Odds, dataset and economy
@@ -35,7 +36,7 @@ jobs:
           const core=fs.readFileSync('js/emoji-drops-core.js','utf8');
           const m=core.match(/const R=\{([\s\S]*?)\};/); if(!m) throw new Error('Rarity table missing');
           const odds=[...m[1].matchAll(/w:(\d+)/g)].map(x=>+x[1]); if(odds.length!==5||odds.reduce((a,b)=>a+b,0)!==100) throw new Error('Invalid rarity odds: '+odds);
-          const ctx={window:{},document:{getElementById:()=>null},localStorage:{getItem:()=>null,setItem:()=>{}},console};
+          const ctx={window:{},document:{getElementById:()=>null},localStorage:{getItem:()=>null,setItem:()=>{}},console,getUsers:()=>[]};
           vm.createContext(ctx); vm.runInContext(fs.readFileSync('js/data.js','utf8'),ctx,{timeout:2000});
           const rar=['common','rare','epic','mythical','legendary'],w={common:.55,rare:.27,epic:.12,mythical:.05,legendary:.01}; let total=0;
           for(const [key,list] of Object.entries(ctx.cases||{})){if(!Array.isArray(list)||!list.length)throw new Error(key+': empty');if(!(ctx.casePrices[key]>0))throw new Error(key+': bad case price');const seen=new Set(),by={};for(const x of list){total++;if(!rar.includes(x.rarity))throw new Error(key+': bad rarity');const v=Number.parseFloat(String(x.price).replace(/[^0-9.\-]/g,''));if(!Number.isFinite(v)||v<0)throw new Error(key+': bad item price');const fp=`${x.emoji}|${x.rarity}|${x.price}`;if(seen.has(fp))throw new Error(key+': duplicate item');seen.add(fp);(by[x.rarity]??=[]).push(v)}for(const r of rar)if(!by[r]?.length)throw new Error(key+': missing '+r);const ev=rar.reduce((s,r)=>s+w[r]*(by[r].reduce((a,b)=>a+b,0)/by[r].length),0),ratio=ev/ctx.casePrices[key];if(!(ratio>0&&ratio<2.5))throw new Error(key+': suspicious EV ratio '+ratio.toFixed(3));console.log(`${key}: price=${ctx.casePrices[key]} EV=${ev.toFixed(2)} ratio=${ratio.toFixed(3)}`)}
