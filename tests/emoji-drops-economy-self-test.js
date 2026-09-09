@@ -4,6 +4,7 @@ const ctx={window:{cases:null,casePrices:null,rarities:null},document:{write:s=>
 vm.createContext(ctx);
 vm.runInContext(fs.readFileSync('data.js','utf8')+'\nthis.__dataset={cases,casePrices,rarities};',ctx,{timeout:2000});
 const {cases,casePrices}=ctx.__dataset;
+const core=fs.readFileSync('js/emoji-drops-core.js','utf8');
 const rarities=['common','rare','epic','mythical','legendary'];
 const weights={common:55,rare:27,epic:12,mythical:5,legendary:1};
 if(Object.keys(cases).length!==8)throw new Error('Expected 8 cases');
@@ -24,21 +25,17 @@ const expected={common:.55,rare:.27,epic:.12,mythical:.05,legendary:.01};
 const tolerance={common:.012,rare:.012,epic:.01,mythical:.007,legendary:.004};
 for(const r of rarities){const observed=counts[r]/N,diff=Math.abs(observed-expected[r]);if(diff>tolerance[r])throw new Error(`Monte Carlo ${r}: ${(observed*100).toFixed(2)}% vs ${(expected[r]*100).toFixed(2)}%`)}
 console.log('Monte Carlo OK:',counts);
-
 function openModel(balance,price,item){if(balance<price)throw new Error('open allowed below case price');return {balance:balance-price,inventory:[item],spent:price}}
 function sellModel(balance,inventory,index){if(index<0||index>=inventory.length)throw new Error('invalid inventory index');const item=inventory[index];return {balance:balance+item.price,inventory:inventory.filter((_,i)=>i!==index)}}
 function upgradeModel(source,target,win){const inv=[source,target];const next=win?[target]:[source];if(next.length!==1)throw new Error('upgrade transaction invariant');return next}
 const item={emoji:'😀',rarity:'common',price:10};const opened=openModel(100,item.price,item);if(opened.balance!==90||opened.inventory.length!==1)throw new Error('open invariant');const sold=sellModel(opened.balance,opened.inventory,0);if(sold.balance!==100||sold.inventory.length!==0)throw new Error('sell invariant');if(upgradeModel(item,{emoji:'🔥',rarity:'rare',price:30},true).length!==1)throw new Error('upgrade win invariant');if(upgradeModel(item,{emoji:'🔥',rarity:'rare',price:30},false).length!==1)throw new Error('upgrade loss invariant');
-
 const cheapest=Math.min(...Object.values(casePrices));
 if(!(cheapest>0))throw new Error('Cheapest case price invalid');
 function bonusAllowed(balance,claims){return balance<cheapest&&claims<3}
 if(!bonusAllowed(0,0)||bonusAllowed(cheapest,0)||bonusAllowed(0,3)||bonusAllowed(cheapest+1,2))throw new Error('Bonus eligibility invariant failed');
 console.log(`Bonus rules OK: cheapest=${cheapest}, maxDaily=3, amount=250`);
-
-// New-player contract: absent state starts at exactly 250; existing state is preserved.
-const fresh=JSON.parse('null');
-const defaultState={balance:250,inventory:[],stats:{opens:0,wins:0,spent:0,earned:0,upgrades:0},xp:0,level:1};
-if(defaultState.balance!==250)throw new Error('Fresh balance contract failed');
-if(fresh!==null)throw new Error('Fresh-state fixture failed');
-console.log('Fresh-state contract OK: 250');
+if(!/return \{balance:250,/.test(core))throw new Error('Core fresh balance must be 250');
+if(!/function grantReward\(\)\{return 0\}/.test(core))throw new Error('Legacy timed reward is still active');
+const hardening=fs.readFileSync('js/emoji-drops-hardening.js','utf8');
+if(!/START_BALANCE=250/.test(hardening)||!/MAX_BONUS_CLAIMS=3/.test(hardening))throw new Error('Hardening defaults mismatch');
+console.log('Fresh-state contract OK: 250; legacy timed reward disabled');
