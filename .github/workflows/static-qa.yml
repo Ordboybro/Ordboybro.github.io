@@ -13,9 +13,8 @@ jobs:
       - name: JavaScript syntax
         run: |
           set -euo pipefail
-          while IFS= read -r -d '' f; do node --check "$f"; done < <(find js -type f -name '*.js' -print0 | sort -z)
+          while IFS= read -r -d '' f; do node --check "$f"; done < <(find js tests -type f -name '*.js' -print0 | sort -z)
           node --check data.js
-          node --check tests/emoji-drops-economy-self-test.js
           python3 - <<'PY'
           from pathlib import Path
           import re,subprocess
@@ -72,7 +71,7 @@ jobs:
           const m=core.match(/const R=\{([\s\S]*?)\};/); if(!m) throw new Error('Rarity table missing');
           const odds=[...m[1].matchAll(/w:(\d+)/g)].map(x=>+x[1]); if(odds.length!==5||odds.reduce((a,b)=>a+b,0)!==100) throw new Error('Invalid rarity odds: '+odds);
           const ctx={window:{},document:{getElementById:()=>null},localStorage:{getItem:()=>null,setItem:()=>{}},console,getUsers:()=>[]};
-          vm.createContext(ctx); vm.runInContext(fs.readFileSync('js/data.js','utf8')+'\nthis.__dataset={cases,casePrices};',ctx,{timeout:2000});
+          vm.createContext(ctx); vm.runInContext(fs.readFileSync('data.js','utf8')+'\nthis.__dataset={cases,casePrices};',ctx,{timeout:2000});
           const {cases,casePrices}=ctx.__dataset,rar=['common','rare','epic','mythical','legendary'],w={common:.55,rare:.27,epic:.12,mythical:.05,legendary:.01}; let total=0;
           for(const [key,list] of Object.entries(cases)){if(!Array.isArray(list)||!list.length)throw new Error(key+': empty');if(!(casePrices[key]>0))throw new Error(key+': bad case price');const seen=new Set(),by={};for(const x of list){total++;if(!rar.includes(x.rarity))throw new Error(key+': bad rarity');const v=Number.parseFloat(String(x.price).replace(/[^0-9.\-]/g,''));if(!Number.isFinite(v)||v<0)throw new Error(key+': bad item price');const fp=`${x.emoji}|${x.rarity}|${x.price}`;if(seen.has(fp))throw new Error(key+': duplicate item');seen.add(fp);(by[x.rarity]??=[]).push(v)}for(const r of rar)if(!by[r]?.length)throw new Error(key+': missing '+r);const ev=rar.reduce((s,r)=>s+w[r]*(by[r].reduce((a,b)=>a+b,0)/by[r].length),0),ratio=ev/casePrices[key];if(!(ratio>0&&ratio<2.5))throw new Error(key+': suspicious EV ratio '+ratio.toFixed(3));console.log(`${key}: price=${casePrices[key]} EV=${ev.toFixed(2)} ratio=${ratio.toFixed(3)}`)}
           console.log('Dataset/economy OK:',Object.keys(cases).length,'cases',total,'items');
@@ -85,9 +84,9 @@ jobs:
           const fs=require('fs'),vm=require('vm'),storage=new Map(),ctx={window:{cases:{},casePrices:{smile:100,moves:80,nature:60,food:40,animals:20,transport:10,sport:250,games:500}},document:{getElementById:()=>null,addEventListener:()=>{},querySelector:()=>null},localStorage:{getItem:k=>storage.get(k)??null,setItem:(k,v)=>storage.set(k,String(v))},Date,Number,JSON,console,setInterval:()=>0,clearTimeout:()=>{}};
           ctx.window.addEventListener=()=>{};ctx.window.__emojiDropsCore={state:()=>({balance:0,inventory:[],market:[],stats:{opens:0,wins:0,spent:0,earned:0,upgrades:0},xp:0,level:1,lastReward:Date.now(),bonusDay:'',bonusClaims:0}),render:()=>{}};
           vm.createContext(ctx);vm.runInContext(fs.readFileSync('js/emoji-drops-hardening.js','utf8'),ctx,{timeout:2000});
-          const d=ctx.window.__emojiDropsDiagnostics;if(!d||d.schemaVersion!==3||d.totalOdds!==100||d.runtime!=='hardened-v6')throw new Error('Hardening contract failed');
+          const d=ctx.window.__emojiDropsDiagnostics;if(!d||d.schemaVersion!==3||d.totalOdds!==100||d.runtime!=='hardened-v7'||d.startBalance!==250||d.maxBonusClaims!==3)throw new Error('Hardening contract failed');
           if(typeof ctx.window.__emojiDropsExportState!=='function')throw new Error('Export hook missing');
           vm.runInContext(fs.readFileSync('js/emoji-drops-runtime-guards.js','utf8'),ctx,{timeout:2000});
           const g=ctx.window.__emojiDropsRuntimeGuards;if(!g||g.version!==1||typeof g.claimDue!=='function'||typeof g.eligible!=='function')throw new Error('Runtime guard contract failed');
-          console.log('Hardening/guards OK: legacy timer blocked, bonus is low-balance only, max 5/day');
+          console.log('Hardening/guards OK: 250 start, low-balance bonus, max 3/day, legacy timer blocked');
           NODE
