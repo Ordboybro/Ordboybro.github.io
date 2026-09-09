@@ -38,6 +38,7 @@ jobs:
           if not (app.index('emoji-drops-hardening.js')<app.index('emoji-drops-core.js')<app.index('emoji-drops-runtime-guards.js')): raise SystemExit('Runtime order must be hardening -> core -> guards')
           if '<scr' not in app or '<\\/scr' not in app: raise SystemExit('Runtime loader is not parser-safe')
           if 'dataset-bridge' not in app or 'window.cases=cases' not in app or 'window.casePrices=casePrices' not in app: raise SystemExit('Dataset bridge missing')
+          if 'hardening-9' not in app or 'guards-6' not in app: raise SystemExit('Runtime cache versions are stale')
           bootstrap=Path('data.js').read_text()
           if 'src="js/data.js' not in bootstrap: raise SystemExit('Dataset bootstrap target missing')
           if 'src="data.js' in bootstrap: raise SystemExit('Root data.js recursively loads itself')
@@ -86,9 +87,9 @@ jobs:
           const fs=require('fs'),vm=require('vm'),storage=new Map(),ctx={window:{cases:{},casePrices:{smile:100,moves:80,nature:60,food:40,animals:20,transport:10,sport:250,games:500}},document:{write:()=>{},getElementById:()=>null,addEventListener:()=>{},querySelector:()=>null},localStorage:{getItem:k=>storage.get(k)??null,setItem:(k,v)=>storage.set(k,String(v))},Date,Number,JSON,console,setInterval:()=>0,clearTimeout:()=>{}};
           ctx.window.addEventListener=()=>{};ctx.window.__emojiDropsCore={state:()=>({balance:0,inventory:[],market:[],stats:{opens:0,wins:0,spent:0,earned:0,upgrades:0},xp:0,level:1,lastReward:Date.now(),bonusDay:'',bonusClaims:0}),render:()=>{}};
           vm.createContext(ctx);vm.runInContext(fs.readFileSync('js/emoji-drops-hardening.js','utf8'),ctx,{timeout:2000});
-          const d=ctx.window.__emojiDropsDiagnostics;if(!d||d.schemaVersion!==3||d.totalOdds!==100||d.runtime!=='hardened-v8'||d.startBalance!==250||d.maxBonusClaims!==3)throw new Error('Hardening contract failed');
+          const d=ctx.window.__emojiDropsDiagnostics;if(!d||d.schemaVersion!==3||d.totalOdds!==100||d.runtime!=='hardened-v9'||d.startBalance!==250||d.maxBonusClaims!==3)throw new Error('Hardening contract failed');
           if(typeof ctx.window.__emojiDropsExportState!=='function')throw new Error('Export hook missing');
           vm.runInContext(fs.readFileSync('js/emoji-drops-runtime-guards.js','utf8'),ctx,{timeout:2000});
-          const g=ctx.window.__emojiDropsRuntimeGuards;if(!g||g.version!==1||typeof g.claimDue!=='function'||typeof g.eligible!=='function')throw new Error('Runtime guard contract failed');
-          console.log('Hardening/guards OK: 250 start, low-balance bonus, max 3/day, legacy timer blocked');
+          const g=ctx.window.__emojiDropsRuntimeGuards;if(!g||g.version!==2||typeof g.claimDue!=='function'||typeof g.eligible!=='function'||typeof g.repair!=='function')throw new Error('Runtime guard contract failed');
+          console.log('Hardening/guards OK: v9/v6, 250 start, low-balance bonus, max 3/day, state repair');
           NODE
