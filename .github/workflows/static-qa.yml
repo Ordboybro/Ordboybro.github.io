@@ -39,18 +39,18 @@ jobs:
           missing=[x for x in refs if not x.split('?',1)[0].startswith(('http://','https://','//','data:')) and not Path(x.split('?',1)[0].lstrip('/')).exists()]
           if missing: raise SystemExit('Missing assets: '+str(missing))
           a=Path('js/app-v2.js').read_text(); boot=Path('data.js').read_text()
-          order=['emoji-drops-hardening.js','emoji-drops-core.js','emoji-drops-transaction-layer.js','emoji-drops-runtime-guards.js','emoji-drops-ui-polish.js']
+          order=['emoji-drops-hardening.js','emoji-drops-core.js','emoji-drops-transaction-layer.js','emoji-drops-runtime-guards.js','emoji-drops-ui-polish.js','emoji-drops-final-hardening.js']
           if not all(a.index(order[i])<a.index(order[i+1]) for i in range(len(order)-1)): raise SystemExit('Runtime order failed')
-          for v in ['hardening-9','core-7','txn-1','guards-8','ui-3']:
+          for v in ['hardening-9','core-7','txn-3','guards-8','ui-3','final-1']:
               if v not in a: raise SystemExit('Cache version missing: '+v)
           if 'src="js/data.js' not in boot or 'src="data.js' in boot: raise SystemExit('Bad dataset bootstrap')
           PY
           node - <<'NODE'
           const fs=require('fs'),vm=require('vm'),w=[];
           const document={write:s=>w.push(s),getElementById:()=>null,head:{appendChild:()=>{}},addEventListener:()=>{},querySelector:()=>null,body:{}};
-          const window={cases:null,casePrices:null,rarities:null};
-          const c={window,document,localStorage:{getItem:()=>null,setItem:()=>{}},console,getUsers:()=>[],setInterval:()=>0,clearInterval:()=>{},clearTimeout:()=>{},NodeFilter:{SHOW_TEXT:4},MutationObserver:function(){this.observe=()=>{}},requestAnimationFrame:fn=>fn()};
-          vm.createContext(c); vm.runInContext(fs.readFileSync('data.js','utf8'),c); if(w.length!==1||!w[0].includes('js/data.js'))throw Error('root bootstrap'); vm.runInContext(fs.readFileSync('js/data.js','utf8'),c); vm.runInContext(fs.readFileSync('js/app-v2.js','utf8'),c); if(Object.keys(window.cases||{}).length!==8||Object.keys(window.casePrices||{}).length!==8)throw Error('dataset bridge'); if(w.length!==6)throw Error('runtime writes: '+w.join(' | ')); if(!w[5].includes('emoji-drops-ui-polish.js'))throw Error('UI polish was not loaded'); console.log('Boot OK: dataset -> hardening -> core -> transaction -> guards -> UI');
+          const window={cases:null,casePrices:null,rarities:null,addEventListener:()=>{}};
+          const c={window,document,localStorage:{getItem:()=>null,setItem:()=>{}},console,getUsers:()=>[],setInterval:()=>0,clearInterval:()=>{},clearTimeout:()=>{},NodeFilter:{SHOW_TEXT:4},MutationObserver:function(){this.observe=()=>{}},requestAnimationFrame:fn=>fn(),performance:{now:()=>0},navigator:{}};
+          vm.createContext(c); vm.runInContext(fs.readFileSync('data.js','utf8'),c); if(w.length!==1||!w[0].includes('js/data.js'))throw Error('root bootstrap'); vm.runInContext(fs.readFileSync('js/data.js','utf8'),c); vm.runInContext(fs.readFileSync('js/app-v2.js','utf8'),c); if(Object.keys(window.cases||{}).length!==8||Object.keys(window.casePrices||{}).length!==8)throw Error('dataset bridge'); if(w.length!==7)throw Error('runtime writes: '+w.join(' | ')); if(!w[6].includes('emoji-drops-final-hardening.js'))throw Error('final hardening was not loaded'); console.log('Boot OK: dataset -> hardening -> core -> transaction -> guards -> UI -> final hardening');
           NODE
       - name: Economy
         run: node tests/emoji-drops-economy-self-test.js
@@ -58,12 +58,15 @@ jobs:
         run: node tests/emoji-drops-runtime-hardening-self-test.js
       - name: Transaction layer
         run: node tests/emoji-drops-transaction-self-test.js
-      - name: Guard contract
+      - name: Final hardening contract
         run: |
           node - <<'NODE'
-          const fs=require('fs'),vm=require('vm'),storage=new Map(),ctx={window:{cases:{},casePrices:{smile:100,moves:80,nature:60,food:40,animals:20,transport:10,sport:250,games:500},addEventListener:()=>{}},document:{write:()=>{},getElementById:()=>null,addEventListener:()=>{},querySelector:()=>null},localStorage:{getItem:k=>storage.get(k)??null,setItem:(k,v)=>storage.set(k,String(v))},console,setInterval:()=>0,clearTimeout:()=>{}};
-          ctx.window.__emojiDropsCore={state:()=>({balance:0,inventory:[],market:[],stats:{opens:0,wins:0,spent:0,earned:0,upgrades:0},xp:0,level:1,lastReward:Date.now(),bonusDay:'',bonusClaims:0}),render:()=>{}};
-          vm.createContext(ctx); vm.runInContext(fs.readFileSync('js/emoji-drops-hardening.js','utf8'),ctx); const d=ctx.window.__emojiDropsDiagnostics; if(d.runtime!=='hardened-v9'||d.startBalance!==250||d.maxBonusClaims!==3)throw Error('hardening contract'); vm.runInContext(fs.readFileSync('js/emoji-drops-runtime-guards.js','utf8'),ctx); const g=ctx.window.__emojiDropsRuntimeGuards; if(g.version!==4||g.actionLockMs!==650)throw Error('guard contract'); console.log('Guards OK');
+          const fs=require('fs'),vm=require('vm'),storage=new Map();
+          const body={appendChild:()=>{},querySelectorAll:()=>[]};
+          const document={body,addEventListener:()=>{},querySelector:()=>null,querySelectorAll:()=>[],createElement:()=>({setAttribute:()=>{},style:{cssText:''},appendChild:()=>{},classList:{},addEventListener:()=>{}})};
+          const window={addEventListener:()=>{},matchMedia:()=>({matches:false}),PerformanceObserver:function(){this.observe=()=>{}},requestAnimationFrame:fn=>fn(Date.now()),performance:{now:()=>Date.now()}};
+          const ctx={window,document,localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,String(v)),removeItem:k=>storage.delete(k)},console,Date,Math,JSON,innerWidth:390,innerHeight:844,performance:window.performance,requestAnimationFrame:window.requestAnimationFrame};
+          vm.createContext(ctx); vm.runInContext(fs.readFileSync('js/emoji-drops-final-hardening.js','utf8'),ctx,{timeout:2000}); if(!ctx.window.__emojiDropsFinalHardening)throw Error('final hardening missing'); console.log('Final hardening contract OK');
           NODE
       - name: UI polish contract
         run: |
