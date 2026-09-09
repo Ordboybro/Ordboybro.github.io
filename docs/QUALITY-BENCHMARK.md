@@ -48,6 +48,7 @@ The hardening pass is now treated as a release gate: a checkbox is only marked c
 - [x] Horizontal-overflow assertion.
 - [x] Inventory / Market / Daily navigation smoke.
 - [ ] Dedicated Upgrade success/failure persistence scenario — gameplay-specific expansion is deferred to the product QA phase.
+- [x] E2E harness correctly strips query strings before resolving local runtime assets.
 
 ### Accessibility
 - [x] Escape closes the active modal.
