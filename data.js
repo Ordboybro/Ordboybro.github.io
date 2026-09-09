@@ -1,7 +1,7 @@
-/* Emoji Drops compatibility bootstrap.
-   The page loads /data.js; the canonical dataset lives in /js/data.js.
-   This shim defines the tiny legacy dependency first, then uses document.write
-   so the dataset is available before the main runtime starts. */
+/* Emoji Drops — synchronous dataset bootstrap.
+   index.html loads this file before the main runtime. Define the legacy
+   dependency first, then synchronously include the canonical dataset so
+   app-v2.js can never race it on a cold load or slow mobile connection. */
 (function(){
   'use strict';
   if(typeof window.getUsers!=='function'){
@@ -13,5 +13,8 @@
       }catch(_){return []}
     };
   }
-  document.write('<script src="js/data.js?v=data-compat-2"><\\/script>');
+  /* document.write is intentional here: this script executes while the HTML
+     parser is processing index.html, so the canonical dataset is evaluated
+     before the following app-v2 script. */
+  document.write('<script src="js/data.js?v=data-sync-3"><\\/script>');
 })();
