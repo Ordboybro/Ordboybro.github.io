@@ -56,13 +56,12 @@ jobs:
           const window={cases:null,casePrices:null,rarities:null};
           const ctx={window,document,localStorage:{getItem:()=>null,setItem:()=>{}},console,getUsers:()=>[],setInterval:()=>0,clearInterval:()=>{}};
           vm.createContext(ctx);
-          vm.runInContext(fs.readFileSync('data.js','utf8')+'\nthis.__dataset={cases,casePrices,rarities};',ctx,{timeout:2000});
-          if(!ctx.__dataset?.cases||!ctx.__dataset?.casePrices)throw new Error('Canonical dataset bindings missing');
+          vm.runInContext(fs.readFileSync('data.js','utf8'),ctx,{timeout:2000});
           vm.runInContext(fs.readFileSync('js/app-v2.js','utf8'),ctx,{timeout:2000});
           if(!window.cases||Object.keys(window.cases).length!==8)throw new Error('Dataset bridge did not expose 8 cases');
           if(!window.casePrices||Object.keys(window.casePrices).length!==8)throw new Error('Dataset bridge did not expose 8 case prices');
-          if(writes.length!==3||!writes[0].includes('emoji-drops-hardening.js')||!writes[1].includes('emoji-drops-core.js')||!writes[2].includes('emoji-drops-runtime-guards.js'))throw new Error('Runtime loader order failed: '+writes.join(' | '));
-          console.log('Boot contract OK: dataset -> bridge -> hardening -> core -> guards');
+          if(writes.length!==4||!writes[0].includes('js/data.js')||!writes[1].includes('emoji-drops-hardening.js')||!writes[2].includes('emoji-drops-core.js')||!writes[3].includes('emoji-drops-runtime-guards.js'))throw new Error('Runtime loader order failed: '+writes.join(' | '));
+          console.log('Boot contract OK: root bootstrap -> dataset -> bridge -> hardening -> core -> guards');
           NODE
       - name: Odds, dataset and economy
         run: |
@@ -74,8 +73,9 @@ jobs:
           if(!/return\s*\{balance:250,/.test(core)) throw new Error('Fresh balance must be 250');
           if(!/function grantReward\(\)\s*\{return 0\}/.test(core)) throw new Error('Legacy timed reward must stay disabled');
           const ctx={window:{},document:{write:()=>{},getElementById:()=>null,addEventListener:()=>{},querySelector:()=>null},localStorage:{getItem:()=>null,setItem:()=>{}},console,getUsers:()=>[]};
-          vm.createContext(ctx); vm.runInContext(fs.readFileSync('data.js','utf8')+'\nthis.__dataset={cases,casePrices};',ctx,{timeout:2000});
-          const {cases,casePrices}=ctx.__dataset,rar=['common','rare','epic','mythical','legendary'],w={common:.55,rare:.27,epic:.12,mythical:.05,legendary:.01}; let total=0;
+          vm.createContext(ctx); vm.runInContext(fs.readFileSync('data.js','utf8'),ctx,{timeout:2000});
+          const cases=ctx.window.cases||{},casePrices=ctx.window.casePrices||{}; if(Object.keys(cases).length!==8||Object.keys(casePrices).length!==8)throw new Error('Dataset bridge missing in economy check');
+          const rar=['common','rare','epic','mythical','legendary'],w={common:.55,rare:.27,epic:.12,mythical:.05,legendary:.01}; let total=0;
           for(const [key,list] of Object.entries(cases)){if(!Array.isArray(list)||!list.length)throw new Error(key+': empty');if(!(casePrices[key]>0))throw new Error(key+': bad case price');const seen=new Set(),by={};for(const x of list){total++;if(!rar.includes(x.rarity))throw new Error(key+': bad rarity');const v=Number.parseFloat(String(x.price).replace(/[^0-9.\-]/g,''));if(!Number.isFinite(v)||v<0)throw new Error(key+': bad item price');const fp=`${x.emoji}|${x.rarity}|${x.price}`;if(seen.has(fp))throw new Error(key+': duplicate item');seen.add(fp);(by[x.rarity]??=[]).push(v)}for(const r of rar)if(!by[r]?.length)throw new Error(key+': missing '+r);const ev=rar.reduce((s,r)=>s+w[r]*(by[r].reduce((a,b)=>a+b,0)/by[r].length),0),ratio=ev/casePrices[key];if(!(ratio>0&&ratio<2.5))throw new Error(key+': suspicious EV ratio '+ratio.toFixed(3));console.log(`${key}: price=${casePrices[key]} EV=${ev.toFixed(2)} ratio=${ratio.toFixed(3)}`)}
           console.log('Dataset/economy OK:',Object.keys(cases).length,'cases',total,'items');
           NODE
