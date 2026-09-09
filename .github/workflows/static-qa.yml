@@ -41,7 +41,7 @@ jobs:
           a=Path('js/app-v2.js').read_text(); boot=Path('data.js').read_text()
           order=['emoji-drops-hardening.js','emoji-drops-core.js','emoji-drops-transaction-layer.js','emoji-drops-runtime-guards.js','emoji-drops-ui-polish.js','emoji-drops-final-hardening.js']
           if not all(a.index(order[i])<a.index(order[i+1]) for i in range(len(order)-1)): raise SystemExit('Runtime order failed')
-          for v in ['hardening-9','core-7','txn-3','guards-8','ui-3','final-1']:
+          for v in ['hardening-9','core-7','txn-4','guards-8','ui-3','final-1']:
               if v not in a: raise SystemExit('Cache version missing: '+v)
           if 'src="js/data.js' not in boot or 'src="data.js' in boot: raise SystemExit('Bad dataset bootstrap')
           PY
@@ -58,6 +58,8 @@ jobs:
         run: node tests/emoji-drops-runtime-hardening-self-test.js
       - name: Transaction layer
         run: node tests/emoji-drops-transaction-self-test.js
+      - name: Final quality invariants
+        run: node tests/emoji-drops-final-quality-self-test.js
       - name: Final hardening contract
         run: |
           node - <<'NODE'
@@ -76,7 +78,7 @@ jobs:
           for(const x of ['ed-online','ed-coin','live-section','Emoji Coin','relevantMutation','requestAnimationFrame']) if(!s.includes(x)) throw new Error('UI polish marker missing: '+x);
           console.log('UI polish OK');
           NODE
-      - name: Browser E2E smoke
+      - name: Browser E2E matrix
         run: |
           set -euo pipefail
           npm install --no-save --no-package-lock playwright@1.55.0
