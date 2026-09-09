@@ -14,7 +14,7 @@ async function closeActiveModal(page,width,height){
   if(await modal.isVisible())throw Error(`Active modal did not close at ${width}x${height}`);
 }
 async function assertNoBlockingModal(page,width,height){
-  const visible=await page.locator('.ed-modal.show').filter({visible:true}).count().catch(()=>0);
+  const visible=await page.locator('.ed-modal.show').evaluateAll(xs=>xs.filter(x=>{const r=x.getBoundingClientRect();return r.width>0&&r.height>0}).length);
   if(visible)throw Error(`Blocking modal remained open at ${width}x${height}`);
 }
 async function assertCore(page,width,height){
