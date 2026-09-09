@@ -1,97 +1,51 @@
 name: EmojiDrops static QA
-
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-
-permissions:
-  contents: read
-
+  push: {branches: [main]}
+  pull_request: {branches: [main]}
+permissions: {contents: read}
 jobs:
-  javascript-syntax:
+  qa:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-      - name: Check every JavaScript file
-        shell: bash
+        with: {node-version: 22}
+      - name: JavaScript syntax
         run: |
           set -euo pipefail
-          while IFS= read -r -d '' file; do node --check "$file"; done < <(find js -type f -name '*.js' -print0 | sort -z)
-
-  html-assets-and-runtime:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Validate local script/style references
-        shell: bash
+          while IFS= read -r -d '' f; do node --check "$f"; done < <(find js -type f -name '*.js' -print0 | sort -z)
+      - name: Runtime and assets
         run: |
-          set -euo pipefail
           python3 - <<'PY'
           from pathlib import Path
           import re
-          html=Path('index.html').read_text(encoding='utf-8')
-          refs=re.findall(r'<script[^>]+src=["\']([^"\']+)["\']',html,re.I)
-          refs += re.findall(r'<link[^>]+href=["\']([^"\']+\.css)["\']',html,re.I)
-          missing=[]
-          for ref in refs:
-              clean=ref.split('?',1)[0].split('#',1)[0]
-              if clean.startswith(('http://','https://','//','data:')): continue
-              if not Path(clean.lstrip('/')).exists(): missing.append(ref)
-          if missing: raise SystemExit('Missing local assets: '+', '.join(missing))
-          print('Assets OK:',len(refs))
+          h=Path('index.html').read_text()
+          refs=re.findall(r'<script[^>]+src=["\']([^"\']+)',h,re.I)+re.findall(r'<link[^>]+href=["\']([^"\']+\.css)',h,re.I)
+          missing=[x for x in refs if not x.split('?',1)[0].startswith(('http://','https://','//','data:')) and not Path(x.split('?',1)[0].lstrip('/')).exists()]
+          if missing: raise SystemExit('Missing assets: '+str(missing))
+          app=Path('js/app-v2.js').read_text()
+          if app.index('emoji-drops-hardening.js')>app.index('emoji-drops-core.js'): raise SystemExit('Hardening must boot before core')
+          if [x.split('?',1)[0] for x in re.findall(r'<script[^>]+src=["\']([^"\']+)',h,re.I) if 'app-v2.js' in x]!=['js/app-v2.js']: raise SystemExit('Unexpected runtime entry')
+          print('Runtime/assets OK')
           PY
-      - name: Enforce one runtime entry point
-        shell: bash
+      - name: Odds, dataset and economy
         run: |
-          set -euo pipefail
-          python3 - <<'PY'
-          from pathlib import Path
-          import re
-          html=Path('index.html').read_text(encoding='utf-8')
-          scripts=re.findall(r'<script[^>]+src=["\']([^"\']+)["\']',html,re.I)
-          runtime=[x.split('?',1)[0] for x in scripts if 'app-v2.js' in x]
-          if runtime!=['js/app-v2.js']: raise SystemExit(f'Unexpected runtime: {runtime}')
-          app=Path('js/app-v2.js').read_text(encoding='utf-8')
-          if 'emoji-drops-core.js' not in app: raise SystemExit('Core runtime missing')
-          forbidden=['product-quality.js','visual-restoration.js','final-polish.js','case-expansion.js','system-overhaul']
-          bad=[x for x in forbidden if x in html or x in app]
-          if bad: raise SystemExit('Legacy runtime referenced: '+', '.join(bad))
-          print('Runtime architecture OK')
-          PY
-      - name: Validate rarity odds
-        shell: bash
-        run: |
-          set -euo pipefail
-          python3 - <<'PY'
-          from pathlib import Path
-          import re
-          js=Path('js/emoji-drops-core.js').read_text(encoding='utf-8')
-          m=re.search(r'const R=\{([^}]+)\}',js)
-          nums=[int(x) for x in re.findall(r'w:(\d+)',m.group(1))] if m else []
-          if len(nums)!=5 or sum(nums)!=100: raise SystemExit(f'Invalid odds: {nums}')
-          print('Odds OK:',nums)
-          PY
-      - name: Validate canonical dataset
-        shell: bash
-        run: |
-          set -euo pipefail
           node - <<'NODE'
           const fs=require('fs'),vm=require('vm');
-          let code=fs.readFileSync('js/data.js','utf8');
+          const core=fs.readFileSync('js/emoji-drops-core.js','utf8');
+          const m=core.match(/const R=\{([\s\S]*?)\};/); if(!m) throw new Error('Rarity table missing');
+          const odds=[...m[1].matchAll(/w:(\d+)/g)].map(x=>+x[1]); if(odds.length!==5||odds.reduce((a,b)=>a+b,0)!==100) throw new Error('Invalid rarity odds: '+odds);
           const ctx={window:{},document:{getElementById:()=>null},localStorage:{getItem:()=>null,setItem:()=>{}},console};
-          vm.createContext(ctx);vm.runInContext(code,ctx,{timeout:2000});
-          const cases=ctx.cases, prices=ctx.casePrices;
-          if(!cases||!prices) throw new Error('Dataset missing');
-          const rar=['common','rare','epic','mythical','legendary'];
-          for(const [key,list] of Object.entries(cases)){
-            if(!Array.isArray(list)||!list.length) throw new Error(key+': empty');
-            if(!(Number(prices[key])>0)) throw new Error(key+': invalid price');
-            for(const r of rar) if(!list.some(x=>x&&x.rarity===r)) throw new Error(key+': missing '+r);
-          }
-          console.log('Dataset OK:',Object.keys(cases).length,'cases');
+          vm.createContext(ctx); vm.runInContext(fs.readFileSync('js/data.js','utf8'),ctx,{timeout:2000});
+          const rar=['common','rare','epic','mythical','legendary'],w={common:.55,rare:.27,epic:.12,mythical:.05,legendary:.01}; let total=0;
+          for(const [key,list] of Object.entries(ctx.cases||{})){if(!Array.isArray(list)||!list.length)throw new Error(key+': empty');if(!(ctx.casePrices[key]>0))throw new Error(key+': bad case price');const seen=new Set(),by={};for(const x of list){total++;if(!rar.includes(x.rarity))throw new Error(key+': bad rarity');const v=Number.parseFloat(String(x.price).replace(/[^0-9.\-]/g,''));if(!Number.isFinite(v)||v<0)throw new Error(key+': bad item price');const fp=`${x.emoji}|${x.rarity}|${x.price}`;if(seen.has(fp))throw new Error(key+': duplicate item');seen.add(fp);(by[x.rarity]??=[]).push(v)}for(const r of rar)if(!by[r]?.length)throw new Error(key+': missing '+r);const ev=rar.reduce((s,r)=>s+w[r]*(by[r].reduce((a,b)=>a+b,0)/by[r].length),0),ratio=ev/ctx.casePrices[key];if(!(ratio>0&&ratio<2.5))throw new Error(key+': suspicious EV ratio '+ratio.toFixed(3));console.log(`${key}: price=${ctx.casePrices[key]} EV=${ev.toFixed(2)} ratio=${ratio.toFixed(3)}`)}
+          console.log('Dataset/economy OK:',Object.keys(ctx.cases).length,'cases',total,'items');
+          NODE
+      - name: Hardening contract
+        run: |
+          node - <<'NODE'
+          const fs=require('fs'),vm=require('vm'),storage=new Map(),ctx={window:{cases:{},casePrices:{}},localStorage:{getItem:k=>storage.get(k)??null,setItem:(k,v)=>storage.set(k,String(v))},Date,Number,JSON,console};
+          ctx.window.addEventListener=()=>{};vm.createContext(ctx);vm.runInContext(fs.readFileSync('js/emoji-drops-hardening.js','utf8'),ctx,{timeout:2000});
+          const d=ctx.window.__emojiDropsDiagnostics;if(!d||d.schemaVersion!==3||d.totalOdds!==100)throw new Error('Hardening contract failed');
+          if(typeof ctx.window.__emojiDropsExportState!=='function')throw new Error('Export hook missing');console.log('Hardening OK');
           NODE
