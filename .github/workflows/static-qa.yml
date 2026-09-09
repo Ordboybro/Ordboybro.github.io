@@ -28,7 +28,7 @@ jobs:
             node --check "$file"
           done < <(find js -type f -name '*.js' -print0 | sort -z)
 
-  html-assets:
+  html-assets-and-runtime:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -50,8 +50,7 @@ jobs:
               clean = ref.split('?', 1)[0].split('#', 1)[0]
               if clean.startswith(('http://', 'https://', '//', 'data:')):
                   continue
-              path = Path(clean.lstrip('/'))
-              if not path.exists():
+              if not Path(clean.lstrip('/')).exists():
                   missing.append(ref)
 
           if missing:
@@ -59,6 +58,42 @@ jobs:
               for ref in missing:
                   print(' -', ref)
               raise SystemExit(1)
-
           print(f'Checked {len(refs)} local script/style references.')
+          PY
+      - name: Enforce one runtime entry point
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          html = Path('index.html').read_text(encoding='utf-8')
+          scripts = re.findall(r'<script[^>]+src=["\']([^"\']+)["\']', html, re.I)
+          runtime = [x.split('?',1)[0] for x in scripts if 'app-v2.js' in x]
+          if runtime != ['js/app-v2.js']:
+              raise SystemExit(f'Unexpected runtime entry points: {runtime}')
+          app = Path('js/app-v2.js').read_text(encoding='utf-8')
+          if 'emoji-drops-core.js' not in app or 'emoji-drops-hardening.js' not in app:
+              raise SystemExit('Authoritative runtime chain is incomplete')
+          forbidden = ['product-quality.js','visual-restoration.js','final-polish.js','case-expansion.js','system-overhaul']
+          loaded = [x for x in forbidden if x in html or x in app]
+          if loaded:
+              raise SystemExit(f'Legacy runtime layers still referenced: {loaded}')
+          print('Single-runtime architecture OK.')
+          PY
+      - name: Validate declared rarity odds
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          js = Path('js/emoji-drops-core.js').read_text(encoding='utf-8')
+          m = re.search(r'const R=\{([^}]+)\}', js)
+          if not m:
+              raise SystemExit('Rarity table not found')
+          nums = [int(x) for x in re.findall(r'w:(\d+)', m.group(1))]
+          if sum(nums) != 100 or len(nums) != 5:
+              raise SystemExit(f'Rarity odds must be 5 tiers totaling 100; got {nums}')
+          print('Rarity odds OK:', nums)
           PY
