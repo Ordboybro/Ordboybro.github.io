@@ -2,19 +2,20 @@ const { chromium } = require('playwright');
 const { spawn } = require('node:child_process');
 const path = require('node:path');
 const root = path.resolve(__dirname, '..');
-const server = spawn(process.execPath, ['-e', `require('http').createServer((req,res)=>require('fs').createReadStream(require('path').join(${JSON.stringify(root)}, req.url==='/'?'index.html':req.url)).on('error',()=>{res.statusCode=404;res.end()}).pipe(res)).listen(4173)`], { stdio: 'ignore' });
+const server = spawn(process.execPath, ['-e', `require('http').createServer((req,res)=>{const u=new URL(req.url,'http://127.0.0.1');const p=u.pathname==='/'?'index.html':u.pathname.slice(1);require('fs').createReadStream(require('path').join(${JSON.stringify(root)},p)).on('error',()=>{res.statusCode=404;res.end()}).pipe(res)}).listen(4173)`], { stdio: 'ignore' });
 const sizes=[[320,844],[340,844],[375,812],[390,844],[430,932]];
 async function waitForServer(){for(let i=0;i<40;i++){try{await new Promise((resolve,reject)=>{const req=require('node:http').get('http://127.0.0.1:4173/',r=>{r.resume();r.statusCode===200?resolve():reject(Error('HTTP '+r.statusCode))});req.on('error',reject)});return}catch{await new Promise(r=>setTimeout(r,50))}}throw Error('Local test server did not start')}
 async function assertCore(page,width,height){
   const errors=[];page.on('pageerror',e=>errors.push(String(e.message||e)));
   await page.goto('http://127.0.0.1:4173/',{waitUntil:'networkidle'});
-  await page.evaluate(()=>localStorage.clear()); await page.reload({waitUntil:'networkidle'}); await page.locator('#edBalance').waitFor();
-  const balance=(await page.locator('#edBalance').textContent()).trim(); const numeric=(balance.match(/\d[\d,]*/)||[''])[0].replace(/,/g,'');
-  if(Number(numeric)!==250||!(await page.locator('.ed-coin').count()))throw Error(`Fresh Emoji Coin balance failed at ${width}x${height}: ${balance}`);
+  await page.evaluate(()=>localStorage.clear()); await page.reload({waitUntil:'networkidle'});
+  const balance=page.locator('#edBalance');await balance.waitFor({state:'visible',timeout:10000});
+  const text=(await balance.textContent()).trim(); const numeric=(text.match(/\d[\d,]*/)||[''])[0].replace(/,/g,'');
+  if(Number(numeric)!==250||!(await page.locator('.ed-coin').count()))throw Error(`Fresh Emoji Coin balance failed at ${width}x${height}: ${text}`);
   const openCase=page.locator('[data-open="transport"]').first();
   if(await openCase.count()){
     await openCase.click(); const opener=page.locator('[data-do-open]').first();
-    if(await opener.count()){await opener.click();await opener.click();await opener.click();await opener.click();await opener.click();}
+    if(await opener.count()){for(let i=0;i<5;i++)await opener.click();}
     const close=page.locator('[data-close]').first(); if(await close.count())await close.click();
   }
   const inv=page.locator('[data-view="inventory"]').first();if(await inv.count())await inv.click();
@@ -30,5 +31,4 @@ async function assertCore(page,width,height){
   const live=await page.locator('#ed-a11y-live').count();if(!live)throw Error(`A11y live region missing at ${width}x${height}`);
   if(errors.length)throw Error(`Page errors at ${width}x${height}: ${errors.join(' | ')}`);
 }
-(async()=>{const browser=await chromium.launch({headless:true});try{await waitForServer();for(const [width,height] of sizes){const page=await browser.newPage({viewport:{width,height},reducedMotion:'reduce'});await assertCore(page,width,height);await page.close();}
-const landscape=await browser.newPage({viewport:{width:844,height:390},reducedMotion:'reduce'});await assertCore(landscape,844,390);await landscape.close();console.log('Browser E2E OK: portrait matrix + landscape + rapid taps + modal Escape + Emoji Coin + overflow + touch targets + live region')}finally{await browser.close();server.kill()}})().catch(err=>{console.error(err);server.kill();process.exitCode=1});
+(async()=>{const browser=await chromium.launch({headless:true});try{await waitForServer();for(const [width,height] of sizes){const page=await browser.newPage({viewport:{width,height},reducedMotion:'reduce'});await assertCore(page,width,height);await page.close();}const landscape=await browser.newPage({viewport:{width:844,height:390},reducedMotion:'reduce'});await assertCore(landscape,844,390);await landscape.close();console.log('Browser E2E OK: portrait matrix + landscape + rapid taps + modal Escape + Emoji Coin + overflow + touch targets + live region')}finally{await browser.close();server.kill()}})().catch(err=>{console.error(err);server.kill();process.exitCode=1});
