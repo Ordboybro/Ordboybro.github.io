@@ -1,10 +1,10 @@
 # Emoji Drops — 11/10 quality benchmark
 
-This document is the technical/product benchmark for the project. It intentionally separates **engine quality** from the later visual redesign phase.
+This document is the technical/product benchmark for the project. It intentionally separates **engine quality** from the later visual/product expansion phase.
 
 ## Engineering status
 
-The hardening pass is now treated as a release gate: a checkbox is only marked complete when the behavior is implemented and covered by an automated contract/E2E check. Visual redesign is not part of this gate.
+The hardening pass is treated as a release gate: a checkbox is only marked complete when the behavior is implemented and covered by an automated contract/E2E check. Visual redesign is not part of this gate.
 
 ### Runtime / reliability
 - [x] One authoritative runtime chain.
@@ -15,6 +15,7 @@ The hardening pass is now treated as a release gate: a checkbox is only marked c
 - [x] Legacy timer risk removed without a global `setInterval` shim.
 - [x] Transaction journal v4 with before/after hashes, rollback and recovery.
 - [x] Transaction action coverage contract includes open, sell, sell-all, upgrade, market buy/list, daily and reset selectors.
+- [x] One-shot case-open action resilience for transient click races, with explicit no-polling contract.
 
 ### Economy
 - [x] 8 cases / 8 case prices validated.
@@ -24,7 +25,7 @@ The hardening pass is now treated as a release gate: a checkbox is only marked c
 - [x] Open / sell / upgrade / market invariants tested at the self-test level.
 - [x] Extreme balances and `MAX_SAFE_INTEGER` boundaries covered.
 - [x] Long-session balance/integrity simulation.
-- [ ] Full economic tuning against a formal inflation/deflation target — intentionally deferred to the dedicated economy phase so engineering hardening does not silently rebalance gameplay.
+- [ ] Full economic tuning against a formal inflation/deflation target — intentionally deferred to the dedicated economy/product phase so engineering hardening does not silently rebalance gameplay.
 
 ### State / persistence
 - [x] Corrupted JSON repair.
@@ -47,7 +48,7 @@ The hardening pass is now treated as a release gate: a checkbox is only marked c
 - [x] Modal Escape close.
 - [x] Horizontal-overflow assertion.
 - [x] Inventory / Market / Daily navigation smoke.
-- [ ] Dedicated Upgrade success/failure persistence scenario — gameplay-specific expansion is deferred to the product QA phase.
+- [ ] Dedicated Upgrade success/failure persistence scenario — still the next gameplay-specific E2E expansion.
 - [x] E2E harness correctly strips query strings before resolving local runtime assets.
 
 ### Accessibility
@@ -84,8 +85,8 @@ The benchmark is functional polish rather than copying branding or paid gambling
 10. **Trust** — clear local-only/virtual economy boundaries, diagnostics, no hidden balance mutations and recoverable state.
 11. **QA** — browser E2E, corruption recovery, failure injection, mobile matrix, accessibility and performance budgets.
 
-Product features such as Contracts and a larger catalog are deliberately **not** being smuggled into the engineering gate. They belong to the next product phase.
+Current implementation covers the core catalog/inventory/rewards/profile/market foundations plus favorites, action history, case details, market cancellation and action resilience. Contracts, richer catalog breadth, and a formal economy rebalance remain product-phase work rather than being faked as complete.
 
 ## Definition of 11/10
 
-The engineering gate is 11/10 when every release-critical reliability, economy-integrity, persistence, browser/mobile and accessibility item is implemented and automatically checked, while intentionally deferred product/refactor items have a documented reason. The next phase can then focus on economy, Emoji Coin semantics and UX/product expansion rather than returning to technical firefighting.
+The engineering gate is 11/10 when every release-critical reliability, economy-integrity, persistence, browser/mobile and accessibility item is implemented and automatically checked, while intentionally deferred product/refactor items have a documented reason. The remaining work should therefore be treated as **product expansion and final polish**, not emergency reliability repair.
