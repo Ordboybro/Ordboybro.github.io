@@ -40,7 +40,7 @@ jobs:
           a=Path('js/app-v2.js').read_text(); boot=Path('data.js').read_text()
           order=['emoji-drops-hardening.js','emoji-drops-core.js','emoji-drops-runtime-guards.js','emoji-drops-ui-polish.js']
           if not all(a.index(order[i])<a.index(order[i+1]) for i in range(len(order)-1)): raise SystemExit('Runtime order failed')
-          if 'hardening-9' not in a or 'guards-8' not in a or 'ui-2' not in a: raise SystemExit('Cache versions stale')
+          if 'hardening-9' not in a or 'guards-8' not in a or 'ui-3' not in a: raise SystemExit('Cache versions stale')
           if 'src="js/data.js' not in boot or 'src="data.js' in boot: raise SystemExit('Bad dataset bootstrap')
           if not Path('js/emoji-drops-ui-polish.js').exists(): raise SystemExit('UI polish asset missing')
           PY
