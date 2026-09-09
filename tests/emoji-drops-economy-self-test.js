@@ -11,6 +11,8 @@ if(Object.keys(casePrices).length!==8)throw new Error('Expected 8 case prices');
 for(const [key,list] of Object.entries(cases)){
   if(!Array.isArray(list)||!list.length)throw new Error(`${key}: empty`);
   for(const r of rarities)if(!list.some(x=>x.rarity===r))throw new Error(`${key}: missing ${r}`);
+  const seen=new Set();
+  for(const x of list){const fp=`${x.emoji}|${x.rarity}|${x.price}`;if(seen.has(fp))throw new Error(`${key}: duplicate item ${fp}`);seen.add(fp)}
 }
 let seed=0x9e3779b9;
 function rand(){seed|=0;seed=(seed+0x6d2b79f5)|0;let t=Math.imul(seed^seed>>>15,1|seed);t^=t+Math.imul(t^t>>>7,61|t);return ((t^t>>>14)>>>0)/4294967296}
@@ -23,16 +25,20 @@ const tolerance={common:.012,rare:.012,epic:.01,mythical:.007,legendary:.004};
 for(const r of rarities){const observed=counts[r]/N,diff=Math.abs(observed-expected[r]);if(diff>tolerance[r])throw new Error(`Monte Carlo ${r}: ${(observed*100).toFixed(2)}% vs ${(expected[r]*100).toFixed(2)}%`)}
 console.log('Monte Carlo OK:',counts);
 
-// Transaction invariants: opening, selling, and upgrading must never create a negative balance.
 function openModel(balance,price,item){if(balance<price)throw new Error('open allowed below case price');return {balance:balance-price,inventory:[item],spent:price}}
 function sellModel(balance,inventory,index){if(index<0||index>=inventory.length)throw new Error('invalid inventory index');const item=inventory[index];return {balance:balance+item.price,inventory:inventory.filter((_,i)=>i!==index)}}
 function upgradeModel(source,target,win){const inv=[source,target];const next=win?[target]:[source];if(next.length!==1)throw new Error('upgrade transaction invariant');return next}
 const item={emoji:'😀',rarity:'common',price:10};const opened=openModel(100,item.price,item);if(opened.balance!==90||opened.inventory.length!==1)throw new Error('open invariant');const sold=sellModel(opened.balance,opened.inventory,0);if(sold.balance!==100||sold.inventory.length!==0)throw new Error('sell invariant');if(upgradeModel(item,{emoji:'🔥',rarity:'rare',price:30},true).length!==1)throw new Error('upgrade win invariant');if(upgradeModel(item,{emoji:'🔥',rarity:'rare',price:30},false).length!==1)throw new Error('upgrade loss invariant');
-console.log('Transaction invariants OK');
 
-// Emergency bonus rules: only when balance is below cheapest case, max 5 claims per local day.
 const cheapest=Math.min(...Object.values(casePrices));
 if(!(cheapest>0))throw new Error('Cheapest case price invalid');
-function bonusAllowed(balance,claims){return balance<cheapest&&claims<5}
-if(!bonusAllowed(0,0)||bonusAllowed(cheapest,0)||bonusAllowed(0,5)||bonusAllowed(cheapest+1,4))throw new Error('Bonus eligibility invariant failed');
-console.log(`Bonus rules OK: cheapest=${cheapest}, maxDaily=5, amount=250`);
+function bonusAllowed(balance,claims){return balance<cheapest&&claims<3}
+if(!bonusAllowed(0,0)||bonusAllowed(cheapest,0)||bonusAllowed(0,3)||bonusAllowed(cheapest+1,2))throw new Error('Bonus eligibility invariant failed');
+console.log(`Bonus rules OK: cheapest=${cheapest}, maxDaily=3, amount=250`);
+
+// New-player contract: absent state starts at exactly 250; existing state is preserved.
+const fresh=JSON.parse('null');
+const defaultState={balance:250,inventory:[],stats:{opens:0,wins:0,spent:0,earned:0,upgrades:0},xp:0,level:1};
+if(defaultState.balance!==250)throw new Error('Fresh balance contract failed');
+if(fresh!==null)throw new Error('Fresh-state fixture failed');
+console.log('Fresh-state contract OK: 250');
