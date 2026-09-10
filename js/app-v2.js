@@ -1,8 +1,8 @@
 (()=>{'use strict';
 /* Emoji Drops — one runtime only. Dataset bridge -> hardening -> core -> transactions -> guards -> UI -> final QA -> release polish -> product quality -> product-plus -> action resilience -> final quality. */
-const version=40;
+const version=41;
 window.__emojiDropsRuntimeLoader={version,complete:false,failed:[],loaded:[],count:1};
-function write(src){document.write('<scr'+'ipt src="'+src+'"><\\/scr'+'ipt>')}
+function write(src){document.write('<scr'+'ipt src="'+src+'"><\/scr'+'ipt>')}
 try{
   if(typeof cases!=='undefined'&&(!window.cases||!Object.keys(window.cases).length))window.cases=cases;
   if(typeof casePrices!=='undefined'&&(!window.casePrices||!Object.keys(window.casePrices).length))window.casePrices=casePrices;
