@@ -4,6 +4,7 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 permissions:
   contents: read
 jobs:
@@ -52,6 +53,8 @@ jobs:
         run: node tests/emoji-drops-action-resilience-self-test.js
       - name: P3/P4 contracts
         run: node tests/emoji-drops-p3-p4-self-test.js
+      - name: Security/privacy audit
+        run: node tests/emoji-drops-security-audit.js
       - name: Final hardening contract
         run: node -e "const fs=require('fs');const s=fs.readFileSync('js/emoji-drops-final-hardening.js','utf8');for(const x of ['aria-live','aria-modal','Escape','focus-trap','PerformanceObserver','storageHealth','stateHealth'])if(!s.includes(x))throw Error(x);console.log('Final hardening contract OK')"
       - name: Browser E2E matrix
