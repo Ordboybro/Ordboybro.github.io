@@ -1,6 +1,6 @@
 (()=>{'use strict';
 /* Emoji Drops — one authoritative runtime. Dataset bridge -> schema -> hardening -> core -> transactions -> guards -> UI -> final QA -> release -> product -> product-plus -> action -> quality -> P3 -> P4. */
-const version=44;
+const version=45;
 window.__emojiDropsRuntimeLoader={version,complete:false,failed:[],loaded:[],count:1};
 function write(src){document.write('<scr'+'ipt src="'+src+'"><\/scr'+'ipt>')}
 try{
