@@ -34,7 +34,7 @@ for(const marker of ['ed-fav','ed-history','data-cancel-market','case-detail','p
 for(const marker of ['action resilience','emojiDropsActionResilience','data-do-open','button.click()'])if(!action.includes(marker))throw Error(`Action resilience marker missing: ${marker}`);
 for(const marker of ['Emoji Drops final quality layer','normalizeState','recover','emojiDropsQualityFinal','prefers-reduced-motion','localStorage'])if(!quality.includes(marker))throw Error(`Final quality marker missing: ${marker}`);
 if(!/emoji-drops-quality-final.js\?v=quality-final-1/.test(loader))throw Error('Final quality loader marker missing');
-if(!/version=40/.test(loader))throw Error('Loader version not incremented for final quality layer');
+if(!/version=41/.test(loader))throw Error('Loader version not incremented for final quality layer');
 for(const f of ['js/emoji-drops-performance-guard.js'])if(fs.existsSync(f))throw Error(`Forbidden legacy runtime file still exists: ${f}`);
 const forbiddenTimerShim=/window\.setInterval\s*=|globalThis\.setInterval\s*=|setInterval\s*=\s*function/;
 if(forbiddenTimerShim.test(core)||forbiddenTimerShim.test(hard)||forbiddenTimerShim.test(guards))throw Error('Global timer override detected');
