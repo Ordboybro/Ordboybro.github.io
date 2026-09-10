@@ -1,8 +1,8 @@
 (()=>{'use strict';
 /* Emoji Drops — one authoritative runtime. Dataset bridge -> schema -> hardening -> core -> transactions -> guards -> UI -> final QA -> release -> product -> product-plus -> action -> quality -> P3 -> P4. */
-const version=45;
+const version=46;
 window.__emojiDropsRuntimeLoader={version,complete:false,failed:[],loaded:[],count:1};
-function write(src){document.write('<scr'+'ipt src="'+src+'"><\/scr'+'ipt>')}
+function write(src){document.write('<scr'+'ipt src="'+src+'"><\\/scr'+'ipt>')}
 try{
   if(typeof cases!=='undefined'&&(!window.cases||!Object.keys(window.cases).length))window.cases=cases;
   if(typeof casePrices!=='undefined'&&(!window.casePrices||!Object.keys(window.casePrices).length))window.casePrices=casePrices;
@@ -10,7 +10,7 @@ try{
   write('js/emoji-drops-schema-migration.js?v=schema-1');
   write('js/emoji-drops-hardening.js?v=hardening-9');
   write('js/emoji-drops-core.js?v=core-7');
-  write('js/emoji-drops-transaction-layer.js?v=txn-5');
+  write('js/emoji-drops-transaction-layer.js?v=txn-6');
   write('js/emoji-drops-runtime-guards.js?v=guards-8');
   write('js/emoji-drops-ui-polish.js?v=ui-3');
   write('js/emoji-drops-final-hardening.js?v=final-2');
