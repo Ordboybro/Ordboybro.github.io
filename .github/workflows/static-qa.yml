@@ -55,6 +55,10 @@ jobs:
       - name: Browser E2E matrix
         run: |
           set -euo pipefail
-          npm install --no-save --no-package-lock playwright@1.55.0
+          npm install --no-save --no-package-lock playwright@1.55.0 axe-core@4.13.0
           npx playwright install --with-deps chromium
           node tests/emoji-drops-browser-e2e.js
+      - name: Upgrade E2E
+        run: node tests/emoji-drops-upgrade-e2e.js
+      - name: Accessibility E2E
+        run: node tests/emoji-drops-accessibility-e2e.js
