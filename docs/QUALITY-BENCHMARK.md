@@ -1,92 +1,49 @@
 # Emoji Drops — 11/10 quality benchmark
 
-This document is the technical/product benchmark for the project. It intentionally separates **engine quality** from the later visual/product expansion phase.
+Release benchmark for the current local-only fictional game scope. No real-money gambling or payment mechanics are part of the project.
 
-## Engineering status
+## Engineering
+- [x] Single authoritative runtime and dataset bridge.
+- [x] Boot-order, asset and module contracts in CI.
+- [x] No global timer shim; event-driven guards and coalesced UI observers.
+- [x] Transaction journal v4: hashes, rollback, recovery and lease protection.
+- [x] Replay-safe action lock and one-shot case-open resilience.
+- [x] Final state recovery/normalization layer.
+- [x] Economy invariants: 8 cases/prices, five rarities, duplicate detection, Monte Carlo sanity, open/sell/upgrade/market invariants, extreme balances and long sessions.
+- [x] Corrupt JSON repair, duplicate inventory repair, numeric normalization and backup diagnostics.
+- [x] Storage-event refresh and bounded local product metadata.
+- [x] 320/340/375/390/430 portrait + 844x390 landscape E2E matrix.
+- [x] Rapid taps, Escape, reduced motion, overflow and touch-target checks.
+- [x] Inventory/Market/Daily browser smoke and persistence smoke.
+- [x] Modal semantics, focus trap/restore, keyboard focus, labels and live region.
+- [x] Static QA + invariant self-tests + browser E2E in CI.
 
-The hardening pass is treated as a release gate: a checkbox is only marked complete when the behavior is implemented and covered by an automated contract/E2E check. Visual redesign is not part of this gate.
+## Product
+- [x] Case catalog search/filter/sort.
+- [x] Favorites and case details.
+- [x] Opening/reel/result flow with duplicate-action protection.
+- [x] Inventory tools, collection progress and selling foundations.
+- [x] Upgrade runtime/invariants.
+- [x] Market listing/buy/cancel foundations with ownership checks.
+- [x] Daily rewards, streak and bonus limits.
+- [x] Profile progression, achievements and history.
+- [x] Live activity.
+- [x] Local-only virtual currency boundary and recovery diagnostics.
 
-### Runtime / reliability
-- [x] One authoritative runtime chain.
-- [x] Dataset bridge before runtime.
-- [x] Runtime hardening before core.
-- [x] Event-driven runtime guards; no continuous guard polling.
-- [x] UI MutationObserver work coalesced through `requestAnimationFrame` and filtered to relevant mutations.
-- [x] Legacy timer risk removed without a global `setInterval` shim.
-- [x] Transaction journal v4 with before/after hashes, rollback and recovery.
-- [x] Transaction action coverage contract includes open, sell, sell-all, upgrade, market buy/list, daily and reset selectors.
-- [x] One-shot case-open action resilience for transient click races, with explicit no-polling contract.
+## Deliberate scope boundaries
+- [ ] Contracts mode.
+- [ ] Server-backed accounts/cloud sync.
+- [ ] Multiplayer, tournaments and giveaways.
+- [ ] Deterministic multi-tab merge for competing balance mutations; without a server authority there is no safe generic merge rule for currency.
+- [ ] Browser-specific quota/private-mode fault injection.
+- [ ] Full axe/WCAG dependency scan; lightweight semantic contracts are currently used instead.
+- [ ] Dedicated browser Upgrade success/failure scenario; runtime/invariant coverage exists, but this is the remaining gameplay-specific E2E enhancement.
+- [ ] Monolithic-core split and final legacy-helper removal; both are refactors with regression risk and no required user-visible behavior change.
 
-### Economy
-- [x] 8 cases / 8 case prices validated.
-- [x] All five rarities validated.
-- [x] Duplicate fingerprints and invalid prices checked.
-- [x] Monte Carlo rarity distribution check.
-- [x] Open / sell / upgrade / market invariants tested at the self-test level.
-- [x] Extreme balances and `MAX_SAFE_INTEGER` boundaries covered.
-- [x] Long-session balance/integrity simulation.
-- [ ] Full economic tuning against a formal inflation/deflation target — intentionally deferred to the dedicated economy/product phase so engineering hardening does not silently rebalance gameplay.
+These are explicit scope/quality enhancements, not hidden defects. The release must not be called final until the active CI Browser E2E matrix is green.
 
-### State / persistence
-- [x] Corrupted JSON repair.
-- [x] Duplicate inventory ID repair.
-- [x] Numeric normalization.
-- [x] Bonus claim rollback.
-- [x] Backup/recovery diagnostics.
-- [x] Atomic journal/commit semantics around the current mutation entry points.
-- [x] Browser-level fresh-state persistence smoke.
-- [x] Cross-tab storage event refresh for non-active transactions.
-- [ ] Full multi-tab conflict resolution with deterministic merge semantics — deliberately deferred because the current single-device local economy has no safe merge rule for competing balance mutations.
-- [ ] Quota/private-mode failure injection E2E — browser-dependent and kept as a follow-up hardening test rather than pretending ordinary persistence smoke proves it.
+## Case-Battle benchmark
+The target is comparable functional polish, not copied branding or paid mechanics. Emoji Drops currently matches the useful local equivalents for catalog, favorites, opening, inventory, Upgrade, Market, rewards, profile, live activity, trust and automated QA. Contracts, social/server features and the larger commercial ecosystem remain outside the current static/local architecture.
 
-### Browser / mobile
-- [x] Browser smoke flow.
-- [x] 320/340/375/390/430 portrait matrix.
-- [x] 844x390 landscape smoke.
-- [x] Reduced-motion mode.
-- [x] Rapid multi-tap opening path.
-- [x] Modal Escape close.
-- [x] Horizontal-overflow assertion.
-- [x] Inventory / Market / Daily navigation smoke.
-- [ ] Dedicated Upgrade success/failure persistence scenario — still the next gameplay-specific E2E expansion.
-- [x] E2E harness correctly strips query strings before resolving local runtime assets.
-
-### Accessibility
-- [x] Escape closes the active modal.
-- [x] Reduced-motion CSS exists.
-- [x] Focus trap and focus restore for modal surfaces.
-- [x] Visible keyboard focus contract.
-- [x] Labels for empty/icon-only controls and form fallbacks.
-- [x] Screen-reader live region for modal announcements.
-- [ ] Automated WCAG/axe scan in CI — intentionally not added as a dependency-heavy gate yet; current CI uses lightweight semantic contracts.
-
-### Maintainability
-- [x] Current runtime loader documents the authoritative chain.
-- [x] Static QA checks syntax, assets, boot order and runtime contracts.
-- [x] Dead legacy runtime file removal has begun.
-- [ ] Complete dead-code audit and final removal pass.
-- [ ] Split the monolithic core into state, economy, render, modal and event modules without changing UI.
-
-The last two items are **refactoring opportunities, not release blockers**. Splitting the currently working monolith during the final hardening pass would increase regression risk without improving the user-visible product proportionally.
-
-## Case-Battle-level product benchmark
-
-The benchmark is functional polish rather than copying branding or paid gambling mechanics:
-
-1. **Case catalog** — categories, search, sort, favorites, case detail and transparent odds/value information.
-2. **Opening** — fast, deterministic UI state transitions, multi-open, cancel/skip rules, result history and zero duplicate transactions.
-3. **Inventory** — filtering, sorting, bulk actions, item details, collection progress and history.
-4. **Upgrade** — mathematically correct chance, clear target constraints, atomic transaction, failure recovery and replay-safe state.
-5. **Contracts** — combine multiple items into one outcome with explicit rules and atomic rollback.
-6. **Market** — listing, buy, cancel, pricing validation, ownership checks and transaction history.
-7. **Rewards** — daily streak, bonus limits, anti-abuse rules and auditable reward history.
-8. **Profile** — stats, history, collection, settings and account-safe reset/export.
-9. **Live activity** — performant feed that does not require polling the whole DOM.
-10. **Trust** — clear local-only/virtual economy boundaries, diagnostics, no hidden balance mutations and recoverable state.
-11. **QA** — browser E2E, corruption recovery, failure injection, mobile matrix, accessibility and performance budgets.
-
-Current implementation covers the core catalog/inventory/rewards/profile/market foundations plus favorites, action history, case details, market cancellation and action resilience. Contracts, richer catalog breadth, and a formal economy rebalance remain product-phase work rather than being faked as complete.
-
-## Definition of 11/10
-
-The engineering gate is 11/10 when every release-critical reliability, economy-integrity, persistence, browser/mobile and accessibility item is implemented and automatically checked, while intentionally deferred product/refactor items have a documented reason. The remaining work should therefore be treated as **product expansion and final polish**, not emergency reliability repair.
+## 11/10 definition
+For this scope, 11/10 means no known release-blocking reliability, persistence, economy-integrity, mobile or accessibility defect; important current behavior is automatically checked; and scope boundaries are explicit. It does not mean every feature of a server-backed commercial platform exists.
