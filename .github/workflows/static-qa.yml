@@ -62,3 +62,5 @@ jobs:
         run: node tests/emoji-drops-upgrade-e2e.js
       - name: Accessibility E2E
         run: node tests/emoji-drops-accessibility-e2e.js
+      - name: Performance budget E2E
+        run: node tests/emoji-drops-performance-budget-e2e.js
