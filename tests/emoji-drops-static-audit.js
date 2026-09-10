@@ -1,5 +1,4 @@
 const fs=require('fs');
-const path=require('path');
 const read=p=>fs.readFileSync(p,'utf8');
 const html=read('index.html'),loader=read('js/app-v2.js');
 const runtime=['js/data.js','js/app-v2.js','js/emoji-drops-schema-migration.js','js/emoji-drops-hardening.js','js/emoji-drops-core.js','js/emoji-drops-transaction-layer.js','js/emoji-drops-runtime-guards.js','js/emoji-drops-ui-polish.js','js/emoji-drops-final-hardening.js','js/emoji-drops-release-polish.js','js/emoji-drops-product-layer.js','js/emoji-drops-product-plus.js','js/emoji-drops-action-resilience.js','js/emoji-drops-quality-final.js','js/emoji-drops-p3-polish.js','js/emoji-drops-p4-final.js'];
@@ -13,6 +12,6 @@ const tx=read('js/emoji-drops-transaction-layer.js'),p3=read('js/emoji-drops-p3-
 for(const x of ['JOURNAL','recover','beforeHash','afterHash','COMMIT_GRACE_MS'])if(!tx.includes(x))throw Error(`Transaction contract missing: ${x}`);
 if(/setInterval\s*\(/.test(tx)&&!tx.includes('lockTimer=setInterval'))throw Error('Unexpected transaction polling');
 for(const x of ['reduced-motion','ed-p3-skeleton','Sound','vibrate','touchstart','ed-modal'])if(!p3.includes(x))throw Error(`P3 contract missing: ${x}`);
-for(const x of ['schemaVersion','conflict','Performance','fault','privacy','coreBoundary'])if(!p4.includes(x))throw Error(`P4 contract missing: ${x}`);
+for(const x of ['schemaVersion','conflict','Performance','fault','privacy','__emojiDropsCoreBoundary'])if(!p4.includes(x))throw Error(`P4 contract missing: ${x}`);
 const hard=read('js/emoji-drops-final-hardening.js');for(const x of ['aria-live','aria-modal','Escape','focus-trap','PerformanceObserver','storageHealth','stateHealth'])if(!hard.includes(x))throw Error(`Final hardening contract missing: ${x}`);
 console.log('Static audit OK: 14-layer runtime, pre-boot schema migration, transaction recovery/grace window, P3 interaction polish, P4 engineering boundary, accessibility/performance/privacy diagnostics');
