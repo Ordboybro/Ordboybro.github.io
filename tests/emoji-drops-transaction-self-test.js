@@ -4,7 +4,7 @@ const ctx={window:{addEventListener:()=>{}},document:{addEventListener:()=>{},qu
 ctx.window.__emojiDropsCore={_s:{balance:250,inventory:[],stats:{},history:[]},state(){return this._s},render(){}};
 vm.createContext(ctx);vm.runInContext(fs.readFileSync('js/emoji-drops-transaction-layer.js','utf8'),ctx,{timeout:2000});
 const t=ctx.window.__emojiDropsTransactions;
-if(!t||t.version!==6||t.maxHistory!==200||t.journal!=='emojiDropsTxnV4'||t.commitGraceMs!==1200||t.nonBlockingLease!==true)throw new Error('Transaction v6 contract missing');
+if(!t||t.version!==7||t.maxHistory!==200||t.journal!=='emojiDropsTxnV4'||t.commitGraceMs!==1200||t.nonBlockingLease!==true||t.faultAware!==true)throw new Error('Transaction v7 contract missing');
 const s=ctx.window.__emojiDropsCore._s,before=JSON.parse(JSON.stringify(s));
 const tx=t.begin('test');
 if(!tx||!tx.before||!storage.has('emojiDropsTxnV4'))throw new Error('Journal begin failed');
@@ -13,4 +13,6 @@ if(!t.rollback(tx))throw new Error('Rollback failed');
 if(JSON.stringify(s)!==JSON.stringify(before))throw new Error('Rollback did not restore state');
 const tx2=t.begin('commit-test');s.balance=225;storage.set('emojiDropsStateV3',JSON.stringify(s));if(!t.commit(tx2))throw new Error('Commit verification failed');
 const j=JSON.parse(storage.get('emojiDropsTxnV4'));if(j.status!=='committed'||!j.afterHash||!j.beforeHash)throw new Error('Committed journal metadata missing');
-console.log('Transaction v6 self-test OK: journal, rollback, hash verification, commit metadata, non-blocking lease, grace window');
+ctx.window.__emojiDropsFaults={transaction:true,storageWrite:false,storageRead:false};if(t.begin('fault-test')!==null)throw new Error('Transaction fault injection did not block begin');
+ctx.window.__emojiDropsFaults.transaction=false;ctx.window.__emojiDropsFaults.storageRead=true;if(t.begin('read-fault')!==null)throw new Error('Storage-read fault did not block begin');
+ctx.window.__emojiDropsFaults.storageRead=false;console.log('Transaction v7 self-test OK: journal, rollback, hash verification, commit metadata, non-blocking lease, grace window, fault injection');
