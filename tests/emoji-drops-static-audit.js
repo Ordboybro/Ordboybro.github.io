@@ -7,7 +7,7 @@ const scripts=[...html.matchAll(/<script[^>]+src=['\"]([^'\"]+)/gi)].map(m=>m[1]
 if(scripts.length!==2||!scripts.includes('js/data.js')||!scripts.includes('js/app-v2.js'))throw Error(`Unexpected root scripts: ${scripts.join(', ')}`);
 const order=['emoji-drops-schema-migration.js','emoji-drops-hardening.js','emoji-drops-core.js','emoji-drops-transaction-layer.js','emoji-drops-runtime-guards.js','emoji-drops-ui-polish.js','emoji-drops-final-hardening.js','emoji-drops-release-polish.js','emoji-drops-product-layer.js','emoji-drops-product-plus.js','emoji-drops-action-resilience.js','emoji-drops-quality-final.js','emoji-drops-p3-polish.js','emoji-drops-p4-final.js'];
 if(!order.every((x,i)=>i===0||loader.indexOf(order[i-1])<loader.indexOf(x)))throw Error('Runtime order failed');
-for(const v of ['schema-1','hardening-9','core-7','txn-6','guards-8','ui-3','final-2','release-1','product-1','product-plus-1','action-1','quality-final-1','p3-2','p4-1'])if(!loader.includes(v))throw Error(`Cache version missing: ${v}`);
+for(const v of ['schema-1','hardening-9','core-7','txn-7','guards-8','ui-3','final-2','release-1','product-1','product-plus-1','action-1','quality-final-1','p3-2','p4-1'])if(!loader.includes(v))throw Error(`Cache version missing: ${v}`);
 const tx=read('js/emoji-drops-transaction-layer.js'),p3=read('js/emoji-drops-p3-polish.js'),p4=read('js/emoji-drops-p4-final.js');
 for(const x of ['JOURNAL','recover','beforeHash','afterHash','COMMIT_GRACE_MS','nonBlockingLease','faultAware'])if(!tx.includes(x))throw Error(`Transaction contract missing: ${x}`);
 if(!/version:7/.test(tx))throw Error('Transaction v7 missing');
