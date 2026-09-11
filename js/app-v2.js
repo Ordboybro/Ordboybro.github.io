@@ -1,8 +1,9 @@
 (()=>{'use strict';
 /* Emoji Drops — one authoritative runtime. Dataset bridge -> schema -> hardening -> core -> transactions -> guards -> UI -> final QA -> release -> product -> product-plus -> action -> quality -> P3 -> P4. */
-const version=48;
+const version=49;
 window.__emojiDropsRuntimeLoader={version,complete:false,failed:[],loaded:[],count:1};
 function write(src){document.write('<scr'+'ipt src="'+src+'"><\\/scr'+'ipt>')}
+function ready(){window.__emojiDropsRuntimeLoader.complete=true}
 try{
   if(typeof cases!=='undefined'&&(!window.cases||!Object.keys(window.cases).length))window.cases=cases;
   if(typeof casePrices!=='undefined'&&(!window.casePrices||!Object.keys(window.casePrices).length))window.casePrices=casePrices;
@@ -23,7 +24,7 @@ try{
   write('js/emoji-drops-p4-final.js?v=p4-1');
   window.__emojiDropsRuntimeLoader.loaded=['dataset-bridge','schema-migration','hardening','core','transaction','runtime-guards','ui-polish','final-hardening','release-polish','product-layer','product-plus','action-resilience','quality-final','p3-polish','p4-final'];
   window.__emojiDropsRuntimeLoader.count=14;
-  window.__emojiDropsRuntimeLoader.complete=true;
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',ready,{once:true});else ready();
 }catch(err){
   window.__emojiDropsRuntimeLoader.failed=['dataset-bridge-or-runtime'];
   window.__emojiDropsRuntimeLoader.bootError=String(err?.message||err);
