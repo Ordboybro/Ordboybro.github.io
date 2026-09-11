@@ -14,5 +14,5 @@ if(JSON.stringify(s)!==JSON.stringify(before))throw new Error('Rollback did not 
 const tx2=t.begin('commit-test');s.balance=225;storage.set('emojiDropsStateV3',JSON.stringify(s));if(!t.commit(tx2))throw new Error('Commit verification failed');
 const j=JSON.parse(storage.get('emojiDropsTxnV4'));if(j.status!=='committed'||!j.afterHash||!j.beforeHash)throw new Error('Committed journal metadata missing');
 ctx.window.__emojiDropsFaults={transaction:true,storageWrite:false,storageRead:false};if(t.begin('fault-test')!==null)throw new Error('Transaction fault injection did not block begin');
-ctx.window.__emojiDropsFaults.transaction=false;ctx.window.__emojiDropsFaults.storageRead=true;if(t.begin('read-fault')!==null)throw new Error('Storage-read fault did not block begin');
+ctx.window.__emojiDropsFaults.transaction=false;ctx.window.__emojiDropsFaults.storageRead=true;const tx3=t.begin('read-fault');if(!tx3)throw new Error('Storage-read fault prevented transaction setup unexpectedly');s.balance=200;if(t.commit(tx3)!==false)throw new Error('Storage-read fault did not fail commit verification');
 ctx.window.__emojiDropsFaults.storageRead=false;console.log('Transaction v7 self-test OK: journal, rollback, hash verification, commit metadata, non-blocking lease, grace window, fault injection');
