@@ -1,5 +1,6 @@
 (()=>{'use strict';
 /* Emoji Drops — one authoritative runtime. Dataset bridge -> schema -> hardening -> core -> transactions -> guards -> UI -> final QA -> release -> product -> product-plus -> action -> quality -> P3 -> P4. */
+/* action-1 compatibility marker: action resilience is now action-2. */
 const version=52;
 window.__emojiDropsRuntimeLoader={version,complete:false,failed:[],loaded:[],count:1};
 function write(src){document.write('<scr'+'ipt src="'+src+'"></scr'+'ipt>')}
@@ -9,9 +10,7 @@ function ready(){
     window.__emojiDropsRuntimeLoader.bootError='Authoritative core did not expose itself';
     return;
   }
-  if(window.__emojiDropsCore&&!document.querySelector('.ed-app')){
-    try{document.dispatchEvent(new Event('DOMContentLoaded'))}catch{}
-  }
+  if(window.__emojiDropsCore&&!document.querySelector('.ed-app')){try{document.dispatchEvent(new Event('DOMContentLoaded'))}catch{}}
   window.__emojiDropsRuntimeLoader.complete=true;
 }
 try{
@@ -35,9 +34,5 @@ try{
   window.__emojiDropsRuntimeLoader.loaded=['dataset-bridge','schema-migration','hardening','core','transaction','runtime-guards','ui-polish','final-hardening','release-polish','product-layer','product-plus','action-resilience','quality-final','p3-polish','p4-final'];
   window.__emojiDropsRuntimeLoader.count=14;
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',ready,{once:true});else ready();
-}catch(err){
-  window.__emojiDropsRuntimeLoader.failed=['dataset-bridge-or-runtime'];
-  window.__emojiDropsRuntimeLoader.bootError=String(err?.message||err);
-  console.error('Emoji Drops runtime boot failed',err)
-}
+}catch(err){window.__emojiDropsRuntimeLoader.failed=['dataset-bridge-or-runtime'];window.__emojiDropsRuntimeLoader.bootError=String(err?.message||err);console.error('Emoji Drops runtime boot failed',err)}
 })();
