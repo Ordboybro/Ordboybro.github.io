@@ -64,7 +64,7 @@ jobs:
           npx playwright install --with-deps chromium
           node tests/emoji-drops-browser-e2e.js
       - name: Upgrade E2E
-        run: node tests/emoji-drops-upgrade-e2e.js
+        run: node tests/emoji-drops-upgrade-e2e-v2.js
       - name: Accessibility E2E
         run: node tests/emoji-drops-accessibility-e2e.js
       - name: Performance budget E2E
