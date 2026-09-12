@@ -1,6 +1,6 @@
 (()=>{'use strict';
 /* Emoji Drops — one authoritative runtime. Dataset bridge -> schema -> hardening -> core -> transactions -> guards -> UI -> final QA -> release -> product -> product-plus -> action -> quality -> P3 -> P4. */
-const version=51;
+const version=52;
 window.__emojiDropsRuntimeLoader={version,complete:false,failed:[],loaded:[],count:1};
 function write(src){document.write('<scr'+'ipt src="'+src+'"></scr'+'ipt>')}
 function ready(){
@@ -28,7 +28,7 @@ try{
   write('js/emoji-drops-release-polish.js?v=release-1');
   write('js/emoji-drops-product-layer.js?v=product-1');
   write('js/emoji-drops-product-plus.js?v=product-plus-1');
-  write('js/emoji-drops-action-resilience.js?v=action-1');
+  write('js/emoji-drops-action-resilience.js?v=action-2');
   write('js/emoji-drops-quality-final.js?v=quality-final-1');
   write('js/emoji-drops-p3-polish.js?v=p3-2');
   write('js/emoji-drops-p4-final.js?v=p4-1');
