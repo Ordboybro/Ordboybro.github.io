@@ -35,6 +35,8 @@ jobs:
               if v not in a: raise SystemExit('Cache version missing: '+v)
           PY
           node tests/emoji-drops-static-audit.js
+      - name: Code quality and engineering audit
+        run: node tests/emoji-drops-engineering-audit.js
       - name: Economy
         run: node tests/emoji-drops-economy-self-test.js
       - name: Runtime hardening
