@@ -1,6 +1,6 @@
 (()=>{'use strict';
-/* Emoji Drops schema migration v1: forward-only, local-only save normalization before core boot. */
-const KEY='emojiDropsStateV3',VERSION=1;
+/* Emoji Drops schema migration v3: forward-only, local-only save normalization before core boot. */
+const KEY='emojiDropsStateV3',VERSION=3;
 const read=k=>{try{return JSON.parse(localStorage.getItem(k)||'null')}catch{return null}};
 const write=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));return true}catch{return false}};
 const validInventory=x=>Array.isArray(x)?x.filter(v=>v&&typeof v==='object'):[];
