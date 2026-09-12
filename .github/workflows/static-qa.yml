@@ -41,6 +41,8 @@ jobs:
         run: node tests/emoji-drops-runtime-hardening-self-test.js
       - name: Transaction layer
         run: node tests/emoji-drops-transaction-self-test.js
+      - name: Reliability recovery and storage faults
+        run: node tests/emoji-drops-reliability-self-test.js
       - name: Final quality invariants
         run: node tests/emoji-drops-final-quality-self-test.js
       - name: Release economy currency UX
