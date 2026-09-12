@@ -1,0 +1,18 @@
+(()=>{'use strict';
+/* Emoji Drops final quality layer v1: state recovery, resilient UI state, keyboard/mobile polish and bounded client metadata. Local-only. */
+const KEY='emojiDropsStateV3',FAV='emojiDropsFavoritesV1',HIST='emojiDropsHistoryV1',MARK='emojiDropsQualityFinalV1';
+const q=(s,r=document)=>r.querySelector(s),qa=(s,r=document)=>[...r.querySelectorAll(s)];
+const safe=(fn,fb=null)=>{try{return fn()}catch{return fb}};
+const read=(k,fb)=>safe(()=>JSON.parse(localStorage.getItem(k)||'null'),fb);
+const write=(k,v)=>safe(()=>{localStorage.setItem(k,JSON.stringify(v));return true},false);
+function normalizeState(s){if(!s||typeof s!=='object')return null;const n={...s};n.balance=Number.isFinite(Number(n.balance))?Math.max(0,Math.min(Number(n.balance),Number.MAX_SAFE_INTEGER)):250;n.inventory=Array.isArray(n.inventory)?n.inventory.filter(Boolean):[];n.market=Array.isArray(n.market)?n.market.filter(Boolean):[];n.stats={...(n.stats||{})};for(const k of ['opens','wins','spent','earned','upgrades'])n.stats[k]=Number.isFinite(Number(n.stats[k]))?Math.max(0,Number(n.stats[k])):0;n.xp=Number.isFinite(Number(n.xp))?Math.max(0,Number(n.xp)):0;n.level=Number.isFinite(Number(n.level))?Math.max(1,Math.floor(Number(n.level))):1;return n}
+function recover(){const raw=read(KEY,null),s=normalizeState(raw);if(s&&Array.isArray(s.inventory)){const seen=new Set(),before=s.inventory.length;s.inventory=s.inventory.filter((x,i)=>{const id=String(x.id||`auto-${i}-${x.emoji||'item'}`);if(seen.has(id))return false;seen.add(id);return true});if(before!==s.inventory.length)write(KEY,s);return {ok:true,repaired:before!==s.inventory.length,inventory:s.inventory.length}}const backup=read(KEY+'_backup',null),b=normalizeState(backup);if(b){write(KEY,b);return {ok:true,recovered:true,inventory:b.inventory.length}}return {ok:false,recovered:false}}
+function boundMetadata(){let h=read(HIST,[]);if(!Array.isArray(h))h=[];h=h.filter(x=>x&&Number.isFinite(Number(x.at))).slice(0,100);write(HIST,h);let f=read(FAV,[]);if(!Array.isArray(f))f=[];f=[...new Set(f.map(String))].slice(0,200);write(FAV,f);}
+function polishControls(){qa('button,input,select,textarea,a[href]').forEach(el=>{if(!el.getAttribute('aria-label')&&!el.textContent.trim()&&el.tagName==='BUTTON')el.setAttribute('aria-label','Действие');if(el.disabled)el.setAttribute('aria-disabled','true');else el.removeAttribute('aria-disabled')})}
+function syncVisibility(){const s=read(KEY,null);if(!s)return;const balance=q('#edBalance');if(balance&&Number.isFinite(Number(s.balance)))balance.dataset.value=String(Math.floor(Number(s.balance)))}
+function keyboard(){if(window.__emojiDropsQualityKeyboard)return;window.__emojiDropsQualityKeyboard=true;document.addEventListener('keydown',e=>{if(e.key==='/'&&!/input|textarea|select/i.test(e.target?.tagName||'')){const x=q('.ed-search');if(x){e.preventDefault();x.focus()}}if(e.key==='Escape'){const m=qa('.ed-modal.show').at(-1);if(m){const c=m.querySelector('.ed-close,[data-close]');c?.click()}}});}
+function reducedMotion(){if(!matchMedia?.('(prefers-reduced-motion: reduce)').matches)return;document.documentElement.dataset.reducedMotion='true'}
+function run(){const recovery=recover();boundMetadata();polishControls();syncVisibility();keyboard();reducedMotion();window.__emojiDropsQualityFinal={version:1,key:MARK,recovery,inventory:read(KEY,{inventory:[]})?.inventory?.length||0};}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run,{once:true});else setTimeout(run,0);
+addEventListener('storage',e=>{if([KEY,FAV,HIST].includes(e.key))setTimeout(run,0)});
+})();

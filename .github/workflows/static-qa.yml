@@ -4,6 +4,7 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 permissions:
   contents: read
 jobs:
@@ -19,63 +20,64 @@ jobs:
           set -euo pipefail
           find js tests -type f -name '*.js' -print0 | while IFS= read -r -d '' f; do node --check "$f"; done
           node --check data.js
-          python3 - <<'PY'
-          from pathlib import Path
-          import re, subprocess
-          h=Path('index.html').read_text()
-          scripts=re.findall(r"<script(?![^>]*\\bsrc=)[^>]*>([\\s\\S]*?)</script>",h,re.I)
-          for i,s in enumerate(scripts,1):
-              if s.strip():
-                  p=Path(f'/tmp/inline-{i}.js'); p.write_text(s); subprocess.run(['node','--check',str(p)],check=True)
-          PY
       - name: Assets and boot
         run: |
           set -euo pipefail
           python3 - <<'PY'
           from pathlib import Path
           import re
-          h=Path('index.html').read_text()
-          refs=re.findall(r"<script[^>]+src=['\"]([^'\"]+)",h,re.I)
+          h=Path('index.html').read_text(); refs=re.findall(r"<script[^>]+src=['\"]([^'\"]+)",h,re.I)
           missing=[x for x in refs if not x.split('?',1)[0].startswith(('http://','https://','//','data:')) and not Path(x.split('?',1)[0].lstrip('/')).exists()]
           if missing: raise SystemExit('Missing assets: '+str(missing))
-          a=Path('js/app-v2.js').read_text(); boot=Path('data.js').read_text()
-          order=['emoji-drops-hardening.js','emoji-drops-core.js','emoji-drops-transaction-layer.js','emoji-drops-runtime-guards.js','emoji-drops-ui-polish.js']
+          a=Path('js/app-v2.js').read_text(); order=['emoji-drops-schema-migration.js','emoji-drops-hardening.js','emoji-drops-core.js','emoji-drops-transaction-layer.js','emoji-drops-runtime-guards.js','emoji-drops-ui-polish.js','emoji-drops-final-hardening.js','emoji-drops-release-polish.js','emoji-drops-product-layer.js','emoji-drops-product-plus.js','emoji-drops-action-resilience.js','emoji-drops-quality-final.js','emoji-drops-p3-polish.js','emoji-drops-p4-final.js']
           if not all(a.index(order[i])<a.index(order[i+1]) for i in range(len(order)-1)): raise SystemExit('Runtime order failed')
-          for v in ['hardening-9','core-7','txn-1','guards-8','ui-3']:
+          for v in ['schema-1','hardening-9','core-7','txn-8','guards-8','ui-3','final-2','release-1','product-1','product-plus-1','action-7','quality-final-1','p3-5','p4-1']:
               if v not in a: raise SystemExit('Cache version missing: '+v)
-          if 'src="js/data.js' not in boot or 'src="data.js' in boot: raise SystemExit('Bad dataset bootstrap')
           PY
-          node - <<'NODE'
-          const fs=require('fs'),vm=require('vm'),w=[];
-          const document={write:s=>w.push(s),getElementById:()=>null,head:{appendChild:()=>{}},addEventListener:()=>{},querySelector:()=>null,body:{}};
-          const window={cases:null,casePrices:null,rarities:null};
-          const c={window,document,localStorage:{getItem:()=>null,setItem:()=>{}},console,getUsers:()=>[],setInterval:()=>0,clearInterval:()=>{},clearTimeout:()=>{},NodeFilter:{SHOW_TEXT:4},MutationObserver:function(){this.observe=()=>{}},requestAnimationFrame:fn=>fn()};
-          vm.createContext(c); vm.runInContext(fs.readFileSync('data.js','utf8'),c); if(w.length!==1||!w[0].includes('js/data.js'))throw Error('root bootstrap'); vm.runInContext(fs.readFileSync('js/data.js','utf8'),c); vm.runInContext(fs.readFileSync('js/app-v2.js','utf8'),c); if(Object.keys(window.cases||{}).length!==8||Object.keys(window.casePrices||{}).length!==8)throw Error('dataset bridge'); if(w.length!==6)throw Error('runtime writes: '+w.join(' | ')); if(!w[5].includes('emoji-drops-ui-polish.js'))throw Error('UI polish was not loaded'); console.log('Boot OK: dataset -> hardening -> core -> transaction -> guards -> UI');
-          NODE
+          node tests/emoji-drops-static-audit.js
+      - name: Code quality and engineering audit
+        run: node tests/emoji-drops-engineering-audit.js
       - name: Economy
         run: node tests/emoji-drops-economy-self-test.js
+      - name: Economy final gate
+        run: node tests/emoji-drops-economy-final-gate.js
       - name: Runtime hardening
         run: node tests/emoji-drops-runtime-hardening-self-test.js
       - name: Transaction layer
         run: node tests/emoji-drops-transaction-self-test.js
-      - name: Guard contract
-        run: |
-          node - <<'NODE'
-          const fs=require('fs'),vm=require('vm'),storage=new Map(),ctx={window:{cases:{},casePrices:{smile:100,moves:80,nature:60,food:40,animals:20,transport:10,sport:250,games:500},addEventListener:()=>{}},document:{write:()=>{},getElementById:()=>null,addEventListener:()=>{},querySelector:()=>null},localStorage:{getItem:k=>storage.get(k)??null,setItem:(k,v)=>storage.set(k,String(v))},console,setInterval:()=>0,clearTimeout:()=>{}};
-          ctx.window.__emojiDropsCore={state:()=>({balance:0,inventory:[],market:[],stats:{opens:0,wins:0,spent:0,earned:0,upgrades:0},xp:0,level:1,lastReward:Date.now(),bonusDay:'',bonusClaims:0}),render:()=>{}};
-          vm.createContext(ctx); vm.runInContext(fs.readFileSync('js/emoji-drops-hardening.js','utf8'),ctx); const d=ctx.window.__emojiDropsDiagnostics; if(d.runtime!=='hardened-v9'||d.startBalance!==250||d.maxBonusClaims!==3)throw Error('hardening contract'); vm.runInContext(fs.readFileSync('js/emoji-drops-runtime-guards.js','utf8'),ctx); const g=ctx.window.__emojiDropsRuntimeGuards; if(g.version!==4||g.actionLockMs!==650)throw Error('guard contract'); console.log('Guards OK');
-          NODE
-      - name: UI polish contract
-        run: |
-          node --check js/emoji-drops-ui-polish.js
-          node - <<'NODE'
-          const fs=require('fs'),s=fs.readFileSync('js/emoji-drops-ui-polish.js','utf8');
-          for(const x of ['ed-online','ed-coin','live-section','Emoji Coin','relevantMutation','requestAnimationFrame']) if(!s.includes(x)) throw new Error('UI polish marker missing: '+x);
-          console.log('UI polish OK');
-          NODE
-      - name: Browser E2E smoke
+      - name: Reliability recovery and storage faults
+        run: node tests/emoji-drops-reliability-self-test.js
+      - name: Final quality invariants
+        run: node tests/emoji-drops-final-quality-self-test.js
+      - name: Release economy currency UX
+        run: node tests/emoji-drops-release-polish-self-test.js
+      - name: Product quality
+        run: node tests/emoji-drops-product-self-test.js
+      - name: Product-plus workflows
+        run: node tests/emoji-drops-product-plus-self-test.js
+      - name: Action resilience
+        run: node tests/emoji-drops-action-resilience-self-test.js
+      - name: P3/P4 contracts
+        run: node tests/emoji-drops-p3-p4-self-test.js
+      - name: Security/privacy audit
+        run: node tests/emoji-drops-security-audit.js
+      - name: Final hardening contract
+        run: node -e "const fs=require('fs');const s=fs.readFileSync('js/emoji-drops-final-hardening.js','utf8');for(const x of ['aria-live','aria-modal','Escape','focus-trap','PerformanceObserver','storageHealth','stateHealth'])if(!s.includes(x))throw Error(x);console.log('Final hardening contract OK')"
+      - name: Browser E2E matrix
         run: |
           set -euo pipefail
-          npm install --no-save --no-package-lock playwright@1.55.0
+          npm install --no-save --no-package-lock playwright@1.55.0 axe-core@4.13.0
           npx playwright install --with-deps chromium
           node tests/emoji-drops-browser-e2e.js
+      - name: Upgrade E2E
+        run: node tests/emoji-drops-upgrade-e2e-v2.js
+      - name: Accessibility E2E
+        run: node tests/emoji-drops-accessibility-e2e.js
+      - name: Performance budget E2E
+        run: node tests/emoji-drops-performance-budget-e2e.js
+      - name: Mobile responsive and touch E2E
+        run: node tests/emoji-drops-mobile-e2e.js
+      - name: Recovery and multi-tab E2E
+        run: node tests/emoji-drops-recovery-e2e.js
+      - name: Security audit
+        run: node tests/emoji-drops-security-audit.js

@@ -1,7 +1,7 @@
 (()=>{'use strict';
 /* Emoji Drops — single authoritative runtime. Local fictional game economy only. */
 const APP='emoji-drops-core-v1';
-const R={common:{label:'COMMON',color:'#9ca3af',w:55},rare:{label:'RARE',color:'#3b82f6',w:27},epic:{label:'EPIC',color:'#a855f7',w:12},mythical:{label:'MYTHICAL',color:'#ef4444',w:5},legendary:{label:'LEGENDARY',color:'#ff8a00',w:1}};
+const R={common:{label:'COMMON',color:'#ffffff',w:55},rare:{label:'RARE',color:'#3b82f6',w:27},epic:{label:'EPIC',color:'#a855f7',w:12},mythical:{label:'MYTHICAL',color:'#ef4444',w:5},legendary:{label:'LEGENDARY',color:'#ff8a00',w:1}};
 const CASES=window.cases||{};
 const PRICES=window.casePrices||{smile:100,moves:80,nature:60,food:40,animals:20,transport:10,sport:250,games:500};
 const NAMES={smile:'Smile',moves:'Moves',nature:'Nature',food:'Food',animals:'Animals',transport:'Transport',sport:'Sport',games:'Games'};
