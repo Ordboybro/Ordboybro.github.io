@@ -1,6 +1,6 @@
 const fs=require('fs'),vm=require('vm');
 const data=fs.readFileSync('js/data.js','utf8');
-const ctx={window:{},document:{write(){},getElementById(){return null},addEventListener(){},querySelector(){return null},head:{appendChild(){}},body:{}},localStorage:{getItem(){return null},setItem(){}},console,Date,Number,JSON,MutationObserver:function(){this.observe=()=>{}},requestAnimationFrame:f=>f(),setInterval(){return 0},clearInterval(){},clearTimeout(){},NodeFilter:{SHOW_TEXT:4}};
+const ctx={window:{},document:{write(){},getElementById(){return null},addEventListener(){},querySelector(){return null},head:{appendChild(){}},body:{}},getUsers(){return []},localStorage:{getItem(){return null},setItem(){}},console,Date,Number,JSON,MutationObserver:function(){this.observe=()=>{}},requestAnimationFrame:f=>f(),setInterval(){return 0},clearInterval(){},clearTimeout(){},NodeFilter:{SHOW_TEXT:4}};
 vm.createContext(ctx);const d=vm.runInContext(`(()=>{${data};return {cases,casePrices,rarities}})()`,ctx);
 const rarities=['common','rare','epic','mythical','legendary'],weights={common:55,rare:27,epic:12,mythical:5,legendary:1};
 const probs=Object.fromEntries(rarities.map(r=>[r,weights[r]/100]));
