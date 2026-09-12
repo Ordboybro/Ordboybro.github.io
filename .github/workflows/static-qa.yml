@@ -71,6 +71,8 @@ jobs:
         run: node tests/emoji-drops-accessibility-e2e.js
       - name: Performance budget E2E
         run: node tests/emoji-drops-performance-budget-e2e.js
+      - name: Mobile responsive and touch E2E
+        run: node tests/emoji-drops-mobile-e2e.js
       - name: Recovery and multi-tab E2E
         run: node tests/emoji-drops-recovery-e2e.js
       - name: Security audit
