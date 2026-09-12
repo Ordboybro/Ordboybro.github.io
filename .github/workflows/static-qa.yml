@@ -31,7 +31,7 @@ jobs:
           if missing: raise SystemExit('Missing assets: '+str(missing))
           a=Path('js/app-v2.js').read_text(); order=['emoji-drops-schema-migration.js','emoji-drops-hardening.js','emoji-drops-core.js','emoji-drops-transaction-layer.js','emoji-drops-runtime-guards.js','emoji-drops-ui-polish.js','emoji-drops-final-hardening.js','emoji-drops-release-polish.js','emoji-drops-product-layer.js','emoji-drops-product-plus.js','emoji-drops-action-resilience.js','emoji-drops-quality-final.js','emoji-drops-p3-polish.js','emoji-drops-p4-final.js']
           if not all(a.index(order[i])<a.index(order[i+1]) for i in range(len(order)-1)): raise SystemExit('Runtime order failed')
-          for v in ['schema-1','hardening-9','core-7','txn-8','guards-8','ui-3','final-2','release-1','product-1','product-plus-1','action-1','quality-final-1','p3-5','p4-1']:
+          for v in ['schema-1','hardening-9','core-7','txn-8','guards-8','ui-3','final-2','release-1','product-1','product-plus-1','action-7','quality-final-1','p3-5','p4-1']:
               if v not in a: raise SystemExit('Cache version missing: '+v)
           PY
           node tests/emoji-drops-static-audit.js
@@ -39,6 +39,8 @@ jobs:
         run: node tests/emoji-drops-engineering-audit.js
       - name: Economy
         run: node tests/emoji-drops-economy-self-test.js
+      - name: Economy final gate
+        run: node tests/emoji-drops-economy-final-gate.js
       - name: Runtime hardening
         run: node tests/emoji-drops-runtime-hardening-self-test.js
       - name: Transaction layer
