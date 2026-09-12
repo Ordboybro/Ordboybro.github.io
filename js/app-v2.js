@@ -2,7 +2,7 @@
 /* Emoji Drops — one authoritative runtime. Dataset bridge -> schema -> hardening -> core -> transactions -> guards -> UI -> final QA -> release -> product -> product-plus -> action -> quality -> P3 -> P4. */
 /* action-1 compatibility marker: action resilience moved through action-2, action-3, action-4, action-5, action-6 and action-7. */
 /* p4-2 compatibility marker: P4 engineering boundary upgraded internally while retaining the p4-1 loader cache contract. */
-const version=61;
+const version=62;
 window.__emojiDropsRuntimeLoader={version,complete:false,failed:[],loaded:[],count:1};
 function write(src){document.write('<scr'+'ipt src="'+src+'"></scr'+'ipt>')}
 function ready(){
@@ -30,7 +30,7 @@ try{
   write('js/emoji-drops-product-plus.js?v=product-plus-1');
   write('js/emoji-drops-action-resilience.js?v=action-7');
   write('js/emoji-drops-quality-final.js?v=quality-final-1');
-  write('js/emoji-drops-p3-polish.js?v=p3-3');
+  write('js/emoji-drops-p3-polish.js?v=p3-4');
   write('js/emoji-drops-p4-final.js?v=p4-1');
   window.__emojiDropsRuntimeLoader.loaded=['dataset-bridge','schema-migration','hardening','core','transaction','runtime-guards','ui-polish','final-hardening','release-polish','product-layer','product-plus','action-resilience','quality-final','p3-polish','p4-final'];
   window.__emojiDropsRuntimeLoader.count=14;
