@@ -1,9 +1,19 @@
 (()=>{'use strict';
 /* Emoji Drops — one authoritative runtime. Dataset bridge -> schema -> hardening -> core -> transactions -> guards -> UI -> final QA -> release -> product -> product-plus -> action -> quality -> P3 -> P4. */
-const version=49;
+const version=50;
 window.__emojiDropsRuntimeLoader={version,complete:false,failed:[],loaded:[],count:1};
 function write(src){document.write('<scr'+'ipt src="'+src+'"><\\/scr'+'ipt>')}
-function ready(){window.__emojiDropsRuntimeLoader.complete=true}
+function ready(){
+  if(!window.__emojiDropsCore&&(!window.__emojiDropsRuntimeLoader.failed||!window.__emojiDropsRuntimeLoader.failed.length)){
+    window.__emojiDropsRuntimeLoader.failed=['core-not-exposed'];
+    window.__emojiDropsRuntimeLoader.bootError='Authoritative core did not expose itself';
+    return;
+  }
+  if(window.__emojiDropsCore&&!document.querySelector('.ed-app')){
+    try{document.dispatchEvent(new Event('DOMContentLoaded'))}catch{}
+  }
+  window.__emojiDropsRuntimeLoader.complete=true;
+}
 try{
   if(typeof cases!=='undefined'&&(!window.cases||!Object.keys(window.cases).length))window.cases=cases;
   if(typeof casePrices!=='undefined'&&(!window.casePrices||!Object.keys(window.casePrices).length))window.casePrices=casePrices;
