@@ -4,7 +4,7 @@
 /* p4-2 compatibility marker: P4 engineering boundary upgraded internally while retaining the p4-1 loader cache contract. */
 /* txn-8 compatibility marker: Web Locks are primary; localStorage lease is verified fallback. */
 /* p3-5 accessibility marker: live activity is non-scrollable and keyboard-addressable. */
-const version=64;
+const version=65;
 window.__emojiDropsRuntimeLoader={version,complete:false,failed:[],loaded:[],count:1};
 function write(src){document.write('<scr'+'ipt src="'+src+'"></scr'+'ipt>')}
 function installAccessibilityContrast(){
@@ -35,8 +35,9 @@ try{
   write('js/emoji-drops-quality-final.js?v=quality-final-1');
   write('js/emoji-drops-p3-polish.js?v=p3-5');
   write('js/emoji-drops-p4-final.js?v=p4-1');
-  window.__emojiDropsRuntimeLoader.loaded=['dataset-bridge','schema-migration','hardening','core','transaction','runtime-guards','ui-polish','final-hardening','release-polish','product-layer','product-plus','action-resilience','quality-final','p3-polish','p4-final'];
-  window.__emojiDropsRuntimeLoader.count=14;
+  write('js/emoji-drops-case-showcase.js?v=case-showcase-1');
+  window.__emojiDropsRuntimeLoader.loaded=['dataset-bridge','schema-migration','hardening','core','transaction','runtime-guards','ui-polish','final-hardening','release-polish','product-layer','product-plus','action-resilience','quality-final','p3-polish','p4-final','case-showcase'];
+  window.__emojiDropsRuntimeLoader.count=15;
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{installAccessibilityContrast();ready()},{once:true});else{installAccessibilityContrast();ready()}
 }catch(err){window.__emojiDropsRuntimeLoader.failed=['dataset-bridge-or-runtime'];window.__emojiDropsRuntimeLoader.bootError=String(err?.message||err);console.error('Emoji Drops runtime boot failed',err)}
 })();
