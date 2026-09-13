@@ -1,6 +1,6 @@
 (()=>{'use strict';
 /* Emoji Drops — one authoritative runtime. Dataset bridge -> schema -> hardening -> core -> transactions -> guards -> UI -> final QA -> release -> product -> product-plus -> action -> quality -> P3 -> P4. */
-/* action-1 compatibility marker: action resilience moved through action-2, action-3, action-4, action-5, action-6 and action-7. */
+/* action-1 compatibility marker: action resilience moved through action-2, action-3, action-4, action-5 and action-6 and action-7. */
 /* p4-2 compatibility marker: P4 engineering boundary upgraded internally while retaining the p4-1 loader cache contract. */
 /* txn-8 compatibility marker: Web Locks are primary; localStorage lease is verified fallback. */
 /* p3-5 accessibility marker: live activity is non-scrollable and keyboard-addressable. */
@@ -10,7 +10,7 @@ function write(src){document.write('<scr'+'ipt src="'+src+'"></scr'+'ipt>')}
 function installAccessibilityContrast(){
   const style=document.createElement('style');
   style.id='emoji-drops-accessibility-contrast';
-  style.textContent='.live-drop[style*="--rarity:#bdbdbd"] span,.live-drop[style*="--rarity: #bdbdbd"] span,.preview-item[style*="--rarity:#bdbdbd"] span,.preview-item[style*="--rarity: #bdbdbd"] span,.inventory-item[style*="--rarity:#bdbdbd"] small,.inventory-item[style*="--rarity: #bdbdbd"] small,.reel-item[style*="--rarity:#bdbdbd"] small,.reel-item[style*="--rarity: #bdbdbd"] small,.upgrade-target[style*="--rarity:#bdbdbd"] small,.upgrade-target[style*="--rarity: #bdbdbd"] small,.best[style*="--rarity:#bdbdbd"] span,.best[style*="--rarity: #bdbdbd"] span{color:#fff!important}';
+  style.textContent='.live-drop[style*="--rarity:#bdbdbd"] span,.live-drop[style*="--rarity: #bdbdbd"] span,.preview-item[style*="--rarity:#bdbdbd"] span,.preview-item[style*="--rarity: #bdbdbd"] span,.inventory-item[style*="--rarity:#bdbdbd"] small,.inventory-item[style*="--rarity: #bdbdbd"] small,.reel-item[style*="--rarity:#bdbdbd"] small,.reel-item[style*="--rarity: #bdbdbd"] small,.upgrade-target[style*="--rarity:#bdbdbd"] small,.upgrade-target[style*="--rarity: #bdbdbd"] small,.best[style*="--rarity:#bdbdbd"] span,.best[style*="--rarity: #bdbdbd"] span,.ed-drop[style*="--rarity:#bdbdbd"] small,.ed-drop[style*="--rarity: #bdbdbd"] small,.ed-item[style*="--rarity:#bdbdbd"] small,.ed-item[style*="--rarity: #bdbdbd"] small,.ed-reel-item[style*="--rarity:#bdbdbd"] small,.ed-reel-item[style*="--rarity: #bdbdbd"] small,.ed-result[style*="--rarity:#bdbdbd"] .rare,.ed-result[style*="--rarity: #bdbdbd"] .rare{color:#fff!important}';
   document.head.appendChild(style);
 }
 function ready(){
