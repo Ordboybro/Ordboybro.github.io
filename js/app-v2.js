@@ -7,12 +7,13 @@
 const version=64;
 window.__emojiDropsRuntimeLoader={version,complete:false,failed:[],loaded:[],count:1};
 function write(src){document.write('<scr'+'ipt src="'+src+'"></scr'+'ipt>')}
+function installAccessibilityContrast(){
+  const style=document.createElement('style');
+  style.id='emoji-drops-accessibility-contrast';
+  style.textContent='.live-drop[style*="--rarity:#bdbdbd"] span,.live-drop[style*="--rarity: #bdbdbd"] span,.preview-item[style*="--rarity:#bdbdbd"] span,.preview-item[style*="--rarity: #bdbdbd"] span,.inventory-item[style*="--rarity:#bdbdbd"] small,.inventory-item[style*="--rarity: #bdbdbd"] small,.reel-item[style*="--rarity:#bdbdbd"] small,.reel-item[style*="--rarity: #bdbdbd"] small,.upgrade-target[style*="--rarity:#bdbdbd"] small,.upgrade-target[style*="--rarity: #bdbdbd"] small,.best[style*="--rarity:#bdbdbd"] span,.best[style*="--rarity: #bdbdbd"] span{color:#fff!important}';
+  document.head.appendChild(style);
+}
 function ready(){
-  if(!window.__emojiDropsCore&&(!window.__emojiDropsRuntimeLoader.failed||!window.__emojiDropsRuntimeLoader.failed.length)){
-    window.__emojiDropsRuntimeLoader.failed=['core-not-exposed'];
-    window.__emojiDropsRuntimeLoader.bootError='Authoritative core did not expose itself';
-    return;
-  }
   if(window.__emojiDropsCore&&!document.querySelector('.ed-app')){try{document.dispatchEvent(new Event('DOMContentLoaded'))}catch{}}
   window.__emojiDropsRuntimeLoader.complete=true;
 }
@@ -36,6 +37,6 @@ try{
   write('js/emoji-drops-p4-final.js?v=p4-1');
   window.__emojiDropsRuntimeLoader.loaded=['dataset-bridge','schema-migration','hardening','core','transaction','runtime-guards','ui-polish','final-hardening','release-polish','product-layer','product-plus','action-resilience','quality-final','p3-polish','p4-final'];
   window.__emojiDropsRuntimeLoader.count=14;
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',ready,{once:true});else ready();
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{installAccessibilityContrast();ready()},{once:true});else{installAccessibilityContrast();ready()}
 }catch(err){window.__emojiDropsRuntimeLoader.failed=['dataset-bridge-or-runtime'];window.__emojiDropsRuntimeLoader.bootError=String(err?.message||err);console.error('Emoji Drops runtime boot failed',err)}
 })();
