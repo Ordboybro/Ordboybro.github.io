@@ -29,7 +29,7 @@ jobs:
           h=Path('index.html').read_text(); refs=re.findall(r"<script[^>]+src=['\"]([^'\"]+)",h,re.I)
           missing=[x for x in refs if not x.split('?',1)[0].startswith(('http://','https://','//','data:')) and not Path(x.split('?',1)[0].lstrip('/')).exists()]
           if missing: raise SystemExit('Missing assets: '+str(missing))
-          a=Path('js/app-v2.js').read_text(); order=['emoji-drops-schema-migration.js','emoji-drops-hardening.js','emoji-drops-core.js','emoji-drops-transaction-layer.js','emoji-drops-runtime-guards.js','emoji-drops-final-hardening.js','emoji-drops-release-polish.js','emoji-drops-product-layer.js','emoji-drops-product-plus.js','emoji-drops-action-resilience.js','emoji-drops-quality-final.js','emoji-drops-p3-polish-v5','emoji-drops-p4-final.js','emoji-drops-case-showcase-exact.js','emoji-drops-case-authority-v2.js','emoji-drops-case-open-bridge.js','emoji-drops-reference-v21-studio.js','emoji-drops-reference-v19-exact-transaction.js']
+          a=Path('js/app-v2.js').read_text(); order=['emoji-drops-schema-migration.js','emoji-drops-hardening.js','emoji-drops-core.js','emoji-drops-transaction-layer.js','emoji-drops-runtime-guards.js','emoji-drops-final-hardening.js','emoji-drops-release-polish.js','emoji-drops-product-layer.js','emoji-drops-product-plus.js','emoji-drops-action-resilience.js','emoji-drops-quality-final.js','emoji-drops-p3-polish.js','emoji-drops-p4-final.js','emoji-drops-case-showcase-exact.js','emoji-drops-case-authority-v2.js','emoji-drops-case-open-bridge.js','emoji-drops-reference-v21-studio.js','emoji-drops-reference-v19-exact-transaction.js']
           missing_order=[x for x in order if x not in a]
           if missing_order: raise SystemExit('Runtime entries missing: '+str(missing_order))
           positions=[a.index(x) for x in order]
@@ -55,7 +55,7 @@ jobs:
           for marker in ['v19','tx.acquire','tx.begin','tx.commit','tx.rollback','leaseOwner=true']:
               if marker not in tx: raise SystemExit('Exact transaction contract missing: '+marker)
           PY
-          node tests/emoji-drops-static-audit-v2.js
+          node tests/emoji-drops-static-audit-v3.js
       - name: Code quality and engineering audit
         run: node tests/emoji-drops-engineering-audit.js
       - name: Economy
