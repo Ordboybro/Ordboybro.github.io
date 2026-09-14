@@ -1,6 +1,6 @@
 (()=>{'use strict';
-/* Emoji Drops — functional case-open bridge v8. Deterministic activation for physical and programmatic openers, resilient to rerenders and late data. */
-const ID='emoji-drops-case-open-bridge-v8';
+/* Emoji Drops — functional case-open bridge v9. Deterministic activation without observer feedback loops. */
+const ID='emoji-drops-case-open-bridge-v9';
 const KEYS=['smile','moves','nature','food','animals','transport','sport','games'];
 const NAMES={smile:'Smile',moves:'Moves',nature:'Nature',food:'Food',animals:'Animals',transport:'Transport',sport:'Sport',games:'Games'};
 function keyFor(card,index){
@@ -21,8 +21,9 @@ function activate(opener,key,event){
   return false;
 }
 function bindOpener(opener,key){
-  if(!opener)return;
-  opener.dataset.edBridge=ID;opener.setAttribute('data-open',key);
+  if(!opener||opener.dataset.edBridge===ID)return;
+  opener.dataset.edBridge=ID;
+  if(opener.getAttribute('data-open')!==key)opener.setAttribute('data-open',key);
   if(!opener.__edBridgeClick){
     opener.__edBridgeClick=true;
     opener.addEventListener('click',e=>activate(opener,key,e),true);
@@ -33,7 +34,7 @@ function normalize(){
   document.querySelectorAll('.ed-case').forEach((card,index)=>{
     const opener=card.querySelector('[data-open]')||card.querySelector('.ed-btn');
     const key=keyFor(opener||card,index);if(!key)return;
-    card.dataset.caseKey=key;
+    if(card.dataset.caseKey!==key)card.dataset.caseKey=key;
     bindOpener(opener,key);
   });
 }
