@@ -1,6 +1,6 @@
 (()=>{'use strict';
-/* Emoji Drops — functional case-open bridge v9. Deterministic activation without observer feedback loops. */
-const ID='emoji-drops-case-open-bridge-v9';
+/* Emoji Drops — functional case-open bridge v10. The authoritative renderer owns data readiness; the bridge only activates it and verifies the CTA exists. */
+const ID='emoji-drops-case-open-bridge-v10';
 const KEYS=['smile','moves','nature','food','animals','transport','sport','games'];
 const NAMES={smile:'Smile',moves:'Moves',nature:'Nature',food:'Food',animals:'Animals',transport:'Transport',sport:'Sport',games:'Games'};
 function keyFor(card,index){
@@ -10,7 +10,7 @@ function keyFor(card,index){
   if(title){const k=KEYS.find(x=>NAMES[x].toLowerCase()===title.toLowerCase());if(k)return k}
   return KEYS[index]||null;
 }
-function ready(key){return !!key&&!!window.EmojiDropsCaseShowcaseExact&&typeof window.EmojiDropsCaseShowcaseExact.open==='function'&&Array.isArray(window.cases?.[key])&&Number.isFinite(Number(window.casePrices?.[key]));}
+function ready(key){return !!key&&!!window.EmojiDropsCaseShowcaseExact&&typeof window.EmojiDropsCaseShowcaseExact.open==='function';}
 function visible(key){return !!key&&!!document.querySelector('#edExact.show')&&!!document.querySelector('#edExactBox .edx-open button');}
 function invoke(key){if(!ready(key))return false;try{window.EmojiDropsCaseShowcaseExact.open(key);return visible(key)}catch(err){console.warn('Emoji Drops case open deferred',err);return false}}
 function retry(key){let attempts=0;const run=()=>{if(invoke(key)||++attempts>=90)return;requestAnimationFrame(run)};run()}
