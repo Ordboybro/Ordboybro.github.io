@@ -29,13 +29,16 @@ jobs:
           h=Path('index.html').read_text(); refs=re.findall(r"<script[^>]+src=['\"]([^'\"]+)",h,re.I)
           missing=[x for x in refs if not x.split('?',1)[0].startswith(('http://','https://','//','data:')) and not Path(x.split('?',1)[0].lstrip('/')).exists()]
           if missing: raise SystemExit('Missing assets: '+str(missing))
-          a=Path('js/app-v2.js').read_text(); order=['emoji-drops-schema-migration.js','emoji-drops-hardening.js','emoji-drops-core.js','emoji-drops-transaction-layer.js','emoji-drops-runtime-guards.js','emoji-drops-ui-polish.js','emoji-drops-final-hardening.js','emoji-drops-release-polish.js','emoji-drops-product-layer.js','emoji-drops-product-plus.js','emoji-drops-action-resilience.js','emoji-drops-quality-final.js','emoji-drops-p3-polish.js','emoji-drops-p4-final.js','emoji-drops-case-showcase-exact.js','emoji-drops-case-authority-v2.js']
+          a=Path('js/app-v2.js').read_text(); order=['emoji-drops-schema-migration.js','emoji-drops-hardening.js','emoji-drops-core.js','emoji-drops-transaction-layer.js','emoji-drops-runtime-guards.js','emoji-drops-ui-polish-v2.js','emoji-drops-final-hardening.js','emoji-drops-release-polish.js','emoji-drops-product-layer.js','emoji-drops-product-plus.js','emoji-drops-action-resilience.js','emoji-drops-quality-final.js','emoji-drops-p3-polish.js','emoji-drops-p4-final.js','emoji-drops-case-showcase-exact.js','emoji-drops-case-authority-v2.js','emoji-drops-main-reference-v2.js']
           if not all(a.index(order[i])<a.index(order[i+1]) for i in range(len(order)-1)): raise SystemExit('Runtime order failed')
-          for v in ['schema-1','hardening-9','core-9','txn-8','guards-8','ui-3','final-2','release-1','product-1','product-plus-1','action-7','quality-final-1','p3-5','p4-1','case-showcase-exact-3','authority-4']:
+          for v in ['schema-1','hardening-9','core-9','txn-8','guards-8','ui-4','final-2','release-1','product-1','product-plus-1','action-7','quality-final-1','p3-5','p4-1','case-showcase-exact-3','authority-5','main-reference-2']:
               if v not in a: raise SystemExit('Cache version missing: '+v)
           exact=Path('js/emoji-drops-case-showcase-exact.js').read_text()
           for marker in ['version:4','aria-modal="true"','case-open','translateX','role="dialog"','₽','Предметы кейса']:
               if marker not in exact: raise SystemExit('Exact showcase contract missing: '+marker)
+          main=Path('js/emoji-drops-main-reference-v2.js').read_text()
+          for marker in ['main catalog reference v2','grid-template-columns:repeat(4','live-section','Внутриигровая экономика','Бонус:\\s*при нехватке','ed-product-tools','ed-coin::after']:
+              if marker not in main: raise SystemExit('Main reference contract missing: '+marker)
           for dead in ['js/emoji-drops-case-showcase.js','js/emoji-drops-case-showcase-final.js','js/emoji-drops-case-showcase-override.js','js/emoji-drops-case-authority.js']:
               if Path(dead).exists(): raise SystemExit('Legacy case file still present: '+dead)
           PY
