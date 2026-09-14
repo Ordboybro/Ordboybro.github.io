@@ -35,7 +35,7 @@ try{
   write('js/emoji-drops-quality-final.js?v=quality-final-1');
   write('js/emoji-drops-p3-polish.js?v=p3-5');
   write('js/emoji-drops-p4-final.js?v=p4-1');
-  write('js/emoji-drops-case-showcase-final.js?v=case-showcase-2');
+  write('js/emoji-drops-case-showcase-final.js?v=case-showcase-3');
   window.__emojiDropsRuntimeLoader.loaded=['dataset-bridge','schema-migration','hardening','core','transaction','runtime-guards','ui-polish','final-hardening','release-polish','product-layer','product-plus','action-resilience','quality-final','p3-polish','p4-final','case-showcase-final'];
   window.__emojiDropsRuntimeLoader.count=15;
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{installAccessibilityContrast();ready()},{once:true});else{installAccessibilityContrast();ready()}
