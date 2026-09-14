@@ -1,8 +1,9 @@
 (()=>{'use strict';
 /* Emoji Drops — clean runtime. Functional layers first, then one visual authority. */
-const version=118;
+const version=119;
 const files=[
 'js/emoji-drops-schema-migration.js?v=schema-1',
+'js/emoji-drops-data-bridge.js?v=data-bridge-1',
 'js/emoji-drops-hardening.js?v=hardening-9',
 'js/emoji-drops-core.js?v=core-9',
 'js/emoji-drops-transaction-layer.js?v=txn-8',
