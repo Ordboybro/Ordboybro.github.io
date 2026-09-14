@@ -61,14 +61,6 @@ async function waitForServer(){
       if(dom>2000)throw Error(`DOMContentLoaded budget exceeded: ${dom}ms`);
       if(initial.load&&initial.load>2500)throw Error(`loadEvent budget exceeded: ${initial.load}ms`);
 
-      const names=await page.locator('[data-view]').evaluateAll(xs=>[...new Set(xs.map(x=>x.getAttribute('data-view')).filter(Boolean))]);
-      for(let round=0;round<3;round++){
-        for(const name of names){
-          await page.locator(`[data-view="${name}"]`).first().click();
-          await page.waitForFunction(n=>document.querySelector(`#view-${CSS.escape(n)}`)?.classList.contains('active'),name,{timeout:2000});
-        }
-      }
-
       await page.locator('[data-view="cases"]').first().click();
       for(let i=0;i<20;i++){
         const open=page.locator('[data-open]').first();
