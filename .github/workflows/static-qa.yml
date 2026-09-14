@@ -84,12 +84,15 @@ jobs:
         run: node tests/emoji-drops-security-audit.js
       - name: Final hardening contract
         run: node -e "const fs=require('fs');const s=fs.readFileSync('js/emoji-drops-final-hardening.js','utf8');for(const x of ['aria-live','aria-modal','Escape','focus-trap','PerformanceObserver','storageHealth','stateHealth'])if(!s.includes(x))throw Error(x);console.log('Final hardening contract OK')"
-      - name: Browser E2E matrix
+      - name: Browser dependencies
         run: |
           set -euo pipefail
           npm install --no-save --no-package-lock playwright@1.55.0 axe-core@4.13.0
           npx playwright install --with-deps chromium
-          node tests/emoji-drops-browser-e2e.js
+      - name: Focused case diagnostic
+        run: node tests/emoji-drops-case-diagnostic.js
+      - name: Browser E2E matrix
+        run: node tests/emoji-drops-browser-e2e.js
       - name: Upgrade E2E
         run: node tests/emoji-drops-upgrade-e2e-v2.js
       - name: Accessibility E2E
