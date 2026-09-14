@@ -1,6 +1,6 @@
 (()=>{'use strict';
-/* Emoji Drops — functional case-open bridge. Keeps visual authority in v21 and routes case cards to the authoritative exact showcase. */
-const ID='emoji-drops-case-open-bridge-v2';
+/* Emoji Drops — functional case-open bridge v3. Deterministic opener routing with event-scoped readiness recovery. */
+const ID='emoji-drops-case-open-bridge-v3';
 const KEYS=['smile','moves','nature','food','animals','transport','sport','games'];
 const NAMES={smile:'Smile',moves:'Moves',nature:'Nature',food:'Food',animals:'Animals',transport:'Transport',sport:'Sport',games:'Games'};
 function keyFor(card,index){
@@ -13,10 +13,15 @@ function keyFor(card,index){
 function normalize(){
   document.querySelectorAll('.ed-case').forEach((card,index)=>{
     const key=keyFor(card,index);if(!key)return;
-    card.dataset.caseKey=key;
+    if(card.dataset.caseKey!==key)card.dataset.caseKey=key;
     const opener=card.querySelector('[data-open]')||card.querySelector('.ed-btn');
-    if(opener)opener.setAttribute('data-open',key);
+    if(opener&&opener.getAttribute('data-open')!==key)opener.setAttribute('data-open',key);
   });
+}
+function invoke(key){
+  const exact=window.EmojiDropsCaseShowcaseExact;
+  if(!key||typeof exact?.open!=='function')return false;
+  exact.open(key);return true;
 }
 function hook(){
   if(window.__emojiDropsCaseOpenBridge===ID)return;
@@ -26,11 +31,18 @@ function hook(){
     const opener=e.target?.closest?.('.ed-case [data-open]');
     if(!opener)return;
     const key=opener.getAttribute('data-open');
-    const exact=window.EmojiDropsCaseShowcaseExact;
-    if(!key||!exact?.open)return;
-    e.preventDefault();e.stopImmediatePropagation();exact.open(key);
+    if(!key)return;
+    e.preventDefault();e.stopImmediatePropagation();
+    if(invoke(key))return;
+    /* The app loader is synchronous, but keep the user action recoverable if a renderer
+       is momentarily unavailable. This is bounded to this click; no background polling. */
+    let attempts=0;
+    const retry=()=>{if(invoke(key)||++attempts>=12)return;requestAnimationFrame(retry)};
+    requestAnimationFrame(retry);
   },true);
-  new MutationObserver(()=>normalize()).observe(document.body,{childList:true,subtree:true});
+  new MutationObserver(mutations=>{
+    if(mutations.some(m=>m.addedNodes?.length))normalize();
+  }).observe(document.body,{childList:true,subtree:true});
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',hook,{once:true});else hook();
 })();
