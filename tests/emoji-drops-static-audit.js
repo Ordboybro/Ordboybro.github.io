@@ -12,7 +12,7 @@ const exact=read('js/emoji-drops-case-showcase-exact.js');for(const x of ['versi
 const ref=read('js/emoji-drops-reference-v5.js');for(const x of ['reference v6','Cases','Upgrade','Market','Search cases','RUB-only',"fetch(BASE+'sprite-","fetch(BASE+'smile.b64'"] )if(!ref.includes(x))throw Error(`Reference v6 contract missing: ${x}`);
 for(const n of [1,2,3])if(!fs.existsSync(`assets/emoji-drops/sprite-${n}.b64`))throw Error(`Missing reference sprite chunk: ${n}`);
 if(!fs.existsSync('assets/emoji-drops/smile.b64'))throw Error('Missing exact Smile modal artwork');
-const interaction=read('js/emoji-drops-reference-interaction-fix.js');for(const x of ['#edExactBox{pointer-events:none!important}','edx-open','z-index:1001'])if(!interaction.includes(x))throw Error(`Modal interaction contract missing: ${x}`);
+const interaction=read('js/emoji-drops-reference-interaction-fix.js');for(const x of ['#edExactBox{pointer-events:auto!important}','edx-open','z-index:1001'])if(!interaction.includes(x))throw Error(`Modal interaction contract missing: ${x}`);
 const layout=read('js/emoji-drops-layout-v3.js');for(const x of ['KEEP','ed-profile-hub','ed-case-art-icon','Торговая площадка'])if(!layout.includes(x))throw Error(`Layout v3 contract missing: ${x}`);
 for(const dead of ['js/emoji-drops-case-showcase.js','js/emoji-drops-case-showcase-final.js','js/emoji-drops-case-showcase-override.js','js/emoji-drops-case-authority.js'])if(fs.existsSync(dead))throw Error(`Legacy case file still present: ${dead}`);
 console.log('Static audit OK: authoritative runtime, exact case showcase, three-tab English reference v6, exact artwork assets and modal hit-testing hardening');
