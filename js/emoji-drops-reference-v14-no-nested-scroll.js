@@ -1,0 +1,6 @@
+(()=>{'use strict';
+/* Emoji Drops — v14 remove nested modal scrolling from the primary action path. */
+const ID='emoji-drops-reference-v14-no-nested-scroll';
+function install(){if(document.getElementById(ID))return;const s=document.createElement('style');s.id=ID;s.textContent=`#edExactBox{overflow:hidden!important;overflow-anchor:none!important;scroll-behavior:auto!important}#edExactBox .edx-main{overflow:visible!important}#edExactBox .edx-open{position:fixed!important;left:max(36px,calc(50% - min(300px,calc(50vw - 36px))))!important;right:max(36px,calc(50% - min(300px,calc(50vw - 36px))))!important;bottom:18px!important;z-index:2147483646!important;pointer-events:auto!important;transform:none!important;filter:none!important;contain:none!important}#edExactBox .edx-open button{position:relative!important;z-index:2147483647!important;width:100%!important;min-height:62px!important;pointer-events:auto!important;transform:none!important;filter:none!important;transition:none!important;animation:none!important;contain:none!important;will-change:auto!important}`;document.head.appendChild(s)}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
+})();
