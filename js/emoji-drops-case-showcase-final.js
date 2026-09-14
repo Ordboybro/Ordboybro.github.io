@@ -13,5 +13,5 @@ function openCaseFinal(k){const modal=document.getElementById('edModal'),box=doc
 css();
 function handleOpenEvent(e){const t=e.target?.closest?.('[data-open]');if(!t)return;e.preventDefault();e.stopImmediatePropagation();openCaseFinal(t.dataset.open)}
 document.addEventListener('click',handleOpenEvent,true);
-document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target?.closest?.('[data-open]')){const t=e.target.closest('[data-open]');e.preventDefault();e.stopImmediatePropagation();openCaseFinal(t.dataset.open)}},true);
+document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target?.closest?.('[data-open]')){const t=e.target.closest('[data-open]');e.preventDefault();e.stopImmediatePropagation();openCaseFinal(t.dataset.open);return}if(e.key!=='Tab')return;const modal=document.querySelector('.ed-modal.show.ed-case-final');if(!modal)return;const focusables=[...modal.querySelectorAll('button:not([disabled]),a[href],input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])')].filter(x=>x.offsetParent!==null);if(!focusables.length)return;const first=focusables[0],last=focusables[focusables.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}} ,true);
 })();
