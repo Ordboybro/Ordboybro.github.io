@@ -1,6 +1,6 @@
 (()=>{'use strict';
-/* Emoji Drops — functional case-open bridge v3. Deterministic opener routing with event-scoped readiness recovery. */
-const ID='emoji-drops-case-open-bridge-v3';
+/* Emoji Drops — functional case-open bridge v4. Capture the whole case surface so opening never depends on a child hook surviving visual rerenders. */
+const ID='emoji-drops-case-open-bridge-v4';
 const KEYS=['smile','moves','nature','food','animals','transport','sport','games'];
 const NAMES={smile:'Smile',moves:'Moves',nature:'Nature',food:'Food',animals:'Animals',transport:'Transport',sport:'Sport',games:'Games'};
 function keyFor(card,index){
@@ -28,14 +28,15 @@ function hook(){
   window.__emojiDropsCaseOpenBridge=ID;
   normalize();
   document.addEventListener('click',e=>{
-    const opener=e.target?.closest?.('.ed-case [data-open]');
-    if(!opener)return;
-    const key=opener.getAttribute('data-open');
+    const target=e.target?.closest?.('.ed-case');
+    if(!target)return;
+    const cards=[...document.querySelectorAll('.ed-case')];
+    const index=Math.max(0,cards.indexOf(target));
+    const key=keyFor(target,index);
     if(!key)return;
     e.preventDefault();e.stopImmediatePropagation();
     if(invoke(key))return;
-    /* The app loader is synchronous, but keep the user action recoverable if a renderer
-       is momentarily unavailable. This is bounded to this click; no background polling. */
+    /* Bounded recovery for a renderer that is momentarily unavailable during a rerender. */
     let attempts=0;
     const retry=()=>{if(invoke(key)||++attempts>=12)return;requestAnimationFrame(retry)};
     requestAnimationFrame(retry);
