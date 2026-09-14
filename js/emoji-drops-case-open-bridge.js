@@ -1,13 +1,21 @@
 (()=>{'use strict';
-/* Emoji Drops — functional case-open bridge v10. The authoritative renderer owns data readiness; the bridge only activates it and verifies the CTA exists. */
-const ID='emoji-drops-case-open-bridge-v10';
+/* Emoji Drops — functional case-open bridge v11. Normalize opener identifiers against the canonical case keys before activation. */
+const ID='emoji-drops-case-open-bridge-v11';
 const KEYS=['smile','moves','nature','food','animals','transport','sport','games'];
 const NAMES={smile:'Smile',moves:'Moves',nature:'Nature',food:'Food',animals:'Animals',transport:'Transport',sport:'Sport',games:'Games'};
+function normalizeKey(value){
+  const raw=String(value||'').trim().toLowerCase();
+  if(KEYS.includes(raw))return raw;
+  const stripped=raw.replace(/^case[-_:/]*/,'').replace(/[-_ ]*(case|open)$/,'');
+  if(KEYS.includes(stripped))return stripped;
+  const named=KEYS.find(k=>NAMES[k].toLowerCase()===raw||NAMES[k].toLowerCase()===stripped);
+  return named||null;
+}
 function keyFor(card,index){
   const direct=card?.dataset?.caseKey||card?.dataset?.case||card?.dataset?.key||card?.getAttribute?.('data-open');
-  if(direct)return String(direct);
+  const normalized=normalizeKey(direct);if(normalized)return normalized;
   const title=card?.querySelector?.('h3')?.textContent?.trim();
-  if(title){const k=KEYS.find(x=>NAMES[x].toLowerCase()===title.toLowerCase());if(k)return k}
+  const named=normalizeKey(title);if(named)return named;
   return KEYS[index]||null;
 }
 function ready(key){return !!key&&!!window.EmojiDropsCaseShowcaseExact&&typeof window.EmojiDropsCaseShowcaseExact.open==='function';}
