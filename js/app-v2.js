@@ -1,6 +1,6 @@
 (()=>{'use strict';
 /* Emoji Drops — clean runtime. Functional layers first, then one visual authority. */
-const version=109;
+const version=110;
 const files=[
 'js/emoji-drops-schema-migration.js?v=schema-1',
 'js/emoji-drops-hardening.js?v=hardening-9',
@@ -13,11 +13,11 @@ const files=[
 'js/emoji-drops-product-plus.js?v=product-plus-1',
 'js/emoji-drops-action-resilience.js?v=action-7',
 'js/emoji-drops-quality-final.js?v=quality-final-1',
-'js/emoji-drops-p3-polish.js?v=p3-5',
+'js/emoji-drops-p3-polish-v5',
 'js/emoji-drops-p4-final.js?v=p4-1',
 'js/emoji-drops-case-showcase-exact.js?v=case-showcase-exact-3',
 'js/emoji-drops-case-authority-v2.js?v=authority-5',
-'js/emoji-drops-case-open-bridge.js?v=case-open-bridge-4',
+'js/emoji-drops-case-open-bridge.js?v=case-open-bridge-5',
 /* Exactly one visual owner. No layout/reference/studio override chain. */
 'js/emoji-drops-reference-v21-studio.js?v=studio-21',
 'js/emoji-drops-reference-v19-exact-transaction.js?v=exact-txn-1'
