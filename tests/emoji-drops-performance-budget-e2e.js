@@ -74,7 +74,7 @@ async function waitForServer(){
         const open=page.locator('[data-open]').first();
         await open.click();
         await page.waitForSelector('.ed-modal.show',{timeout:5000});
-        await page.locator('.ed-modal.show [data-close]').first().click();
+        await page.keyboard.press('Escape');
         await page.waitForFunction(()=>!document.querySelector('.ed-modal.show'),null,{timeout:2000});
       }
 
