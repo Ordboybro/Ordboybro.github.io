@@ -8,6 +8,8 @@ const server=http.createServer((req,res)=>{try{const u=new URL(req.url,'http://1
   await page.waitForSelector('.ed-case',{timeout:5000});
   const before=await page.evaluate(()=>({lexicalCases:typeof cases,lexicalPrices:typeof casePrices,lexicalKeys:typeof cases!=='undefined'?Object.keys(cases).slice(0,8):[],casesKeys:Object.keys(window.cases||{}),hasCases:!!window.cases,hasPrices:!!window.casePrices,exact:!!window.EmojiDropsCaseShowcaseExact,exactOpen:typeof window.EmojiDropsCaseShowcaseExact?.open,bridge:window.__emojiDropsCaseOpenBridge,authority:window.__emojiDropsCaseAuthority?.version,first:[...document.querySelectorAll('.ed-case')].slice(0,1).map(c=>({title:c.querySelector('h3')?.textContent,open:c.querySelector('[data-open]')?.getAttribute('data-open'),btn:c.querySelector('.ed-btn')?.getAttribute('data-open')}))}));
   console.log('CASE_DIAG_BEFORE',JSON.stringify(before));
+  const injected=await page.evaluate(()=>{window.cases=cases;window.casePrices=casePrices;window.rarities=rarities;return {casesKeys:Object.keys(window.cases),prices:Object.keys(window.casePrices)}});
+  console.log('CASE_DIAG_INJECTED',JSON.stringify(injected));
   const direct=await page.evaluate(()=>{try{const r=window.EmojiDropsCaseShowcaseExact?.open?.('smile');return {r,show:!!document.querySelector('#edExact.show'),button:!!document.querySelector('#edExactBox .edx-open button'),box:!!document.querySelector('#edExactBox')}}catch(e){return {error:String(e)}}});
   console.log('CASE_DIAG_DIRECT',JSON.stringify(direct));
   await page.evaluate(()=>{document.querySelector('#edExact')?.remove()});
