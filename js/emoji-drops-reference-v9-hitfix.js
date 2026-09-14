@@ -1,0 +1,6 @@
+(()=>{'use strict';
+/* Emoji Drops — v9 modal hit-testing hardening. Keep the exact open action physically on top of every decorative layer. */
+const ID='emoji-drops-reference-v9-hitfix';
+function install(){if(document.getElementById(ID))return;const s=document.createElement('style');s.id=ID;s.textContent=`#edExact{isolation:isolate!important}#edExactBox{isolation:isolate!important}#edExactBox .edx-main{position:relative!important;z-index:30!important;pointer-events:auto!important}#edExactBox .edx-art,#edExactBox .edx-case,#edExactBox .edx-marker,#edExactBox .edx-result,#edExactBox .edx-items{pointer-events:none!important}#edExactBox .edx-open{position:relative!important;z-index:2147483001!important;display:block!important;pointer-events:auto!important}#edExactBox .edx-open button{position:relative!important;z-index:2147483002!important;display:block!important;pointer-events:auto!important;touch-action:manipulation!important;transform:none!important;transition:none!important;animation:none!important}#edExactBox .edx-open button:hover,#edExactBox .edx-open button:active{transform:none!important}`;document.head.appendChild(s)}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
+})();
