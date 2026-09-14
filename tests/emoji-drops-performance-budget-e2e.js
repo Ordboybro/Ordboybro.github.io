@@ -72,7 +72,7 @@ async function waitForServer(){
       await page.locator('[data-view="cases"]').first().click();
       for(let i=0;i<20;i++){
         const open=page.locator('[data-open]').first();
-        await open.click();
+        await open.evaluate(el=>el.click());
         await page.waitForSelector('.ed-modal.show',{timeout:5000});
         await page.keyboard.press('Escape');
         await page.waitForFunction(()=>!document.querySelector('.ed-modal.show'),null,{timeout:2000});
