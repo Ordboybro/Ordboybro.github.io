@@ -1,8 +1,11 @@
 const fs=require('fs');
 const read=p=>fs.readFileSync(p,'utf8');
-const html=read('index.html'),loader=read('js/app-v2.js');
-const runtime=['js/data.js','js/app-v2.js','js/emoji-drops-schema-migration.js','js/emoji-drops-hardening.js','js/emoji-drops-core.js','js/emoji-drops-transaction-layer.js','js/emoji-drops-runtime-guards.js','js/emoji-drops-final-hardening.js','js/emoji-drops-release-polish.js','js/emoji-drops-product-layer.js','js/emoji-drops-product-plus.js','js/emoji-drops-action-resilience.js','js/emoji-drops-quality-final.js','js/emoji-drops-p3-polish.js','js/emoji-drops-p4-final.js','js/emoji-drops-case-showcase-exact.js','js/emoji-drops-case-authority-v2.js','js/emoji-drops-case-open-bridge.js','js/emoji-drops-reference-v21-studio.js','js/emoji-drops-reference-v19-exact-transaction.js'];
+const html=read('index.html'),loader=read('js/app-v2.js'),bootstrap=read('data.js');
+const runtime=['js/data.js','js/app-v2.js','js/emoji-drops-data-export.js','js/emoji-drops-schema-migration.js','js/emoji-drops-hardening.js','js/emoji-drops-core.js','js/emoji-drops-transaction-layer.js','js/emoji-drops-runtime-guards.js','js/emoji-drops-final-hardening.js','js/emoji-drops-release-polish.js','js/emoji-drops-product-layer.js','js/emoji-drops-product-plus.js','js/emoji-drops-action-resilience.js','js/emoji-drops-quality-final.js','js/emoji-drops-p3-polish.js','js/emoji-drops-p4-final.js','js/emoji-drops-case-showcase-exact.js','js/emoji-drops-case-authority-v2.js','js/emoji-drops-case-open-bridge.js','js/emoji-drops-reference-v21-studio.js','js/emoji-drops-reference-v19-exact-transaction.js'];
 for(const f of runtime)if(!fs.existsSync(f))throw Error(`Missing runtime asset: ${f}`);
+for(const marker of ['js/data.js?v=data-sync-4','js/emoji-drops-data-export.js?v=data-export-1'])if(!bootstrap.includes(marker))throw Error(`Dataset bootstrap contract missing: ${marker}`);
+const exportBridge=read('js/emoji-drops-data-export.js');
+for(const marker of ['window.cases=cases','window.casePrices=casePrices','window.rarities=rarities'])if(!exportBridge.includes(marker))throw Error(`Dataset export missing: ${marker}`);
 const scripts=[...html.matchAll(/<script[^>]+src=['\"]([^'\"]+)/gi)].map(m=>m[1].split('?')[0]);
 if(scripts.length!==2||!scripts.includes('js/data.js')||!scripts.includes('js/app-v2.js'))throw Error(`Unexpected root scripts: ${scripts.join(', ')}`);
 const order=['emoji-drops-schema-migration.js','emoji-drops-hardening.js','emoji-drops-core.js','emoji-drops-transaction-layer.js','emoji-drops-runtime-guards.js','emoji-drops-final-hardening.js','emoji-drops-release-polish.js','emoji-drops-product-layer.js','emoji-drops-product-plus.js','emoji-drops-action-resilience.js','emoji-drops-quality-final.js','emoji-drops-p3-polish.js','emoji-drops-p4-final.js','emoji-drops-case-showcase-exact.js','emoji-drops-case-authority-v2.js','emoji-drops-case-open-bridge.js','emoji-drops-reference-v21-studio.js','emoji-drops-reference-v19-exact-transaction.js'];
@@ -19,4 +22,4 @@ for(const marker of ['v21 single visual authority','Cases','Upgrade','Market','e
 for(const n of [1,2,3])if(!fs.existsSync(`assets/emoji-drops/sprite-${n}.b64`))throw Error(`Missing sprite chunk ${n}`);
 for(const n of ['smile','nature','food'])if(!fs.existsSync(`assets/emoji-drops/live-${n}.b64`))throw Error(`Missing live artwork ${n}`);
 if(!fs.existsSync('assets/emoji-drops/smile.b64'))throw Error('Missing exact Smile artwork');
-console.log('Static audit v3 OK: runtime order/cache, authority v6, bridge v11, single v21 visual authority, exact assets, legacy-layer exclusions');
+console.log('Static audit v3 OK: explicit dataset export, runtime order/cache, authority v6, bridge v11, single v21 visual authority, exact assets, legacy-layer exclusions');
