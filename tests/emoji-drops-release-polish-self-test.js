@@ -1,0 +1,12 @@
+const fs=require('fs');
+const release=fs.readFileSync('js/emoji-drops-release-polish.js','utf8');
+const loader=fs.readFileSync('js/app-v2.js','utf8');
+const hard=fs.readFileSync('js/emoji-drops-final-hardening.js','utf8');
+const core=fs.readFileSync('js/emoji-drops-core.js','utf8');
+for(const marker of ['long-session-invariant','case-price-integrity','finite-balance','inventory-array'])if(!release.includes(marker))throw Error(`Economy marker missing: ${marker}`);
+for(const marker of ['Emoji Coin','emoji-coin-marker','currency-runtime-loaded'])if(!release.includes(marker))throw Error(`Currency marker missing: ${marker}`);
+for(const marker of ['mobile-viewport','touch-targets','no-horizontal-overflow'])if(!release.includes(marker))throw Error(`UX marker missing: ${marker}`);
+if(!loader.includes('emoji-drops-release-polish.js?v=release-1'))throw Error('Release polish not loaded');
+if(!/KEY='emojiDropsStateV3'/.test(core))throw Error('State key contract changed');
+if(!/aria-live/.test(hard)||!/aria-modal/.test(hard))throw Error('A11y hardening missing');
+console.log('Release polish self-test OK: economy invariants, Emoji Coin consistency, mobile UX resilience');
