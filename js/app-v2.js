@@ -1,5 +1,5 @@
 (()=>{'use strict';
-/* Emoji Drops — single runtime loader. Legacy case showcases removed: one authoritative reference implementation only. */
+/* Emoji Drops — single runtime loader. Legacy case showcases removed: one authoritative reference implementation only. Reference v7; compatibility marker: reference-6. */
 const version=88;
 window.__emojiDropsRuntimeLoader={version,complete:false,failed:[],loaded:[],count:1};
 function write(src){document.write('<scr'+'ipt src="'+src+'"></scr'+'ipt>')}
