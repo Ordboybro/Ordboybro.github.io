@@ -1,6 +1,6 @@
 (()=>{'use strict';
-/* Emoji Drops — clean runtime. Functional layers first, then ONLY the authoritative visual layers. */
-const version=104;
+/* Emoji Drops — clean runtime. Functional layers first, then one visual authority. */
+const version=105;
 const files=[
 'js/emoji-drops-schema-migration.js?v=schema-1',
 'js/emoji-drops-hardening.js?v=hardening-9',
@@ -17,20 +17,11 @@ const files=[
 'js/emoji-drops-p4-final.js?v=p4-1',
 'js/emoji-drops-case-showcase-exact.js?v=case-showcase-exact-3',
 'js/emoji-drops-case-authority-v2.js?v=authority-5',
-/* Visual stack is intentionally only these three layers. All experimental v8-v18 visual overrides are no longer loaded. */
-'js/emoji-drops-layout-v3.js?v=layout-3c',
-'js/emoji-drops-reference-v5.js?v=reference-7',
-'js/emoji-drops-reference-v15-case-precedence.js?v=case-precedence-1',
-'js/emoji-drops-reference-v18-modal-cleanup.js?v=modal-cleanup-1',
-'js/emoji-drops-reference-v19-exact-transaction.js?v=exact-txn-1',
-'js/emoji-drops-reference-v20-studio.js?v=studio-20'
+/* Exactly one visual owner. No layout/reference/studio override chain. */
+'js/emoji-drops-reference-v21-studio.js?v=studio-21',
+'js/emoji-drops-reference-v19-exact-transaction.js?v=exact-txn-1'
 ];
 window.__emojiDropsRuntimeLoader={version,complete:false,failed:[],loaded:[],count:files.length};
 function write(src){document.write('<scr'+'ipt src="'+src+'"></scr'+'ipt>')}
 function installContrast(){if(document.getElementById('emoji-drops-accessibility-contrast'))return;const s=document.createElement('style');s.id='emoji-drops-accessibility-contrast';s.textContent='.ed-collection .c.lock{opacity:1!important;filter:grayscale(1)}.ed-collection .c.lock span{opacity:.28}.ed-collection .c.lock small{color:#fff!important;font-weight:900}';document.head.appendChild(s)}
-try{
-files.forEach(write);
-window.__emojiDropsRuntimeLoader.loaded=files.map(x=>x.split('?')[0]);
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{installContrast();window.__emojiDropsRuntimeLoader.complete=true},{once:true});else{installContrast();window.__emojiDropsRuntimeLoader.complete=true}
-}catch(err){window.__emojiDropsRuntimeLoader.failed=[String(err?.message||err)];console.error('Emoji Drops runtime boot failed',err)}
-})();
+try{files.forEach(write);window.__emojiDropsRuntimeLoader.loaded=files.map(x=>x.split('?')[0]);if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{installContrast();window.__emojiDropsRuntimeLoader.complete=true},{once:true});else{installContrast();window.__emojiDropsRuntimeLoader.complete=true}}catch(err){window.__emojiDropsRuntimeLoader.failed=[String(err?.message||err)];console.error('Emoji Drops runtime boot failed',err)}})();
