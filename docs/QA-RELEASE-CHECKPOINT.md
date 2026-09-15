@@ -1,5 +1,5 @@
 # QA release checkpoint
 
-Final full QA after economy, interaction, animation, performance, visual authority, atomic Upgrade handling, modal lifecycle and mobile touch hit-area hardening.
+Final full QA after economy, interaction, animation, performance, visual authority, modal lifecycle, mobile touch and atomic Upgrade storage rollback hardening.
 
 No QA thresholds are weakened.
