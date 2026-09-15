@@ -1,6 +1,6 @@
 (()=>{'use strict';
-/* Emoji Drops action resilience v8: normalize empty action markers, deterministic activation, upgrade recovery, modal lifecycle, keyboard focus safety and touch-safe case-card activation. No polling. */
-const KEY='emojiDropsStateV3',MARK='emojiDropsActionResilienceV8',RETRY_DELAY=720;
+/* Emoji Drops action resilience v7 compatibility + v8 touch-safe case activation: normalize empty action markers, deterministic activation, upgrade recovery, modal lifecycle and keyboard focus safety. No polling. */
+const KEY='emojiDropsStateV3',MARK='emojiDropsActionResilienceV7',VERSION=8,RETRY_DELAY=720;
 const ACTIONS=['data-do-open','data-sell','data-sell-all','data-upgrade','data-buy','data-list-random','data-daily','data-reset'];
 const cloneState=()=>{try{const s=JSON.parse(localStorage.getItem(KEY)||'null');return s&&typeof s==='object'?{opens:Number(s.stats?.opens)||0,inventory:Array.isArray(s.inventory)?s.inventory.length:0,balance:Number(s.balance)||0,upgrades:Number(s.stats?.upgrades)||0}:null}catch{return null}};
 const changed=(a,b)=>!!a&&!!b&&(a.opens!==b.opens||a.inventory!==b.inventory||a.balance!==b.balance||a.upgrades!==b.upgrades);
@@ -19,5 +19,5 @@ function modalKeydown(e){if(e.key==='Escape'){const modal=visibleModal();if(moda
 function modalOpenObserver(){const observer=new MutationObserver(()=>{for(const modal of document.querySelectorAll('.ed-modal.show')){if(!modal.hasAttribute('aria-hidden'))modal.setAttribute('aria-hidden','false');if(!window.__emojiDropsLastModalTrigger&&document.activeElement instanceof HTMLElement)window.__emojiDropsLastModalTrigger=document.activeElement}});observer.observe(document.documentElement,{attributes:true,subtree:true,attributeFilter:['class']})}
 const install=()=>{normalize();const observer=new MutationObserver(()=>normalize());observer.observe(document.documentElement,{childList:true,subtree:true});modalOpenObserver();document.addEventListener('pointerup',activateFromPointer,true);document.addEventListener('pointerup',activateCaseCardFromTouch,true);document.addEventListener('click',onClick,true);document.addEventListener('click',modalClick,true);document.addEventListener('keydown',modalKeydown,true)};
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
-window.__emojiDropsActionResilience={version:8,key:MARK,retryDelay:RETRY_DELAY,verifyAndRetry,normalize,closeModal,upgradeFallback,activateCaseCardFromTouch};
+window.__emojiDropsActionResilience={version:VERSION,key:MARK,retryDelay:RETRY_DELAY,verifyAndRetry,normalize,closeModal,upgradeFallback,activateCaseCardFromTouch};
 })();
