@@ -15,11 +15,16 @@ const bridge=read('js/emoji-drops-case-open-bridge.js');
 for(const marker of ['bridge v11','normalizeKey','opener.click=','MutationObserver','requestAnimationFrame','delayedRetry'])if(!bridge.includes(marker))throw Error(`Case opener bridge contract missing: ${marker}`);
 const authority=read('js/emoji-drops-case-authority-v2.js');
 for(const marker of ['version:6','normalizeKey','keyFromElement','#edExactBox .edx-open button'])if(!authority.includes(marker))throw Error(`Case authority contract missing: ${marker}`);
-for(const dead of ['js/emoji-drops-case-showcase.js','js/emoji-drops-case-showcase-final.js','js/emoji-drops-case-showcase-override.js','js/emoji-drops-case-authority.js'])if(fs.existsSync(dead))throw Error(`Legacy case file still present: ${dead}`);
-for(const dead of ['emoji-drops-ui-polish-v2.js','emoji-drops-main-reference-v2.js','emoji-drops-layout-v3.js','emoji-drops-reference-v5.js','emoji-drops-reference-interaction-fix.js','emoji-drops-reference-v8-luxe.js','emoji-drops-reference-v9-hitfix.js','emoji-drops-reference-v10-stability.js','emoji-drops-reference-v11-modal-reset.js','emoji-drops-reference-v13-fixed-action.js','emoji-drops-reference-v15-case-precedence.js','emoji-drops-reference-v18-modal-cleanup.js','emoji-drops-reference-v20-studio.js'])if(loader.includes(dead))throw Error(`Legacy visual layer still loaded: ${dead}`);
+const deletedLegacy=[
+'js/emoji-drops-case-showcase.js','js/emoji-drops-case-showcase-final.js','js/emoji-drops-case-showcase-override.js','js/emoji-drops-case-authority.js',
+'js/emoji-drops-ui-polish.js','js/emoji-drops-ui-polish-v2.js','js/emoji-drops-main-reference.js','js/emoji-drops-main-reference-v2.js','js/emoji-drops-layout-v3.js','js/emoji-drops-reference-v5.js','js/emoji-drops-reference-interaction-fix.js','js/emoji-drops-reference-v8-luxe.js','js/emoji-drops-reference-v9-hitfix.js','js/emoji-drops-reference-v10-stability.js','js/emoji-drops-reference-v11-modal-reset.js','js/emoji-drops-reference-v12-action-surface.js','js/emoji-drops-reference-v13-fixed-action.js','js/emoji-drops-reference-v14-no-nested-scroll.js','js/emoji-drops-reference-v15-case-precedence.js','js/emoji-drops-reference-v16-modal-footer.js','js/emoji-drops-reference-v17-scroll-container-fix.js','js/emoji-drops-reference-v18-modal-cleanup.js','js/emoji-drops-reference-v18-modal-zindex.js','js/emoji-drops-reference-v20-studio.js',
+'js/functional-final.js','js/game-transaction-engine.js','js/motion-system.js','js/product-quality.js','js/runtime-action-bridge.js','js/runtime-final-qa.js','js/runtime-hardening.js','js/runtime-qa.js','js/transaction-guard.js','js/transaction-serialization.js','js/ux-overhaul.js',
+];
+for(const dead of deletedLegacy)if(fs.existsSync(dead))throw Error(`Deleted legacy file still present: ${dead}`);
+if(loader.match(/emoji-drops-(?:ui-polish|main-reference|layout-v3|reference-v\d+|reference-interaction-fix)\.js/))throw Error('Legacy visual layer still loaded');
 const ref=read('js/emoji-drops-reference-v21-studio.js');
 for(const marker of ['v21 single visual authority','Cases','Upgrade','Market','ed-profile-hub','ed-studio-page','live-smile.b64','live-nature.b64','live-food.b64'])if(!ref.includes(marker))throw Error(`v21 visual contract missing: ${marker}`);
 for(const n of [1,2,3])if(!fs.existsSync(`assets/emoji-drops/sprite-${n}.b64`))throw Error(`Missing sprite chunk ${n}`);
 for(const n of ['smile','nature','food'])if(!fs.existsSync(`assets/emoji-drops/live-${n}.b64`))throw Error(`Missing live artwork ${n}`);
 if(!fs.existsSync('assets/emoji-drops/smile.b64'))throw Error('Missing exact Smile artwork');
-console.log('Static audit v3 OK: explicit dataset export, runtime order/cache, authority v6, bridge v11, single v21 visual authority, exact assets, legacy-layer exclusions');
+console.log('Static audit v3 OK: dataset export, runtime order/cache, exact visual authority, dead-layer cleanup, exact assets and legacy exclusions');
