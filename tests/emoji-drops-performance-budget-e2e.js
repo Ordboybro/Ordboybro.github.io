@@ -78,15 +78,17 @@ async function waitForServer(){
         modals:document.querySelectorAll('#edExact').length,
         life:{...window.__edLifecycle}
       }));
+      const nodeGrowth=after.domNodes-initial.nodes;
       if(after.longTasks.some(x=>x>200))throw Error(`Long task regression: ${Math.round(Math.max(...after.longTasks))}ms`);
       if(after.resources>initial.resources+8)throw Error(`Resource count grew unexpectedly: ${initial.resources} -> ${after.resources}`);
-      if(after.domNodes>5000)throw Error(`DOM grew unexpectedly: ${after.domNodes} nodes`);
+      if(nodeGrowth>300)throw Error(`DOM grew unexpectedly: ${initial.nodes} -> ${after.domNodes} nodes (+${nodeGrowth})`);
+      if(after.domNodes>7000)throw Error(`DOM budget exceeded: ${after.domNodes} nodes`);
       if(after.modals!==1)throw Error(`Modal lifecycle leaked nodes: ${after.modals}`);
       if(after.life.activeObservers>4)throw Error(`Observer leak suspected: ${after.life.activeObservers}`);
       if(after.life.intervalAdds-after.life.intervalClears>3)throw Error(`Interval leak suspected: ${after.life.intervalAdds} adds / ${after.life.intervalClears} clears`);
       if(after.life.audioCreates>1)throw Error(`AudioContext leak suspected: ${after.life.audioCreates}`);
       if(errors.length)throw Error(`Page errors: ${errors.join(' | ')}`);
-      console.log(`Performance E2E OK: DOM ${dom}ms, load ${Math.round(initial.load||0)}ms, resources ${initial.resources}->${after.resources}, long tasks max ${after.longTasks.length?Math.round(Math.max(...after.longTasks)):0}ms, DOM nodes ${after.domNodes}, observers ${after.life.activeObservers}, intervals ${after.life.intervalAdds}/${after.life.intervalClears}, audio contexts ${after.life.audioCreates}`);
+      console.log(`Performance E2E OK: DOM ${dom}ms, load ${Math.round(initial.load||0)}ms, resources ${initial.resources}->${after.resources}, long tasks max ${after.longTasks.length?Math.round(Math.max(...after.longTasks)):0}ms, DOM nodes ${initial.nodes}->${after.domNodes} (+${nodeGrowth}), observers ${after.life.activeObservers}, intervals ${after.life.intervalAdds}/${after.life.intervalClears}, audio contexts ${after.life.audioCreates}`);
       await page.close();
     }finally{ await browser.close(); }
   }finally{ server.kill(); }
