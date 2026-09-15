@@ -24,7 +24,7 @@ function perf(){if(!('PerformanceObserver' in window)||window.__emojiDropsProduc
 function run(){style();semanticCoin();catalog();achievements();progression();a11y();perf();health()}
 let timer=0;const schedule=()=>{if(timer)return;timer=setTimeout(()=>{timer=0;run()},0)};
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',schedule,{once:true});else schedule();
-let observed=false;const observer=()=>{if(observed||!document.body)return;observed=true;new MutationObserver(records=>{if(records.some(r=>r.type==='childList'&&([...r.addedNodes].some(n=>n.nodeType===1&&!n.closest?.('.ed-product-tools,.ed-product-achievements')))))schedule()}).observe(document.body,{childList:true,subtree:true})};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',observer,{once:true});else observer();
+if(window.__emojiDropsMutationHub)window.__emojiDropsMutationHub.subscribe(()=>schedule());
 addEventListener('storage',e=>{if(e.key===KEY)schedule()});
 window.__emojiDropsProduct={run,state,meta:()=>M};
 })();
