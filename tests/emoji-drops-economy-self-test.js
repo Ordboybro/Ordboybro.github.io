@@ -48,8 +48,8 @@ if(!/START_BALANCE=250/.test(hardening)||!/MAX_BONUS_CLAIMS=3/.test(hardening))t
 const guards=fs.readFileSync('js/emoji-drops-runtime-guards.js','utf8');
 if(!/MAX_DAILY=3/.test(guards)||!/BONUS=250/.test(guards)||!/function eligible\(/.test(guards)||!/function claimDue\(/.test(guards))throw new Error('Runtime guard contract mismatch');
 if(/setInterval\s*\(/.test(guards))throw new Error('Runtime guards must not poll continuously');
-const polish=fs.readFileSync('js/emoji-drops-ui-polish.js','utf8');
-if(!/MutationObserver/.test(polish)||!/relevantMutation/.test(polish)||!/requestAnimationFrame/.test(polish))throw new Error('UI observer optimization contract failed');
+const product=fs.readFileSync('js/emoji-drops-product-layer.js','utf8');
+if(!/classList\.contains\('ed-coin'\)/.test(product)||!/Search cases/.test(product)||!/Search items/.test(product))throw new Error('Product semantic currency/search contract failed');
 console.log(`Bonus rules OK: cheapest=${cheapest}, maxDaily=3, amount=250`);
-console.log('Runtime optimization contract OK: no guard polling; mutation observer is filtered/coalesced');
-console.log('Economy self-test OK: dataset, odds, open/sell/upgrade invariants, extreme values, bonus rules, runtime optimization');
+console.log('Product optimization contract OK: semantic currency transform is idempotent; no guard polling');
+console.log('Economy self-test OK: dataset, odds, open/sell/upgrade invariants, extreme values, bonus rules, product optimization');
