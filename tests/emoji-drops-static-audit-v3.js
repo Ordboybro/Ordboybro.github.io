@@ -12,7 +12,7 @@ const scripts=[...html.matchAll(/<script[^>]+src=['\"]([^'\"]+)/gi)].map(m=>m[1]
 if(scripts.length!==2||!scripts.includes('js/data.js')||!scripts.includes('js/app-v2.js'))throw Error(`Unexpected root scripts: ${scripts.join(', ')}`);
 const order=['emoji-drops-schema-migration.js','emoji-drops-data-bridge.js','emoji-drops-hardening.js','emoji-drops-core.js','emoji-drops-transaction-layer.js','emoji-drops-runtime-guards.js','emoji-drops-final-hardening.js','emoji-drops-release-polish.js','emoji-drops-product-layer.js','emoji-drops-product-plus.js','emoji-drops-action-resilience.js','emoji-drops-quality-final.js','emoji-drops-p3-polish.js','emoji-drops-p4-final.js','emoji-drops-case-showcase-exact.js','emoji-drops-case-authority-v2.js','emoji-drops-case-open-bridge.js','emoji-drops-reference-v23-studio.js','emoji-drops-reference-v19-exact-transaction.js'];
 if(!order.every((x,i)=>i===0||loader.indexOf(order[i-1])<loader.indexOf(x)))throw Error('Clean runtime order failed');
-for(const v of ['schema-1','data-bridge-1','hardening-9','core-9','txn-8','guards-8','final-2','release-1','product-5','product-plus-1','action-7','quality-final-1','p3-polish-v8','p4-3','case-showcase-exact-5','authority-6','case-open-bridge-11','studio-23','exact-txn-1'])if(!loader.includes(v))throw Error(`Cache version missing: ${v}`);
+for(const v of ['schema-1','data-bridge-1','hardening-9','core-9','txn-8','guards-8','final-2','release-1','product-5','product-plus-1','action-7','quality-final-1','p3-polish-v8','p4-3','case-showcase-exact-5','authority-6','case-open-bridge-11','studio-24','exact-txn-1'])if(!loader.includes(v))throw Error(`Cache version missing: ${v}`);
 const bridge=read('js/emoji-drops-case-open-bridge.js');
 for(const marker of ['bridge v11','normalizeKey','opener.click=','MutationObserver','requestAnimationFrame','delayedRetry'])if(!bridge.includes(marker))throw Error(`Case opener bridge contract missing: ${marker}`);
 const authority=read('js/emoji-drops-case-authority-v2.js');
@@ -21,8 +21,8 @@ const deletedLegacy=['js/emoji-drops-case-showcase.js','js/emoji-drops-case-show
 for(const dead of deletedLegacy)if(fs.existsSync(dead))throw Error(`Deleted legacy file still present: ${dead}`);
 if(loader.match(/emoji-drops-(?:ui-polish|main-reference|layout-v3|reference-v\d+|reference-interaction-fix)\.js/))throw Error('Legacy visual layer still loaded');
 const ref=read('js/emoji-drops-reference-v23-studio.js');
-for(const marker of ['v23','ed-profile-hub','ed-studio-page','LIVE'])if(!ref.includes(marker))throw Error(`v23 visual contract missing: ${marker}`);
+for(const marker of ['v23','ed-profile-hub','ed-studio-page','LIVE','min-height:48px','min-width:50px'])if(!ref.includes(marker))throw Error(`v23 visual contract missing: ${marker}`);
 for(const n of [1,2,3])if(!fs.existsSync(`assets/emoji-drops/sprite-${n}.b64`))throw Error(`Missing sprite chunk ${n}`);
 for(const n of ['smile','nature','food'])if(!fs.existsSync(`assets/emoji-drops/live-${n}.b64`))throw Error(`Missing live artwork ${n}`);
 if(!fs.existsSync('assets/emoji-drops/smile.b64'))throw Error('Missing exact Smile artwork');
-console.log('Static audit v3 OK: dataset bridge, runtime order/cache, exact visual authority, dead-layer cleanup, exact assets and legacy exclusions');
+console.log('Static audit v3 OK: dataset bridge, runtime order/cache, exact visual authority, dead-layer cleanup, exact assets, mobile touch-owner contract and legacy exclusions');
