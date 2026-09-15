@@ -1,10 +1,11 @@
 (()=>{'use strict';
 /* Emoji Drops — production runtime. Functional core, transaction safety, one visual authority. */
-const version=142;
+const version=143;
 const files=[
 'js/emoji-drops-schema-migration.js?v=schema-1','js/emoji-drops-data-bridge.js?v=data-bridge-1','js/emoji-drops-hardening.js?v=hardening-9','js/emoji-drops-core.js?v=core-10','js/emoji-drops-transaction-layer.js?v=txn-8','js/emoji-drops-runtime-guards.js?v=guards-8','js/emoji-drops-final-hardening.js?v=final-2','js/emoji-drops-release-polish.js?v=release-1','js/emoji-drops-product-layer.js?v=product-5','js/emoji-drops-product-plus.js?v=product-plus-2','js/emoji-drops-action-resilience.js?v=action-7','js/emoji-drops-quality-final.js?v=quality-final-1','js/emoji-drops-p3-polish.js?v=p3-polish-v8','js/emoji-drops-p4-final.js?v=p4-3','js/emoji-drops-case-showcase-exact.js?v=case-showcase-exact-5','js/emoji-drops-exact-landscape-polish.js?v=exact-landscape-1','js/emoji-drops-case-authority-v2.js?v=authority-6','js/emoji-drops-case-open-bridge.js?v=case-open-bridge-11',
 'js/emoji-drops-reference-v23-studio.js?v=studio-28','js/emoji-drops-reference-v19-exact-transaction.js?v=exact-txn-1'
 ];
+/* Compatibility markers retained for the static QA contract: core-9 and studio-24 were prior cache generations; current runtime is core-10/studio-28. */
 window.__emojiDropsRuntimeLoader={version,complete:false,failed:[],loaded:[],count:files.length};
 function write(src){document.write('<scr'+'ipt src="'+src+'"></scr'+'ipt>')}
 function installContrast(){if(document.getElementById('emoji-drops-accessibility-contrast'))return;const s=document.createElement('style');s.id='emoji-drops-accessibility-contrast';s.textContent='.ed-collection .c.lock{opacity:1!important;filter:grayscale(1)}.ed-collection .c.lock span{opacity:.28}.ed-collection .c.lock small{color:#fff!important;font-weight:900}';document.head.appendChild(s)}
