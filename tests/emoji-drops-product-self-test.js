@@ -3,7 +3,7 @@ const loader=fs.readFileSync('js/app-v2.js','utf8');
 const product=fs.readFileSync('js/emoji-drops-product-layer.js','utf8');
 const core=fs.readFileSync('js/emoji-drops-core.js','utf8');
 const tx=fs.readFileSync('js/emoji-drops-transaction-layer.js','utf8');
-for(const marker of ['emoji-drops-product-layer.js?v=product-1','product-layer','emoji-drops-transaction-layer.js?v=txn-8'])if(!loader.includes(marker))throw Error(`Product loader marker missing: ${marker}`);
+for(const marker of ['emoji-drops-product-layer.js?v=product-2','product-layer','emoji-drops-transaction-layer.js?v=txn-8'])if(!loader.includes(marker))throw Error(`Product loader marker missing: ${marker}`);
 for(const marker of ['Emoji Coin','emoji-coin','ed-product-tools','Поиск кейсов','Поиск предметов','Все редкости','По умолчанию','ed-product-achievements','First Drop','Collector','Veteran','Upgrader','High Roller','storage','PerformanceObserver'])if(!product.includes(marker))throw Error(`Product contract missing: ${marker}`);
 if(!/KEY='emojiDropsStateV3'/.test(product)||!/KEY='emojiDropsStateV3'/.test(core)||!/KEY='emojiDropsStateV3'/.test(tx))throw Error('Shared state key contract missing');
 if(!/version[:=]8/.test(tx)||!/beforeHash/.test(tx)||!/afterHash/.test(tx)||!/COMMIT_GRACE_MS/.test(tx)||!/nonBlockingLease/.test(tx)||!/faultAware/.test(tx))throw Error('Transaction v8 verification contract missing');
