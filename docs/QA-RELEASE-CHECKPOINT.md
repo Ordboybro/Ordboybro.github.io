@@ -1,5 +1,5 @@
 # QA release checkpoint
 
-Final full QA trigger for the v2 economy, interaction, animation, performance and screenshot-led visual release, including deterministic modal lifecycle handling.
+Full release QA after economy, interaction, animation, performance, visual authority and global modal lifecycle hardening.
 
 No QA thresholds are weakened.
