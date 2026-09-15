@@ -1,5 +1,5 @@
 # QA release checkpoint
 
-Full QA checkpoint for the v2 economy, interaction, animation, performance and screenshot-led visual release, including compatibility contract fixes.
+Final full QA trigger for the v2 economy, interaction, animation, performance and screenshot-led visual release.
 
 No QA thresholds are weakened.
