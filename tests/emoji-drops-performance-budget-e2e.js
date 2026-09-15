@@ -65,9 +65,9 @@ async function waitForServer(){
       for(let i=0;i<20;i++){
         const open=page.locator('[data-open]').first();
         await open.evaluate(el=>el.click());
-        await page.waitForSelector('.ed-modal.show',{timeout:5000});
+        await page.waitForSelector('#edExact.show',{timeout:5000});
         await page.keyboard.press('Escape');
-        await page.waitForFunction(()=>!document.querySelector('.ed-modal.show'),null,{timeout:2000});
+        await page.waitForFunction(()=>!document.querySelector('#edExact.show'),null,{timeout:2000});
       }
 
       await page.waitForTimeout(300);
@@ -75,7 +75,7 @@ async function waitForServer(){
         longTasks:window.__edLongTasks||[],
         resources:performance.getEntriesByType('resource').length,
         domNodes:document.getElementsByTagName('*').length,
-        modals:document.querySelectorAll('.ed-modal').length,
+        modals:document.querySelectorAll('#edExact').length,
         life:{...window.__edLifecycle}
       }));
       if(after.longTasks.some(x=>x>200))throw Error(`Long task regression: ${Math.round(Math.max(...after.longTasks))}ms`);
