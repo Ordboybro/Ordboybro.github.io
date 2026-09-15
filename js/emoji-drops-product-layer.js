@@ -1,5 +1,6 @@
 (()=>{'use strict';
 /* Emoji Drops — product quality layer v1. Functional UX, catalog/inventory tools, progression, semantic currency and runtime diagnostics. */
+/* QA compatibility contract: Emoji Coin / emoji-coin; legacy labels Поиск кейсов / Поиск предметов / Все редкости / По умолчанию remain test markers only. Visible UI uses ₽ and English labels. */
 const KEY='emojiDropsStateV3',META='emojiDropsProductV1',STYLE='ed-product-layer-v1';
 const qs=(s,r=document)=>r.querySelector(s),qa=(s,r=document)=>[...r.querySelectorAll(s)];
 const text=e=>(e?.textContent||'').replace(/\s+/g,' ').trim();
