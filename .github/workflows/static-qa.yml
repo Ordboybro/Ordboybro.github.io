@@ -34,14 +34,14 @@ jobs:
           if missing_order: raise SystemExit('Runtime entries missing: '+str(missing_order))
           positions=[a.index(x) for x in order]
           if positions!=sorted(positions): raise SystemExit('Runtime order failed: '+str(list(zip(order,positions))))
-          for v in ['schema-1','data-bridge-1','hardening-9','core-9','txn-8','guards-8','final-2','release-1','product-5','product-plus-1','action-7','quality-final-1','p3-polish-v8','p4-3','exact-landscape-1','case-showcase-exact-5','authority-6','case-open-bridge-11','studio-23','exact-txn-1']:
+          for v in ['schema-1','data-bridge-1','hardening-9','core-9','txn-8','guards-8','final-2','release-1','product-5','product-plus-1','action-7','quality-final-1','p3-polish-v8','p4-3','exact-landscape-1','case-showcase-exact-5','authority-6','case-open-bridge-11','studio-24','exact-txn-1']:
               if v not in a: raise SystemExit('Cache version missing: '+v)
           for dead in ['js/emoji-drops-case-showcase.js','js/emoji-drops-case-showcase-final.js','js/emoji-drops-case-showcase-override.js','js/emoji-drops-case-authority.js']:
               if Path(dead).exists(): raise SystemExit('Legacy case file still present: '+dead)
           for dead in ['emoji-drops-ui-polish-v2.js','emoji-drops-main-reference-v2.js','emoji-drops-layout-v3.js','emoji-drops-reference-v5.js','emoji-drops-reference-interaction-fix.js','emoji-drops-reference-v8-luxe.js','emoji-drops-reference-v9-hitfix.js','emoji-drops-reference-v10-stability.js','emoji-drops-reference-v11-modal-reset.js','emoji-drops-reference-v13-fixed-action.js','emoji-drops-reference-v15-case-precedence.js','emoji-drops-reference-v18-modal-cleanup.js','emoji-drops-reference-v20-studio.js']:
               if dead in a: raise SystemExit('Legacy visual layer still loaded: '+dead)
           ref=Path('js/emoji-drops-reference-v23-studio.js').read_text()
-          for marker in ['v23','ed-profile-hub','ed-studio-page','LIVE']:
+          for marker in ['v23','ed-profile-hub','ed-studio-page','LIVE','min-height:48px','min-width:50px']:
               if marker not in ref: raise SystemExit('v23 visual contract missing: '+marker)
           for n in [1,2,3]:
               if not Path(f'assets/emoji-drops/sprite-{n}.b64').exists(): raise SystemExit(f'Missing reference sprite chunk: {n}')
