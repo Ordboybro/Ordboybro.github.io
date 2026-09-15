@@ -1,6 +1,0 @@
-(()=>{'use strict';
-/* Emoji Drops — v13 fixed primary action surface. */
-const ID='emoji-drops-reference-v13-fixed-action';
-function install(){if(document.getElementById(ID))return;const s=document.createElement('style');s.id=ID;s.textContent=`#edExactBox .edx-open{position:fixed!important;left:max(36px,calc(50% - min(300px,calc(50vw - 36px))))!important;right:max(36px,calc(50% - min(300px,calc(50vw - 36px))))!important;bottom:18px!important;z-index:2147483646!important;margin:0!important;padding:10px 0 0!important;background:linear-gradient(180deg,transparent 0%,rgba(7,7,7,.92) 45%,#070707 100%)!important;pointer-events:auto!important;transform:none!important;filter:none!important;contain:none!important}#edExactBox .edx-open button{position:relative!important;z-index:2147483647!important;width:100%!important;min-height:62px!important;margin:0!important;pointer-events:auto!important;transform:none!important;filter:none!important;transition:none!important;animation:none!important;contain:none!important;will-change:auto!important}#edExactBox .edx-open button:hover,#edExactBox .edx-open button:active,#edExactBox .edx-open button:focus{transform:none!important;filter:none!important}`;document.head.appendChild(s)}
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
-})();
