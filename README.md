@@ -1,71 +1,77 @@
 # 🎰 Emoji Drops
 
-> A browser-based case-opening simulator with roulette, Live Drops, inventory, profile progression and item upgrades.
+> A browser-based case-opening simulator with roulette, Live Drops, profile progression, inventory, market and item upgrades.
 
 [![Static QA](https://github.com/Ordboybro/Ordboybro.github.io/actions/workflows/static-qa.yml/badge.svg)](https://github.com/Ordboybro/Ordboybro.github.io/actions/workflows/static-qa.yml)  
 **Live demo:** https://ordboybro.github.io/
 
-Emoji Drops is a static-first web application built with vanilla HTML, CSS and JavaScript. The project focuses on a polished game-like UI while keeping the client runtime dependency-light and heavily tested with browser smoke checks and contract tests.
+Emoji Drops is a static-first web application built with vanilla HTML, CSS and JavaScript. The current UI follows a dark premium reference direction: Cases / Upgrade / Market are the primary navigation, Profile contains Inventory and related account sections, and case cards use large thematic emojis.
 
 > This is a simulator / portfolio project. It does not process real-money gambling or payments.
 
 ## ✨ Features
 
-- 📦 Case opening and multi-open flows
-- 🎰 Dedicated roulette animation for each case
-- ⚡ Fast opening mode
-- 🔴 Live Drops feed with a bounded visible stream
-- 👤 Profile, inventory and Best Drop
-- 📊 Statistics and account settings
-- 🚀 Item upgrades with x1.5 / x2 / x3 / x5 multipliers
-- 📱 Responsive desktop and mobile layouts
+- 📦 Eight themed cases with weighted rarity drops
+- 🎰 Exact case-opening modal with roulette/reel presentation
+- ⚡ Fast opening and resilient action handling
+- 🔴 Live Drops feed
+- 👤 Profile with Inventory and account sections
+- 📊 Statistics, progression and achievements
+- 🚀 Item upgrades with transaction-safe state mutation
+- 🛒 Market flows and balance/inventory consistency
+- 📱 Responsive portrait and landscape layouts
 - 💾 Client-side state persistence
-- 🛡️ Runtime guards and transaction-style state handling
+- 🛡️ Runtime hardening, accessibility, recovery and lifecycle QA
 
 ## 🧱 Runtime architecture
 
-The application is deliberately split into small browser modules rather than one monolithic script:
+The runtime is intentionally split into focused browser modules. `js/app-v2.js` is the single bootstrap/loader and keeps the production order deterministic.
 
 ```text
 index.html
    │
-   ├── data.js                bootstrap / dataset bridge
+   ├── data.js                         dataset bootstrap
    │
-   └── js/app-v2.js           application runtime
+   └── js/app-v2.js                    runtime loader
           │
-          ├── hardening        defensive state/runtime checks
-          ├── core             game state and domain logic
-          ├── transaction      controlled state mutations
-          ├── runtime guards   action locks / safety contracts
-          └── UI polish        presentation behavior
+          ├── schema / data bridge     canonical dataset exposure
+          ├── hardening / guards       defensive runtime contracts
+          ├── core                     state + domain rendering
+          ├── transaction layer        controlled state mutations
+          ├── product layers           search, filters, progression, UX
+          ├── case showcase            authoritative case modal
+          ├── case authority/bridge    canonical case activation
+          ├── P3/P4 polish             responsive interaction/accessibility
+          └── reference-v21 studio     single visual authority
 ```
 
-Supporting test code lives under `tests/`, while optional backend-related experiments are isolated under `supabase/`.
+There is deliberately no legacy visual override chain in the production loader. Superseded runtime/visual files are removed instead of being left as hidden fallback layers.
 
 ## 🧪 Quality & CI
 
 Every push and pull request to `main` runs the static QA workflow. It checks:
 
-- JavaScript syntax, including inline scripts
-- local asset references
-- deterministic runtime bootstrap order
-- dataset contracts
-- economy invariants
-- transaction behavior
-- runtime guard contracts
-- UI polish contracts
-- Chromium browser smoke tests
+- JavaScript syntax and local asset integrity
+- deterministic runtime bootstrap order and cache versions
+- canonical dataset and economy contracts
+- transaction, recovery and storage-fault behavior
+- product, accessibility, security and hardening contracts
+- Chromium browser E2E flows
+- Upgrade E2E
+- responsive/touch behavior across portrait and landscape viewports
+- performance budgets, DOM lifecycle stability, resource growth and observer lifecycle
+- multi-tab/recovery behavior
 
-The project intentionally avoids a large frontend framework and keeps the runtime free of external CDN dependencies.
+Performance failures are treated as real failures; lifecycle checks are not made green by simply raising leak thresholds.
 
 ## 🛠️ Tech stack
 
 - HTML5
 - CSS3
 - Vanilla JavaScript
-- Canvas / browser APIs
+- Browser APIs / Canvas where needed
 - Local browser storage
-- Playwright for browser smoke tests
+- Playwright for browser E2E
 - GitHub Actions for CI
 
 ## 🚀 Run locally
@@ -84,7 +90,7 @@ Open:
 http://localhost:8000
 ```
 
-Opening `index.html` directly may work for basic UI inspection, but an HTTP server is recommended for browser API and asset behavior.
+Opening `index.html` directly may work for basic inspection, but an HTTP server is recommended for browser API and asset behavior.
 
 ## 📂 Project structure
 
@@ -95,10 +101,10 @@ Opening `index.html` directly may work for basic UI inspection, but an HTTP serv
 ├── mobile.html
 ├── data.js
 ├── js/
-│   ├── data.js
 │   ├── app-v2.js
-│   └── runtime modules
-├── css/
+│   ├── canonical runtime modules
+│   └── case/reference modules
+├── assets/emoji-drops/
 ├── tests/
 ├── docs/
 ├── supabase/
@@ -111,7 +117,7 @@ Opening `index.html` directly may work for basic UI inspection, but an HTTP serv
 
 **Portfolio project — active development**
 
-The core case-opening, inventory, economy, runtime-hardening and browser-QA systems are implemented. Future work is focused on product polish, performance and maintaining deterministic behavior as the UI evolves.
+The case-opening, economy, inventory, profile, Upgrade, Market, runtime-hardening and browser-QA systems are implemented. Current work is focused on maintaining the reference-driven product UI, deterministic state transitions and regression-free production behavior.
 
 ## 👨‍💻 Author
 
