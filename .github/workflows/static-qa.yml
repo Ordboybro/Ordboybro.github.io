@@ -34,7 +34,7 @@ jobs:
           if missing_order: raise SystemExit('Runtime entries missing: '+str(missing_order))
           positions=[a.index(x) for x in order]
           if positions!=sorted(positions): raise SystemExit('Runtime order failed: '+str(list(zip(order,positions))))
-          for v in ['schema-1','data-bridge-1','hardening-9','core-9','txn-8','guards-8','final-2','release-1','product-1','product-plus-1','action-7','quality-final-1','p3-polish-v5','p4-1','case-showcase-exact-3','exact-landscape-1','authority-6','case-open-bridge-11','studio-21','exact-txn-1']:
+          for v in ['schema-1','data-bridge-1','hardening-9','core-9','txn-8','guards-8','final-2','release-1','product-1','product-plus-1','action-7','quality-final-1','p3-polish-v5','p4-1','case-showcase-exact-3','exact-landscape-1','authority-6','case-open-bridge-11','studio-22','exact-txn-1']:
               if v not in a: raise SystemExit('Cache version missing: '+v)
           for dead in ['js/emoji-drops-case-showcase.js','js/emoji-drops-case-showcase-final.js','js/emoji-drops-case-showcase-override.js','js/emoji-drops-case-authority.js']:
               if Path(dead).exists(): raise SystemExit('Legacy case file still present: '+dead)
