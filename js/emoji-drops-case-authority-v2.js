@@ -17,6 +17,6 @@ const clean=()=>{const w=document.createTreeWalker(document.body,NodeFilter.SHOW
 markActions();inject();hideLegacy();clean();
 document.addEventListener('click',e=>{const t=e.target.closest?.('button[data-open],[data-open]');if(!t)return;const key=keyFromElement(t);if(key&&open(key)){e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();hideLegacy()}},true);
 document.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){const t=document.activeElement?.closest?.('[data-open]');const key=keyFromElement(t);if(key&&open(key)){e.preventDefault();hideLegacy()}}});
-window.addEventListener('DOMContentLoaded',()=>{markActions();inject();clean()});window.addEventListener('pageshow',()=>{markActions();hideLegacy();inject();clean()});new MutationObserver(()=>{markActions();clean()}).observe(document.documentElement,{subtree:true,childList:true,characterData:true});
+window.addEventListener('DOMContentLoaded',()=>{markActions();inject();clean()});window.addEventListener('pageshow',()=>{markActions();hideLegacy();inject();clean()});if(window.__emojiDropsMutationHub)window.__emojiDropsMutationHub.subscribe(records=>{if(records.some(m=>m.addedNodes?.length||m.type==='characterData'||(m.type==='attributes'&&m.attributeName==='data-open'))){markActions();clean()}});
 window.__emojiDropsCaseAuthority={version:6,open};
 })();
