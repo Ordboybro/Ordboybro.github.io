@@ -1,6 +1,0 @@
-(()=>{'use strict';
-/* Emoji Drops — v12 action surface. Keep the primary case-open control in the viewport without nested-scroll chasing. */
-const ID='emoji-drops-reference-v12-action-surface';
-function install(){if(document.getElementById(ID))return;const s=document.createElement('style');s.id=ID;s.textContent=`#edExactBox{scroll-padding:100px 0 24px!important}#edExactBox .edx-open{position:sticky!important;bottom:0!important;z-index:2147483646!important;padding:10px 0 20px!important;background:linear-gradient(180deg,transparent 0%,rgba(7,7,7,.92) 35%,#070707 100%)!important;pointer-events:auto!important}#edExactBox .edx-open button{position:relative!important;z-index:2147483647!important;pointer-events:auto!important;display:block!important;width:100%!important;min-height:62px!important;margin:0!important;transform:none!important;filter:none!important;transition:none!important;animation:none!important}#edExactBox .edx-open button:hover,#edExactBox .edx-open button:active,#edExactBox .edx-open button:focus{transform:none!important;filter:none!important}`;document.head.appendChild(s)}
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
-})();
