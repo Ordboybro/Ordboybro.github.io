@@ -100,6 +100,8 @@ jobs:
         run: node tests/emoji-drops-upgrade-e2e-v2.js
       - name: Accessibility E2E
         run: node tests/emoji-drops-accessibility-e2e.js
+      - name: Performance lifecycle diagnostic
+        run: node tests/emoji-drops-performance-diagnose.js
       - name: Performance budget E2E
         run: node tests/emoji-drops-performance-budget-e2e.js
       - name: Mobile responsive and touch E2E
