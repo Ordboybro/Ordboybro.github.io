@@ -1,22 +1,22 @@
 # Emoji Drops — restore point
 
-Created before the next Upgrade / case-opening / QA pass.
+Updated after the full QA / polish pass.
 
 ## Restore target
 - Branch: `main`
-- Commit: `4b2faf34d18131820a5fe134e06b891b239675c5`
-- Message: `chore: remove obsolete javascript runtimes`
+- Commit: `42728f4485b2c14fb5d300d2e2f34813a6b6486a`
+- Message: `Update QA contract for P4 cache v3`
 
-This is the baseline to return to if the next development pass introduces regressions.
+This is the verified baseline from the completed QA pass. Return to this commit if a later development pass introduces regressions.
 
-## Current runtime at the restore point
-- `js/functional-final.js`
-- `js/runtime-hardening.js`
-- `js/case-upgrade-polish.js`
-- `js/app-v2.js`
+## Current runtime
+- `js/app-v2.js` version `132`
+- Functional/runtime modules load deterministically.
+- `js/emoji-drops-reference-v21-studio.js` is the single visual authority.
+- Superseded visual and dead runtime layers are intentionally removed rather than kept as hidden fallbacks.
 
-## Important scope
-The general site appearance is frozen. Only case-opening and Upgrade visuals are allowed to change during the next pass.
+## QA baseline
+The baseline passed the complete 28-stage static/browser QA workflow, including economy, transactions, case opening, Upgrade, accessibility, performance, mobile/touch, recovery/multi-tab and security checks.
 
 ## Platform note
 GitHub Pages is static HTML/CSS/JavaScript hosting; it does not provide a server-side application backend. Real secure authentication/economy would require a backend.
