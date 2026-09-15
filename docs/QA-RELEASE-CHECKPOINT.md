@@ -1,5 +1,5 @@
 # QA release checkpoint
 
-This checkpoint intentionally triggers the complete Emoji Drops QA suite after restoring the syntactically valid authoritative case showcase baseline.
+This checkpoint triggers the complete Emoji Drops QA suite after the v2 economy, interaction, animation, performance and screenshot-led visual release.
 
 No QA thresholds are weakened.
