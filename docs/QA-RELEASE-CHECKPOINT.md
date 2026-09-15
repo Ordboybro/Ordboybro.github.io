@@ -1,5 +1,5 @@
 # QA release checkpoint
 
-Final release QA after economy, interaction, animation, performance, visual authority and deterministic pointer-based modal lifecycle handling.
+Full release QA after economy, interaction, animation, performance, visual authority, modal lifecycle and atomic Upgrade failure handling.
 
 No QA thresholds are weakened.
