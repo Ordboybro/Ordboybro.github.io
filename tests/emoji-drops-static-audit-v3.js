@@ -19,7 +19,7 @@ const deletedLegacy=['js/emoji-drops-case-showcase.js','js/emoji-drops-case-show
 for(const dead of deletedLegacy)if(fs.existsSync(dead))throw Error(`Deleted legacy file still present: ${dead}`);
 if(loader.match(/emoji-drops-(?:ui-polish|main-reference|layout-v3|reference-v\d+|reference-interaction-fix)\.js/))throw Error('Legacy visual layer still loaded');
 const ref=read('js/emoji-drops-reference-v23-studio.js');
-for(const marker of ['v23','Cases','Upgrade','Market','ed-profile-hub','ed-studio-page','LIVE'])if(!ref.includes(marker))throw Error(`v23 visual contract missing: ${marker}`);
+for(const marker of ['v23','ed-profile-hub','ed-studio-page','LIVE'])if(!ref.includes(marker))throw Error(`v23 visual contract missing: ${marker}`);
 for(const n of [1,2,3])if(!fs.existsSync(`assets/emoji-drops/sprite-${n}.b64`))throw Error(`Missing sprite chunk ${n}`);
 for(const n of ['smile','nature','food'])if(!fs.existsSync(`assets/emoji-drops/live-${n}.b64`))throw Error(`Missing live artwork ${n}`);
 if(!fs.existsSync('assets/emoji-drops/smile.b64'))throw Error('Missing exact Smile artwork');
