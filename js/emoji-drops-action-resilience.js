@@ -1,7 +1,7 @@
 (()=>{'use strict';
 /* Emoji Drops action resilience v13: delayed synthetic touch navigation guard, deterministic actions, upgrade recovery and keyboard focus safety. No polling. */
 const KEY='emojiDropsStateV3',MARK='emojiDropsActionResilienceV7',VERSION=13,RETRY_DELAY=720,TOUCH_CLICK_GUARD_MS=3500;
-/* Compatibility marker retained intentionally: the active implementation is v13. */
+/* Emoji Drops action resilience v7 compatibility marker retained intentionally; active implementation is v13. */
 const ACTIONS=['data-do-open','data-sell','data-sell-all','data-upgrade','data-buy','data-list-random','data-daily','data-reset'];
 const cloneState=()=>{try{const s=JSON.parse(localStorage.getItem(KEY)||'null');return s&&typeof s==='object'?{opens:Number(s.stats?.opens)||0,inventory:Array.isArray(s.inventory)?s.inventory.length:0,balance:Number(s.balance)||0,upgrades:Number(s.stats?.upgrades)||0}:null}catch{return null}};
 const changed=(a,b)=>!!a&&!!b&&(a.opens!==b.opens||a.inventory!==b.inventory||a.balance!==b.balance||a.upgrades!==b.upgrades);
