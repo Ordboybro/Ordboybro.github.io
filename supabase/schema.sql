@@ -1,5 +1,6 @@
--- Emoji Drops — server-authoritative economy v5.
+-- Emoji Drops — server-authoritative economy v6.
 -- Canonical case prices mirror the client economy contract exactly.
+-- Direct authenticated updates to balance/inventory/stats are intentionally forbidden.
 create extension if not exists pgcrypto;
 
 create table if not exists public.profiles (
@@ -17,12 +18,20 @@ drop policy if exists "profiles_insert_own" on public.profiles;
 drop policy if exists "profiles_update_own" on public.profiles;
 create policy "profiles_select_own" on public.profiles for select using (auth.uid()=id);
 create policy "profiles_insert_own" on public.profiles for insert with check (auth.uid()=id);
-create policy "profiles_update_own" on public.profiles for update using (auth.uid()=id) with check (auth.uid()=id);
 
 create or replace function public.handle_new_user() returns trigger language plpgsql security definer set search_path=public as $$
 begin insert into public.profiles(id,nickname,balance) values(new.id,coalesce(new.raw_user_meta_data->>'nickname',split_part(new.email,'@',1)),250) on conflict(id) do nothing; return new; end; $$;
 drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created after insert on auth.users for each row execute procedure public.handle_new_user();
+
+create or replace function public.set_nickname(p_nickname text) returns jsonb language plpgsql security definer set search_path=public as $$
+declare uid uuid:=auth.uid(); clean text:=trim(coalesce(p_nickname,''));
+begin
+ if uid is null then raise exception 'AUTH_REQUIRED'; end if;
+ if char_length(clean)<1 or char_length(clean)>32 then raise exception 'INVALID_NICKNAME'; end if;
+ update public.profiles set nickname=clean,updated_at=now() where id=uid;
+ return jsonb_build_object('nickname',clean);
+end; $$;
 
 create or replace function public.case_cost(p_case_id text) returns numeric language sql immutable as $$
 select case lower(trim(p_case_id)) when 'smile' then 100 when 'moves' then 80 when 'nature' then 60 when 'food' then 40 when 'animals' then 20 when 'transport' then 10 when 'sport' then 250 when 'games' then 500 else null end $$;
@@ -71,6 +80,7 @@ begin
 end; $$;
 
 grant execute on function public.case_cost(text) to authenticated;
+grant execute on function public.set_nickname(text) to authenticated;
 grant execute on function public.open_case_server(text,numeric) to authenticated;
 grant execute on function public.sell_all_server() to authenticated;
 grant execute on function public.upgrade_server(text,numeric,numeric) to authenticated;
