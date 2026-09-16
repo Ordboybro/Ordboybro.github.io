@@ -14,7 +14,8 @@ const order=['emoji-drops-schema-migration.js','emoji-drops-data-bridge.js','emo
 if(!order.every((x,i)=>i===0||loader.indexOf(order[i-1])<loader.indexOf(x)))throw Error('Clean runtime order failed');
 for(const v of ['schema-1','data-bridge-1','hardening-9','core-9','txn-8','guards-8','final-2','release-1','product-5','product-plus-2','action-7','quality-final-1','p3-polish-v8','p4-3','case-showcase-exact-5','authority-6','case-open-bridge-11','studio-24','exact-txn-1'])if(!loader.includes(v))throw Error(`Cache version missing: ${v}`);
 const bridge=read('js/emoji-drops-case-open-bridge.js');
-for(const marker of ['bridge v11','normalizeKey','opener.click=','MutationObserver','requestAnimationFrame','delayedRetry'])if(!bridge.includes(marker))throw Error(`Case opener bridge contract missing: ${marker}`);
+for(const marker of ['normalizeKey','pointerdown','pointerup','skipSyntheticTouchClick','delayedRetry','TOUCH_GUARD_MS'])if(!bridge.includes(marker))throw Error(`Case opener bridge contract missing: ${marker}`);
+if(/bridge v1[01]\b/.test(bridge))throw Error('Case opener bridge still advertises obsolete v11/v10 contract');
 const authority=read('js/emoji-drops-case-authority-v2.js');
 for(const marker of ['version:6','normalizeKey','keyFromElement','#edExactBox .edx-open button'])if(!authority.includes(marker))throw Error(`Case authority contract missing: ${marker}`);
 const liveOwner=read('js/emoji-drops-product-plus.js');
@@ -27,4 +28,4 @@ for(const marker of ['v23','ed-profile-hub','ed-studio-page','LIVE','min-height:
 for(const n of [1,2,3])if(!fs.existsSync(`assets/emoji-drops/sprite-${n}.b64`))throw Error(`Missing sprite chunk ${n}`);
 for(const n of ['smile','nature','food'])if(!fs.existsSync(`assets/emoji-drops/live-${n}.b64`))throw Error(`Missing live artwork ${n}`);
 if(!fs.existsSync('assets/emoji-drops/smile.b64'))throw Error('Missing exact Smile artwork');
-console.log('Static audit v3 OK: dataset bridge, runtime order/cache, exact visual authority, Live Drops owner, dead-layer cleanup, exact assets, mobile touch-owner contract and legacy exclusions');
+console.log('Static audit v3 OK: dataset bridge, runtime order/cache, exact visual authority, Live Drops owner, dead-layer cleanup, exact assets, current pointerup touch-owner contract and legacy exclusions');
