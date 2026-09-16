@@ -1,6 +1,6 @@
--- Emoji Drops — server-authoritative economy v6.
+-- Emoji Drops — server-authoritative economy v7.
 -- Canonical case prices mirror the client economy contract exactly.
--- Direct authenticated updates to balance/inventory/stats are intentionally forbidden.
+-- Authenticated users can read their profile, but cannot directly insert or update economy fields.
 create extension if not exists pgcrypto;
 
 create table if not exists public.profiles (
@@ -17,7 +17,6 @@ drop policy if exists "profiles_select_own" on public.profiles;
 drop policy if exists "profiles_insert_own" on public.profiles;
 drop policy if exists "profiles_update_own" on public.profiles;
 create policy "profiles_select_own" on public.profiles for select using (auth.uid()=id);
-create policy "profiles_insert_own" on public.profiles for insert with check (auth.uid()=id);
 
 create or replace function public.handle_new_user() returns trigger language plpgsql security definer set search_path=public as $$
 begin insert into public.profiles(id,nickname,balance) values(new.id,coalesce(new.raw_user_meta_data->>'nickname',split_part(new.email,'@',1)),250) on conflict(id) do nothing; return new; end; $$;
@@ -40,7 +39,6 @@ create or replace function public.open_case_server(p_case_id text, p_cost numeri
 declare uid uuid:=auth.uid(); bal numeric; inv jsonb; cost numeric; roll numeric:=random(); rarity text; price numeric; item jsonb;
 begin
  if uid is null then raise exception 'AUTH_REQUIRED'; end if;
- -- Never trust the caller-supplied cost; the canonical server function owns pricing.
  cost:=public.case_cost(p_case_id);
  if cost is null then raise exception 'INVALID_CASE'; end if;
  select balance,inventory into bal,inv from public.profiles where id=uid for update;
