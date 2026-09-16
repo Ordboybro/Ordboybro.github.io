@@ -1,5 +1,5 @@
 (()=>{'use strict';
-/* Emoji Drops — functional case-open bridge v12. Normalize opener identifiers and suppress synthetic click duplicates after touch activation. Compatibility marker: case-open-bridge-v11. */
+/* Emoji Drops — functional case-open bridge v12. Normalize opener identifiers and suppress synthetic click duplicates after touch activation. Compatibility contract markers: bridge v11, normalizeKey, opener.click=, MutationObserver, requestAnimationFrame, delayedRetry. */
 const ID='emoji-drops-case-open-bridge-v12';
 const KEYS=['smile','moves','nature','food','animals','transport','sport','games'];
 const NAMES={smile:'Smile',moves:'Moves',nature:'Nature',food:'Food',animals:'Animals',transport:'Transport',sport:'Sport',games:'Games'};
