@@ -24,5 +24,5 @@ function install(){
     window.EmojiDropsCaseShowcaseExact.open(key);
   },true);
 }
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
+install();
 })();
