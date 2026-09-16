@@ -17,7 +17,8 @@ if(A.configured){
    signOut:async()=>{const s=read();if(s?.access_token){try{await request('/auth/v1/logout',{method:'POST'},s.access_token)}catch{}}write(null);A.userId=null;window.dispatchEvent(new CustomEvent('emoji-drops-auth-change',{detail:{session:null}}))}
   },
   rpc:async(name,args={})=>{try{return {data:await request(`/rest/v1/rpc/${encodeURIComponent(name)}`,{method:'POST',body:JSON.stringify(args)},read()?.access_token),error:null}}catch(error){return {data:null,error}}},
-  from:(table)=>{const q={table,select:'*',order:null,limit:null};const run=async()=>{try{const params=new URLSearchParams({select:q.select});if(q.order)params.set('order',q.order);if(q.limit)params.set('limit',String(q.limit));return {data:await request(`/rest/v1/${encodeURIComponent(q.table)}?${params.toString()}`,{method:'GET'},read()?.access_token),error:null}}catch(error){return {data:null,error}}};return {select:(columns='*')=>{q.select=columns;return {order:(column,{ascending=true}={})=>{q.order=`${column}.${ascending?'asc':'desc'}`;return {limit:n=>{q.limit=n;return run()}}},limit:n=>{q.limit=n;return run()}}}}}
+  from:(table)=>{const q={table,select:'*',order:null,limit:null};const run=async()=>{try{const params=new URLSearchParams({select:q.select});if(q.order)params.set('order',q.order);if(q.limit)params.set('limit',String(q.limit));return {data:await request(`/rest/v1/${encodeURIComponent(q.table)}?${params.toString()}`,{method:'GET'},read()?.access_token),error:null}}catch(error){return {data:null,error}}};return {select:(columns='*')=>{q.select=columns;return {order:(column,{ascending=true}={})=>{q.order=`${column}.${ascending?'asc':'desc'}`;return {limit:n=>{q.limit=n;return run()}}},limit:n=>{q.limit=n;return run()}}}}},
+  channel:()=>({on(){return this},subscribe:async()=>{},unsubscribe:async()=>{}})
  };
  A.client=client;
  const s=read();if(s)window.dispatchEvent(new CustomEvent('emoji-drops-auth-change',{detail:{session:s}}));
