@@ -6,12 +6,13 @@ const NAMES={smile:'Smile',moves:'Moves',nature:'Nature',food:'Food',animals:'An
 const TOUCH_GUARD_MS=1500;
 function normalizeKey(value){const raw=String(value||'').trim().toLowerCase();if(KEYS.includes(raw))return raw;const stripped=raw.replace(/^case[-_:/]*/,'').replace(/[-_ ]*(case|open)$/,'');if(KEYS.includes(stripped))return stripped;const named=KEYS.find(k=>NAMES[k].toLowerCase()===raw||NAMES[k].toLowerCase()===stripped);return named||null}
 function keyFor(card,index){const direct=card?.dataset?.caseKey||card?.dataset?.case||card?.dataset?.key||card?.getAttribute?.('data-open');const normalized=normalizeKey(direct);if(normalized)return normalized;const title=card?.querySelector?.('h3')?.textContent?.trim();const named=normalizeKey(title);if(named)return named;return KEYS[index]||null}
+function inActiveCases(opener){const node=opener?.closest?.('.ed-case');return !!node?.closest?.('#view-cases.active')&&node.isConnected}
 function ready(key){return !!key&&!!window.EmojiDropsCaseShowcaseExact&&typeof window.EmojiDropsCaseShowcaseExact.open==='function'}
 function visible(key){return !!key&&!!document.querySelector('#edExact.show')&&!!document.querySelector('#edExactBox .edx-open button')}
 function invoke(key){if(!ready(key))return false;try{window.EmojiDropsCaseShowcaseExact.open(key);return visible(key)}catch(err){console.warn('Emoji Drops case open deferred',err);return false}}
-function retry(key){let attempts=0;const run=()=>{if(invoke(key)||++attempts>=12)return;setTimeout(run,40)};run()}
-function delayedRetry(key){retry(key);setTimeout(()=>retry(key),120);setTimeout(()=>retry(key),350)}
-function activate(opener,key,event){if(event){event.preventDefault();event.stopImmediatePropagation()}if(!invoke(key))delayedRetry(key);return false}
+function retry(key,opener){let attempts=0;const run=()=>{if(!inActiveCases(opener))return;if(invoke(key)||++attempts>=12)return;setTimeout(run,40)};run()}
+function delayedRetry(key,opener){retry(key,opener);setTimeout(()=>retry(key,opener),120);setTimeout(()=>retry(key,opener),350)}
+function activate(opener,key,event){if(!inActiveCases(opener))return false;if(event){event.preventDefault();event.stopImmediatePropagation()}if(!invoke(key))delayedRetry(key,opener);return false}
 function markTouchTarget(node){if(!node)return;node.dataset.edBridgeTouchAt=String(Date.now());setTimeout(()=>{if(node.isConnected)delete node.dataset.edBridgeTouchAt},TOUCH_GUARD_MS+250)}
 function skipSyntheticTouchClick(node){const card=node?.closest?.('.ed-case');if(!card)return false;const at=Number(card.dataset.edBridgeTouchAt||0);if(!at)return false;const fresh=Date.now()-at<TOUCH_GUARD_MS;if(fresh){delete card.dataset.edBridgeTouchAt;return true}delete card.dataset.edBridgeTouchAt;return false}
 function bindOpener(opener,key){if(!opener||opener.dataset.edBridge===ID)return;opener.dataset.edBridge=ID;if(opener.getAttribute('data-open')!==key)opener.setAttribute('data-open',key);if(!opener.__edBridgeClick){opener.__edBridgeClick=true;opener.addEventListener('click',e=>{if(skipSyntheticTouchClick(opener))return;activate(opener,key,e)},true);opener.click=()=>activate(opener,key,null)}}
