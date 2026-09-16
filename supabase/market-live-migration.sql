@@ -48,6 +48,7 @@ begin
  if inv is null then raise exception 'PROFILE_NOT_FOUND'; end if;
  select x into item from jsonb_array_elements(coalesce(inv,'[]'::jsonb)) x where x->>'id'=p_item_id limit 1;
  if item is null then raise exception 'ITEM_NOT_FOUND'; end if;
+ if coalesce((item->>'price')::numeric,0)<=0 then raise exception 'INVALID_ITEM_PRICE'; end if;
  insert into public.market_listings(seller_id,item_id,emoji,rarity,case_id,item_price,listing_price)
  values(uid,p_item_id,coalesce(item->>'emoji','🎁'),coalesce(item->>'rarity','common'),item->>'case_id',coalesce((item->>'price')::numeric,0),clean)
  returning jsonb_build_object('id',id,'item_id',item_id,'emoji',emoji,'rarity',rarity,'case_id',case_id,'item_price',item_price,'listing_price',listing_price,'status',status,'created_at',created_at) into listing;
@@ -70,25 +71,28 @@ begin
  return jsonb_build_object('listing_id',p_listing_id,'item',restored);
 end; $$;
 
+-- Purchase reconstructs the listed item from the locked listing row.
+-- The seller's inventory no longer contains the item because create_market_listing removes it atomically.
 create or replace function public.buy_market_listing(p_listing_id uuid) returns jsonb language plpgsql security definer set search_path=public as $$
-declare buyer uuid:=auth.uid(); l public.market_listings%rowtype; buyer_bal numeric; seller_inv jsonb; buyer_inv jsonb; item jsonb;
+declare buyer uuid:=auth.uid(); l public.market_listings%rowtype; buyer_bal numeric; buyer_inv jsonb; item jsonb;
 begin
  if buyer is null then raise exception 'AUTH_REQUIRED'; end if;
- select * into l from public.market_listings where id=p_listing_id for update;
+ select * into l from public.market_listings where id=p_listing_id and status='active' for update;
  if not found then raise exception 'LISTING_NOT_FOUND'; end if;
- if l.status<>'active' then raise exception 'LISTING_NOT_ACTIVE'; end if;
  if l.seller_id=buyer then raise exception 'SELF_PURCHASE'; end if;
  select balance,inventory into buyer_bal,buyer_inv from public.profiles where id=buyer for update;
  if buyer_bal is null then raise exception 'PROFILE_NOT_FOUND'; end if;
  if buyer_bal<l.listing_price then raise exception 'INSUFFICIENT_FUNDS'; end if;
- select inventory into seller_inv from public.profiles where id=l.seller_id for update;
- select x into item from jsonb_array_elements(coalesce(seller_inv,'[]'::jsonb)) x where x->>'id'=l.item_id limit 1;
- if item is null then update public.market_listings set status='cancelled' where id=l.id; raise exception 'LISTING_ITEM_MISSING'; end if;
- update public.profiles set balance=buyer_bal-l.listing_price, inventory=coalesce(buyer_inv,'[]'::jsonb)||jsonb_build_array(item),updated_at=now() where id=buyer;
- update public.profiles set balance=balance+l.listing_price, inventory=(select coalesce(jsonb_agg(x),'[]'::jsonb) from jsonb_array_elements(seller_inv) x where x->>'id'<>l.item_id),updated_at=now() where id=l.seller_id;
+ item:=jsonb_build_object('id',l.item_id,'emoji',l.emoji,'rarity',l.rarity,'case_id',l.case_id,'price',l.item_price,'created_at',l.created_at);
+ update public.profiles set balance=buyer_bal-l.listing_price,inventory=coalesce(buyer_inv,'[]'::jsonb)||jsonb_build_array(item),updated_at=now() where id=buyer;
+ update public.profiles set balance=balance+l.listing_price,updated_at=now() where id=l.seller_id;
  update public.market_listings set status='sold',buyer_id=buyer,sold_at=now() where id=l.id;
  return jsonb_build_object('listing_id',l.id,'item',item,'price',l.listing_price,'balance',buyer_bal-l.listing_price);
 end; $$;
+
+grant execute on function public.create_market_listing(text,numeric) to authenticated;
+grant execute on function public.cancel_market_listing(uuid) to authenticated;
+grant execute on function public.buy_market_listing(uuid) to authenticated;
 
 create or replace function public.market_snapshot() returns table(
  id uuid,seller_id uuid,item_id text,emoji text,rarity text,case_id text,item_price numeric,listing_price numeric,created_at timestamptz,nickname text
@@ -98,9 +102,6 @@ create or replace function public.market_snapshot() returns table(
  where l.status='active' order by l.listing_price asc,l.created_at asc limit 200;
 $$;
 
-grant execute on function public.create_market_listing(text,numeric) to authenticated;
-grant execute on function public.cancel_market_listing(uuid) to authenticated;
-grant execute on function public.buy_market_listing(uuid) to authenticated;
 grant execute on function public.market_snapshot() to anon,authenticated;
 grant select on public.live_drops to anon,authenticated;
 
