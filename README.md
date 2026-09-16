@@ -42,7 +42,7 @@ index.html
           ├── case showcase            authoritative case modal
           ├── case authority/bridge    canonical case activation
           ├── P3/P4 polish             responsive interaction/accessibility
-          └── reference-v21 studio     single visual authority
+          └── reference-v23 studio     single visual authority
 ```
 
 There is deliberately no legacy visual override chain in the production loader. Superseded runtime/visual files are removed instead of being left as hidden fallback layers.
@@ -115,9 +115,9 @@ Opening `index.html` directly may work for basic inspection, but an HTTP server 
 
 ## 📈 Project status
 
-**Portfolio project — active development**
+**Production-ready portfolio project.**
 
-The case-opening, economy, inventory, profile, Upgrade, Market, runtime-hardening and browser-QA systems are implemented. Current work is focused on maintaining the reference-driven product UI, deterministic state transitions and regression-free production behavior.
+The case-opening, economy, inventory, profile, Upgrade, Market, runtime-hardening, accessibility, recovery, security and browser-QA systems are implemented and covered by the current CI suite. The latest full QA run completed successfully across syntax, economy, transactions, product workflows, browser E2E, Upgrade, accessibility, performance, mobile/touch, recovery/multi-tab and security checks. Production deployment is handled through GitHub Pages.
 
 ## 👨‍💻 Author
 
