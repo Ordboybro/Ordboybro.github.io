@@ -4,6 +4,11 @@ let installed=false;
 function install(){
   if(installed)return;
   installed=true;
+  const exact=window.EmojiDropsCaseShowcaseExact;
+  if(exact&&typeof exact.open==='function'){
+    window.__emojiDropsExactAuthoritativeApi=exact;
+    setTimeout(()=>{if(window.__emojiDropsExactAuthoritativeApi===exact)window.EmojiDropsCaseShowcaseExact=exact},0);
+  }
   document.addEventListener('click',e=>{
     const btn=e.target?.closest?.('.ed-case>.ed-btn,[data-open].ed-btn');
     if(!btn)return;
