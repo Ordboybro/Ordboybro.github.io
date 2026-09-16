@@ -1,5 +1,8 @@
 /* Emoji Drops — public Supabase configuration.
- * Fill these two values with the project's browser-safe URL + anon/publishable key.
+ * Browser-safe Project URL + publishable key.
  * NEVER place a service_role/secret key here.
  */
-window.EMOJI_DROPS_SUPABASE=Object.freeze({url:'',anonKey:''});
+window.EMOJI_DROPS_SUPABASE=Object.freeze({
+  url:'https://ikodftqyzfeeoophwlvy.supabase.co',
+  anonKey:'sb_publishable_9Zouq9ZlMFl8dEupnd75PA_RwHdCajK'
+});
