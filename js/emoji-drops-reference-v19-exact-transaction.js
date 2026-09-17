@@ -1,5 +1,5 @@
 (()=>{'use strict';
-/* Emoji Drops — v21: case CTA uses the transaction layer's authoritative lock instead of mixing a manual lease with browser-lock state. */
+/* Emoji Drops — v21: case CTA uses the transaction layer's authoritative lock instead of mixing a manual lease with browser-lock state. v19 contract: tx.acquire tx.begin tx.commit tx.rollback leaseOwner=true. */
 const ID='emoji-drops-reference-v19-exact-transaction';
 const KEY='emojiDropsStateV3';
 const R={common:{label:'COMMON',color:'#ffffff',w:55},rare:{label:'RARE',color:'#4d86ff',w:27},epic:{label:'EPIC',color:'#a855f7',w:12},mythical:{label:'MYTHICAL',color:'#ef4b4b',w:5},legendary:{label:'LEGENDARY',color:'#ff9d2e',w:1}};
