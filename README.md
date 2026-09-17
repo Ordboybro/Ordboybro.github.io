@@ -5,7 +5,7 @@
 [![Static QA](https://github.com/Ordboybro/Ordboybro.github.io/actions/workflows/static-qa.yml/badge.svg)](https://github.com/Ordboybro/Ordboybro.github.io/actions/workflows/static-qa.yml)  
 **Live demo:** https://ordboybro.github.io/
 
-Emoji Drops is a static-first web application built with vanilla HTML, CSS and JavaScript. The current UI follows a dark premium reference direction: Cases / Upgrade / Market are the primary navigation, Profile contains Inventory and related account sections, and case cards use large thematic emojis.
+Emoji Drops is a static-first web application built with vanilla HTML, CSS and JavaScript. The UI follows a dark premium reference direction: Cases / Upgrade / Market are the primary navigation, Profile contains Inventory and related account sections, and case cards use large thematic emojis.
 
 > This is a simulator / portfolio project. It does not process real-money gambling or payments.
 
@@ -13,7 +13,7 @@ Emoji Drops is a static-first web application built with vanilla HTML, CSS and J
 
 - 📦 Eight themed cases with weighted rarity drops
 - 🎰 Exact case-opening modal with roulette/reel presentation
-- ⚡ Fast opening and resilient action handling
+- ⚡ Resilient opening and interaction handling
 - 🔴 Live Drops feed
 - 👤 Profile with Inventory and account sections
 - 📊 Statistics, progression and achievements
@@ -25,44 +25,13 @@ Emoji Drops is a static-first web application built with vanilla HTML, CSS and J
 
 ## 🧱 Runtime architecture
 
-The runtime is intentionally split into focused browser modules. `js/app-v2.js` is the single bootstrap/loader and keeps the production order deterministic.
-
-```text
-index.html
-   │
-   ├── data.js                         dataset bootstrap
-   │
-   └── js/app-v2.js                    runtime loader
-          │
-          ├── schema / data bridge     canonical dataset exposure
-          ├── hardening / guards       defensive runtime contracts
-          ├── core                     state + domain rendering
-          ├── transaction layer        controlled state mutations
-          ├── product layers           search, filters, progression, UX
-          ├── case showcase            authoritative case modal
-          ├── case authority/bridge    canonical case activation
-          ├── P3/P4 polish             responsive interaction/accessibility
-          └── reference-v23 studio     single visual authority
-```
-
-There is deliberately no legacy visual override chain in the production loader. Superseded runtime/visual files are removed instead of being left as hidden fallback layers.
+`js/app-v2.js` is the deterministic bootstrap/loader. The latest repair pass keeps the authoritative transaction/case/Upgrade owners intact and adds a final interaction layer for cross-module UX issues: touch feedback, iOS search zoom, modal close handling, favorites, case-result presentation and Profile presentation.
 
 ## 🧪 Quality & CI
 
-Every push and pull request to `main` runs the static QA workflow. It checks:
+Every push and pull request to `main` runs the static QA workflow. It checks syntax, canonical economy, transaction/recovery behavior, product flows, Chromium browser E2E, Upgrade, accessibility, performance, responsive/touch behavior, multi-tab recovery and security.
 
-- JavaScript syntax and local asset integrity
-- deterministic runtime bootstrap order and cache versions
-- canonical dataset and economy contracts
-- transaction, recovery and storage-fault behavior
-- product, accessibility, security and hardening contracts
-- Chromium browser E2E flows
-- Upgrade E2E
-- responsive/touch behavior across portrait and landscape viewports
-- performance budgets, DOM lifecycle stability, resource growth and observer lifecycle
-- multi-tab/recovery behavior
-
-Performance failures are treated as real failures; lifecycle checks are not made green by simply raising leak thresholds.
+After the latest UX repair pass, a fresh full QA run is required before declaring the project fully green. A previous green run is not treated as proof for the newer commit.
 
 ## 🛠️ Tech stack
 
@@ -84,13 +53,7 @@ cd Ordboybro.github.io
 python -m http.server 8000
 ```
 
-Open:
-
-```text
-http://localhost:8000
-```
-
-Opening `index.html` directly may work for basic inspection, but an HTTP server is recommended for browser API and asset behavior.
+Open `http://localhost:8000`.
 
 ## 📂 Project structure
 
@@ -103,7 +66,7 @@ Opening `index.html` directly may work for basic inspection, but an HTTP server 
 ├── js/
 │   ├── app-v2.js
 │   ├── canonical runtime modules
-│   └── case/reference modules
+│   └── UX/interaction repair layer
 ├── assets/emoji-drops/
 ├── tests/
 ├── docs/
@@ -115,9 +78,7 @@ Opening `index.html` directly may work for basic inspection, but an HTTP server 
 
 ## 📈 Project status
 
-**Production-ready portfolio project.**
-
-The case-opening, economy, inventory, profile, Upgrade, Market, runtime-hardening, accessibility, recovery, security and browser-QA systems are implemented and covered by the current CI suite. The latest full QA run completed successfully across syntax, economy, transactions, product workflows, browser E2E, Upgrade, accessibility, performance, mobile/touch, recovery/multi-tab and security checks. Production deployment is handled through GitHub Pages.
+**QA verification pending for the latest UX repair commit.** The production codebase has received a focused repair pass for the reported Favorites, iOS search zoom, tap flash, modal close, case-result animation, Upgrade interaction conflict and Profile UX issues. Full QA and production smoke verification must pass before this status is changed to production-ready.
 
 ## 👨‍💻 Author
 
