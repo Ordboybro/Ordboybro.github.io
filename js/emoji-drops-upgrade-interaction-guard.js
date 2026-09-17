@@ -7,7 +7,7 @@ if(from){root.dataset.upgradeWager=from.dataset.upFrom||'';root.dataset.upgradeG
 if(to){root.dataset.upgradeGoal=to.dataset.upTo||'';window.EmojiDropsUpgradeFinal?.build?.();return}
 /* The final Upgrade owner installs the transaction handler as the button's onclick property. Invoke that owner directly from capture so older document-level handlers cannot replace/rerender the control before the transaction starts. */
 const handler=spin.onclick;if(typeof handler!=='function')return;const before=snapshot();try{handler.call(spin,e)}catch(err){console.error('Emoji Drops Upgrade interaction failed',err);return}
-/* Local/offline fallback animations intentionally commit after their wheel animation. If a legacy layer swallowed the first owner call, give the same owner one guarded retry after that commit window. Never retry a server-authoritative call. */
-if(!window.EmojiDropsAuth?.userId){setTimeout(()=>{const now=snapshot();if(!spin.isConnected||!before||!now||now.s===before.s&&now.i===before.i)return;},2800)}
+/* Local/offline fallback commits after its wheel animation. If the first owner call was swallowed before scheduling its commit, retry the same owner once after that window. Server-authoritative calls are never retried. */
+if(!window.EmojiDropsAuth?.userId&&before){setTimeout(()=>{const now=snapshot();if(!spin.isConnected||!now||now.s!==before.s||now.i!==before.i)return;try{handler.call(spin,e)}catch(err){console.error('Emoji Drops Upgrade guarded retry failed',err)}},2800)}
 },true);
 })();
