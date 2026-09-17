@@ -1,6 +1,5 @@
--- Emoji Drops — server-authoritative economy v7.
--- Canonical case prices mirror the client economy contract exactly.
--- Authenticated users can read their profile, but cannot directly insert or update economy fields.
+-- Emoji Drops — server-authoritative economy v8.
+-- Canonical case prices and authoritative random outcomes stay on the server.
 create extension if not exists pgcrypto;
 
 create table if not exists public.profiles (
@@ -76,9 +75,29 @@ begin
  update public.profiles set inventory=(select coalesce(jsonb_agg(x),'[]'::jsonb) from jsonb_array_elements(inv) x where x->>'id'<>p_item_id) || case when success then jsonb_build_array(result) else '[]'::jsonb end,updated_at=now() where id=uid;
  return jsonb_build_object('success',success,'item',result,'chance',chance,'balance',(select balance from public.profiles where id=uid));
 end; $$;
-
 grant execute on function public.case_cost(text) to authenticated;
 grant execute on function public.set_nickname(text) to authenticated;
 grant execute on function public.open_case_server(text,numeric) to authenticated;
 grant execute on function public.sell_all_server() to authenticated;
 grant execute on function public.upgrade_server(text,numeric,numeric) to authenticated;
+
+-- Upgrade v8: target identity is supplied by the catalogue, while the server still owns the roll and inventory mutation.
+create or replace function public.upgrade_server(p_item_id text,p_target_price numeric,p_multiplier numeric,p_target_emoji text,p_target_rarity text,p_target_case_id text) returns jsonb language plpgsql security definer set search_path=public as $$
+declare uid uuid:=auth.uid(); inv jsonb; src jsonb; src_price numeric; chance numeric; roll numeric:=random(); success boolean; result jsonb; clean_rarity text; clean_case text; clean_emoji text;
+begin
+ if uid is null then raise exception 'AUTH_REQUIRED'; end if;
+ if p_multiplier not in (1.5,2,3,5) or p_target_price<=0 then raise exception 'INVALID_UPGRADE'; end if;
+ clean_emoji:=left(trim(coalesce(p_target_emoji,'')),16); clean_rarity:=lower(trim(coalesce(p_target_rarity,''))); clean_case:=lower(trim(coalesce(p_target_case_id,'')));
+ if clean_emoji='' or clean_rarity not in ('common','rare','epic','mythical','legendary') or clean_case='' then raise exception 'INVALID_TARGET'; end if;
+ select inventory into inv from public.profiles where id=uid for update;
+ select x into src from jsonb_array_elements(coalesce(inv,'[]'::jsonb)) x where x->>'id'=p_item_id limit 1;
+ if src is null then raise exception 'ITEM_NOT_FOUND'; end if;
+ src_price:=round((src->>'price')::numeric,2);
+ if p_target_price<=src_price or p_target_price>src_price*p_multiplier then raise exception 'INVALID_TARGET'; end if;
+ chance:=greatest(0.01,least(0.95,(src_price*p_multiplier-p_target_price)/(src_price*p_multiplier-src_price)));
+ success:=roll<=chance;
+ if success then result:=jsonb_build_object('id',gen_random_uuid()::text,'emoji',clean_emoji,'rarity',clean_rarity,'case_id',clean_case,'price',round(p_target_price,2),'created_at',now(),'upgraded_from',p_item_id); else result:=null; end if;
+ update public.profiles set inventory=(select coalesce(jsonb_agg(x),'[]'::jsonb) from jsonb_array_elements(inv) x where x->>'id'<>p_item_id) || case when success then jsonb_build_array(result) else '[]'::jsonb end,stats=jsonb_set(coalesce(stats,'{}'::jsonb),'{wins}',to_jsonb(coalesce((stats->>'wins')::int,0)+case when success then 1 else 0 end),true),updated_at=now() where id=uid;
+ return jsonb_build_object('success',success,'item',result,'chance',chance,'balance',(select balance from public.profiles where id=uid));
+end; $$;
+grant execute on function public.upgrade_server(text,numeric,numeric,text,text,text) to authenticated;
