@@ -322,7 +322,7 @@ insert into public.case_items(case_id,item_index,emoji,rarity,item_price) values
 on conflict (case_id,item_index) do update set emoji=excluded.emoji,rarity=excluded.rarity,item_price=excluded.item_price;
 
 create or replace function public.open_case_server(p_case_id text, p_cost numeric default null) returns jsonb
-language plpgsql security definer set search_path=public as $$
+language plpgsql security definer set search_path='' as $$
 declare
   uid uuid:=auth.uid(); bal numeric; inv jsonb; cost numeric; roll numeric:=random(); v_rarity text; chosen public.case_items%rowtype; item jsonb;
 begin
@@ -335,7 +335,7 @@ begin
   v_rarity:=case when roll<.01 then 'legendary' when roll<.06 then 'mythical' when roll<.18 then 'epic' when roll<.45 then 'rare' else 'common' end;
   select ci.* into chosen from public.case_items ci where ci.case_id=lower(trim(p_case_id)) and ci.rarity=v_rarity order by random() limit 1;
   if chosen.item_index is null then raise exception 'CASE_ITEMS_UNAVAILABLE'; end if;
-  item:=jsonb_build_object('id',gen_random_uuid()::text,'emoji',chosen.emoji,'rarity',chosen.rarity,'price',chosen.item_price,'case_id',chosen.case_id,'caseKey',chosen.case_id,'obtainedAt',now());
+  item:=jsonb_build_object('id',public.gen_random_uuid()::text,'emoji',chosen.emoji,'rarity',chosen.rarity,'price',chosen.item_price,'case_id',chosen.case_id,'caseKey',chosen.case_id,'obtainedAt',now());
   update public.profiles set balance=bal-cost,inventory=coalesce(inv,'[]'::jsonb)||jsonb_build_array(item),best_drop=case when best_drop is null or coalesce((best_drop->>'price')::numeric,0)<chosen.item_price then item else best_drop end,stats=jsonb_set(jsonb_set(jsonb_set(coalesce(stats,'{}'::jsonb),'{opens}',to_jsonb(coalesce((stats->>'opens')::int,0)+1),true),'{wins}',to_jsonb(coalesce((stats->>'wins')::int,0)+1),true),'{spent}',to_jsonb(coalesce((stats->>'spent')::numeric,0)+cost),true),'{earned}',to_jsonb(coalesce((stats->>'earned')::numeric,0)+chosen.item_price),true),updated_at=now() where id=uid;
   if to_regclass('public.live_drops') is not null then
     execute 'insert into public.live_drops(user_id,nickname,item,case_id,item_price,created_at) values ($1,$2,$3,$4,$5,now())' using uid,(select nickname from public.profiles where id=uid),item,chosen.case_id,chosen.item_price;
