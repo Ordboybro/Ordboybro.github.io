@@ -102,7 +102,6 @@ revoke execute on function public.create_market_listing(text,numeric) from publi
 revoke execute on function public.cancel_market_listing(uuid) from public,anon;
 revoke execute on function public.buy_market_listing(uuid) from public,anon;
 revoke execute on function public.market_snapshot() from public,anon;
-revoke execute on function public.open_case_server(text,numeric) from public,anon;
 
 grant execute on function public.create_market_listing(text,numeric) to authenticated;
 grant execute on function public.cancel_market_listing(uuid) to authenticated;
