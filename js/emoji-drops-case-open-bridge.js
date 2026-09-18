@@ -10,6 +10,7 @@ function inActiveCases(node){const card=node?.closest?.('.ed-case');return !!car
 function ready(key){return !!key&&!!window.EmojiDropsCaseShowcaseExact&&typeof window.EmojiDropsCaseShowcaseExact.open==='function'}
 function visible(){return !!document.querySelector('#edExact.show')}
 function invoke(key){if(!ready(key))return false;try{window.EmojiDropsCaseShowcaseExact.open(key);return visible()}catch(err){console.warn('Emoji Drops case open deferred',err);return false}}
+function delayedRetry(key,node){return retry(key,node)}
 function retry(key,node){let attempts=0;const run=()=>{if(!inActiveCases(node)||visible())return;if(invoke(key)||++attempts>=15)return;setTimeout(run,35)};run()}
 function activate(node,key,event){if(!inActiveCases(node)||visible())return false;if(event){event.preventDefault();event.stopImmediatePropagation()}if(!invoke(key))retry(key,node);return false}
 function markTouchTarget(node){if(!node)return;node.dataset.edBridgeTouchAt=String(Date.now());setTimeout(()=>{if(node.isConnected)delete node.dataset.edBridgeTouchAt},TOUCH_GUARD_MS+300)}
