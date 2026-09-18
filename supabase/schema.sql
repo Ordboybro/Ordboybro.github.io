@@ -17,12 +17,12 @@ drop policy if exists "profiles_insert_own" on public.profiles;
 drop policy if exists "profiles_update_own" on public.profiles;
 create policy "profiles_select_own" on public.profiles for select using (auth.uid()=id);
 
-create or replace function public.handle_new_user() returns trigger language plpgsql security definer set search_path=public as $$
+create or replace function public.handle_new_user() returns trigger language plpgsql security definer set search_path='' as $$
 begin insert into public.profiles(id,nickname,balance) values(new.id,coalesce(new.raw_user_meta_data->>'nickname',split_part(new.email,'@',1)),250) on conflict(id) do nothing; return new; end; $$;
 drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created after insert on auth.users for each row execute procedure public.handle_new_user();
 
-create or replace function public.set_nickname(p_nickname text) returns jsonb language plpgsql security definer set search_path=public as $$
+create or replace function public.set_nickname(p_nickname text) returns jsonb language plpgsql security definer set search_path='' as $$
 declare uid uuid:=auth.uid(); clean text:=trim(coalesce(p_nickname,''));
 begin
  if uid is null then raise exception 'AUTH_REQUIRED'; end if;
@@ -34,7 +34,7 @@ end; $$;
 create or replace function public.case_cost(p_case_id text) returns numeric language sql immutable as $$
 select case lower(trim(p_case_id)) when 'smile' then 100 when 'moves' then 80 when 'nature' then 60 when 'food' then 40 when 'animals' then 20 when 'transport' then 10 when 'sport' then 250 when 'games' then 500 else null end $$;
 
-create or replace function public.open_case_server(p_case_id text, p_cost numeric default null) returns jsonb language plpgsql security definer set search_path=public as $$
+create or replace function public.open_case_server(p_case_id text, p_cost numeric default null) returns jsonb language plpgsql security definer set search_path='' as $$
 declare uid uuid:=auth.uid(); bal numeric; inv jsonb; cost numeric; roll numeric:=random(); rarity text; price numeric; item jsonb;
 begin
  if uid is null then raise exception 'AUTH_REQUIRED'; end if;
@@ -50,7 +50,7 @@ begin
  return jsonb_build_object('item',item,'balance',bal-cost,'cost',cost);
 end; $$;
 
-create or replace function public.sell_all_server() returns jsonb language plpgsql security definer set search_path=public as $$
+create or replace function public.sell_all_server() returns jsonb language plpgsql security definer set search_path='' as $$
 declare uid uuid:=auth.uid(); total numeric;
 begin
  if uid is null then raise exception 'AUTH_REQUIRED'; end if;
@@ -59,7 +59,7 @@ begin
  return jsonb_build_object('balance',(select balance from public.profiles where id=uid),'sold',total);
 end; $$;
 
-create or replace function public.upgrade_server(p_item_id text,p_target_price numeric,p_multiplier numeric) returns jsonb language plpgsql security definer set search_path=public as $$
+create or replace function public.upgrade_server(p_item_id text,p_target_price numeric,p_multiplier numeric) returns jsonb language plpgsql security definer set search_path='' as $$
 declare uid uuid:=auth.uid(); inv jsonb; src jsonb; src_price numeric; chance numeric; roll numeric:=random(); success boolean; result jsonb;
 begin
  if uid is null then raise exception 'AUTH_REQUIRED'; end if;
@@ -82,7 +82,7 @@ grant execute on function public.sell_all_server() to authenticated;
 grant execute on function public.upgrade_server(text,numeric,numeric) to authenticated;
 
 -- Upgrade v8: target identity is supplied by the catalogue, while the server still owns the roll and inventory mutation.
-create or replace function public.upgrade_server(p_item_id text,p_target_price numeric,p_multiplier numeric,p_target_emoji text,p_target_rarity text,p_target_case_id text) returns jsonb language plpgsql security definer set search_path=public as $$
+create or replace function public.upgrade_server(p_item_id text,p_target_price numeric,p_multiplier numeric,p_target_emoji text,p_target_rarity text,p_target_case_id text) returns jsonb language plpgsql security definer set search_path='' as $$
 declare uid uuid:=auth.uid(); inv jsonb; src jsonb; src_price numeric; chance numeric; roll numeric:=random(); success boolean; result jsonb; clean_rarity text; clean_case text; clean_emoji text;
 begin
  if uid is null then raise exception 'AUTH_REQUIRED'; end if;
@@ -101,3 +101,16 @@ begin
  return jsonb_build_object('success',success,'item',result,'chance',chance,'balance',(select balance from public.profiles where id=uid));
 end; $$;
 grant execute on function public.upgrade_server(text,numeric,numeric,text,text,text) to authenticated;
+
+
+-- Harden the fresh schema against legacy/public execution and remove superseded overloads.
+revoke execute on function public.handle_new_user() from public,anon,authenticated;
+grant execute on function public.handle_new_user() to service_role;
+revoke execute on function public.set_nickname(text) from public,anon;
+grant execute on function public.set_nickname(text) to authenticated;
+revoke execute on function public.open_case_server(text,numeric) from public,anon;
+grant execute on function public.open_case_server(text,numeric) to authenticated;
+revoke execute on function public.sell_all_server() from public,anon;
+grant execute on function public.sell_all_server() to authenticated;
+revoke execute on function public.upgrade_server(text,numeric,numeric) from public,anon,authenticated;
+drop function if exists public.upgrade_server(text,numeric,numeric);
