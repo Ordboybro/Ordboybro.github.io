@@ -114,3 +114,388 @@ revoke execute on function public.sell_all_server() from public,anon;
 grant execute on function public.sell_all_server() to authenticated;
 revoke execute on function public.upgrade_server(text,numeric,numeric) from public,anon,authenticated;
 drop function if exists public.upgrade_server(text,numeric,numeric);
+
+-- Canonical case catalogue and server-side resolution (self-contained schema).
+-- Emoji Drops authoritative case catalog + server-side case resolution.
+-- The browser may display this catalog, but the RPC chooses the actual item on the server.
+create table if not exists public.case_items (
+  case_id text not null,
+  item_index integer not null,
+  emoji text not null,
+  rarity text not null check (rarity in ('common','rare','epic','mythical','legendary')),
+  item_price numeric(12,2) not null check (item_price >= 0),
+  primary key (case_id,item_index)
+);
+alter table public.case_items enable row level security;
+revoke all on public.case_items from anon, authenticated;
+
+insert into public.case_items(case_id,item_index,emoji,rarity,item_price) values
+('smile',0,'😀','common',4),
+('smile',1,'😃','common',4),
+('smile',2,'😄','common',5),
+('smile',3,'😁','common',5),
+('smile',4,'😆','common',5),
+('smile',5,'😅','common',5),
+('smile',6,'😂','common',6),
+('smile',7,'🤣','common',6),
+('smile',8,'🙂','common',6),
+('smile',9,'🙃','common',6),
+('smile',10,'😉','common',7),
+('smile',11,'😊','rare',12),
+('smile',12,'😇','rare',13),
+('smile',13,'😍','rare',14),
+('smile',14,'😘','rare',14),
+('smile',15,'😎','rare',15),
+('smile',16,'🤓','rare',16),
+('smile',17,'🥳','epic',28),
+('smile',18,'🤩','epic',30),
+('smile',19,'😈','epic',32),
+('smile',20,'👻','epic',35),
+('smile',21,'🤖','mythical',70),
+('smile',22,'👽','mythical',80),
+('smile',23,'💀','mythical',90),
+('smile',24,'👑','legendary',150),
+('smile',25,'💎','legendary',180),
+('smile',26,'🌟','legendary',220),
+('smile',27,'🤗','common',7),
+('smile',28,'🤭','common',7),
+('smile',29,'🤔','common',8),
+('smile',30,'😐','common',8),
+('smile',31,'😑','common',8),
+('smile',32,'😌','rare',11),
+('smile',33,'😏','rare',12),
+('smile',34,'😒','rare',13),
+('smile',35,'😞','rare',14),
+('smile',36,'😓','rare',15),
+('smile',37,'😩','epic',25),
+('smile',38,'😱','epic',27),
+('smile',39,'😭','epic',30),
+('smile',40,'😖','epic',33),
+('smile',41,'🤯','mythical',65),
+('smile',42,'🤢','mythical',75),
+('smile',43,'🤧','mythical',85),
+('smile',44,'🥵','legendary',170),
+('smile',45,'🥶','legendary',190),
+('moves',0,'🕺','common',3),
+('moves',1,'💃','common',3),
+('moves',2,'🏃','common',4),
+('moves',3,'🚶','common',4),
+('moves',4,'🏃‍♂️','common',5),
+('moves',5,'🏃‍♀️','common',5),
+('moves',6,'🤸','rare',10),
+('moves',7,'🏋️','rare',12),
+('moves',8,'🤾','rare',13),
+('moves',9,'🚴','rare',14),
+('moves',10,'⚡','epic',24),
+('moves',11,'🔥','epic',28),
+('moves',12,'💨','epic',30),
+('moves',13,'🌪️','mythical',60),
+('moves',14,'☄️','mythical',75),
+('moves',15,'👑','legendary',140),
+('moves',16,'🧘‍♂️','common',4),
+('moves',17,'🧘‍♀️','common',4),
+('moves',18,'🤺','common',5),
+('moves',19,'🤼‍♂️','common',5),
+('moves',20,'🤼‍♀️','common',5),
+('moves',21,'🤽‍♂️','rare',11),
+('moves',22,'🤽‍♀️','rare',11),
+('moves',23,'🤹‍♂️','rare',12),
+('moves',24,'🤹‍♀️','rare',12),
+('moves',25,'🤴','rare',13),
+('moves',26,'🤵‍♂️','epic',20),
+('moves',27,'🤵‍♀️','epic',20),
+('moves',28,'🤴','epic',22),
+('moves',29,'🦸‍♂️','epic',26),
+('moves',30,'🦸‍♀️','epic',26),
+('moves',31,'🦹‍♂️','mythical',55),
+('moves',32,'🦹‍♀️','mythical',55),
+('moves',33,'🦸‍♂️','mythical',65),
+('moves',34,'🦸‍♀️','mythical',65),
+('moves',35,'🦹‍♂️','legendary',130),
+('moves',36,'🦹‍♀️','legendary',130),
+('nature',0,'🌿','common',2),
+('nature',1,'🌲','common',3),
+('nature',2,'🌳','common',3),
+('nature',3,'🍀','common',3),
+('nature',4,'🌱','common',4),
+('nature',5,'🌵','common',4),
+('nature',6,'🌸','rare',10),
+('nature',7,'🌺','rare',12),
+('nature',8,'🌼','rare',13),
+('nature',9,'🌻','rare',14),
+('nature',10,'🌈','epic',26),
+('nature',11,'🌊','epic',28),
+('nature',12,'🌋','mythical',55),
+('nature',13,'🌪️','mythical',70),
+('nature',14,'☀️','legendary',130),
+('nature',15,'🌌','legendary',180),
+('nature',16,'🍂','common',2),
+('nature',17,'🍁','common',2),
+('nature',18,'🍃','common',3),
+('nature',19,'🌴','common',3),
+('nature',20,'💐','common',4),
+('nature',21,'🌹','rare',11),
+('nature',22,'🌷','rare',12),
+('nature',23,'🥀','rare',13),
+('nature',24,'🌴','rare',14),
+('nature',25,'🌾','rare',15),
+('nature',26,'🌦️','epic',25),
+('nature',27,'⛅','epic',27),
+('nature',28,'🌧️','epic',29),
+('nature',29,'❄️','epic',31),
+('nature',30,'🌩️','mythical',60),
+('nature',31,'🌤️','mythical',65),
+('nature',32,'🌑','mythical',75),
+('nature',33,'🌕','mythical',80),
+('nature',34,'🌍','legendary',160),
+('nature',35,'🌎','legendary',170),
+('nature',36,'🪐','legendary',190),
+('food',0,'🍔','common',2),
+('food',1,'🍕','common',2),
+('food',2,'🍟','common',3),
+('food',3,'🌭','common',3),
+('food',4,'🍿','common',3),
+('food',5,'🥪','common',4),
+('food',6,'🍩','rare',9),
+('food',7,'🍪','rare',10),
+('food',8,'🍫','rare',12),
+('food',9,'🍰','epic',20),
+('food',10,'🎂','epic',24),
+('food',11,'🍓','epic',26),
+('food',12,'🍣','mythical',50),
+('food',13,'🍤','mythical',65),
+('food',14,'💎','legendary',140),
+('food',15,'👑','legendary',170),
+('food',16,'🍎','common',2),
+('food',17,'🍊','common',2),
+('food',18,'🍋','common',3),
+('food',19,'🍇','common',3),
+('food',20,'🍏','common',3),
+('food',21,'🍐','rare',8),
+('food',22,'🍑','rare',9),
+('food',23,'🍒','rare',10),
+('food',24,'🍌','rare',11),
+('food',25,'🍍','rare',12),
+('food',26,'🍯','epic',18),
+('food',27,'🍼','epic',22),
+('food',28,'☕️','epic',23),
+('food',29,'🍵','epic',25),
+('food',30,'🍷','mythical',45),
+('food',31,'🍸','mythical',52),
+('food',32,'🍹','mythical',58),
+('food',33,'🍾','mythical',62),
+('food',34,'🍳','legendary',120),
+('food',35,'🍽️','legendary',130),
+('food',36,'🧁','legendary',150),
+('animals',0,'🐶','common',3),
+('animals',1,'🐱','common',3),
+('animals',2,'🐭','common',3),
+('animals',3,'🐹','common',4),
+('animals',4,'🐰','common',4),
+('animals',5,'🦊','rare',12),
+('animals',6,'🐼','rare',14),
+('animals',7,'🐨','rare',15),
+('animals',8,'🦁','epic',30),
+('animals',9,'🐯','epic',34),
+('animals',10,'🦄','epic',38),
+('animals',11,'🐉','mythical',80),
+('animals',12,'🦖','mythical',90),
+('animals',13,'👹','legendary',170),
+('animals',14,'👑','legendary',220),
+('animals',15,'🦜','common',5),
+('animals',16,'🕊️','common',4),
+('animals',17,'🦅','common',5),
+('animals',18,'🦉','common',5),
+('animals',19,'🦋','common',4),
+('animals',20,'🐝','common',4),
+('animals',21,'🕷️','common',5),
+('animals',22,'🦟','common',5),
+('animals',23,'🦗','common',6),
+('animals',24,'🐞','common',4),
+('animals',25,'🦂','rare',11),
+('animals',26,'🦃','rare',13),
+('animals',27,'🦚','rare',14),
+('animals',28,'🦩','rare',16),
+('animals',29,'🦤','rare',17),
+('animals',30,'🦛','epic',28),
+('animals',31,'🦏','epic',32),
+('animals',32,'🦓','epic',36),
+('animals',33,'🦍','epic',42),
+('animals',34,'🦧','epic',44),
+('animals',35,'🦈','mythical',75),
+('animals',36,'🦐','mythical',85),
+('animals',37,'🦑','mythical',95),
+('animals',38,'🦀','mythical',100),
+('animals',39,'🦕','legendary',200),
+('animals',40,'🦇','legendary',210),
+('transport',0,'🚗','common',2),
+('transport',1,'🚕','common',2),
+('transport',2,'🚌','common',3),
+('transport',3,'🚓','common',3),
+('transport',4,'🚑','rare',10),
+('transport',5,'🏎️','rare',14),
+('transport',6,'🚜','rare',15),
+('transport',7,'✈️','epic',28),
+('transport',8,'🚀','epic',35),
+('transport',9,'🛸','mythical',70),
+('transport',10,'⚡','mythical',80),
+('transport',11,'🪐','legendary',150),
+('transport',12,'🌌','legendary',180),
+('transport',13,'🚲','common',3),
+('transport',14,'🛴','common',4),
+('transport',15,'🛵','common',4),
+('transport',16,'🛺','common',3),
+('transport',17,'🚘','common',3),
+('transport',18,'🚙','rare',11),
+('transport',19,'🚚','rare',12),
+('transport',20,'🚛','rare',13),
+('transport',21,'🚐','rare',14),
+('transport',22,'🚍','rare',16),
+('transport',23,'🚝','epic',25),
+('transport',24,'🚞','epic',27),
+('transport',25,'🚈','epic',29),
+('transport',26,'🚆','epic',31),
+('transport',27,'🚄','epic',33),
+('transport',28,'🛩️','mythical',65),
+('transport',29,'🛫','mythical',75),
+('transport',30,'⛵','mythical',85),
+('transport',31,'🛥️','mythical',90),
+('transport',32,'🛳️','mythical',95),
+('transport',33,'🛰️','legendary',160),
+('transport',34,'🗼','legendary',190),
+('transport',35,'🗽','legendary',200),
+('sport',0,'⚽','common',5),
+('sport',1,'🏀','common',6),
+('sport',2,'🏉','common',7),
+('sport',3,'🏒','common',8),
+('sport',4,'🏓','common',9),
+('sport',5,'⛸️','common',10),
+('sport',6,'🥌','common',11),
+('sport',7,'🏸','common',12),
+('sport',8,'🤸‍♂️','common',13),
+('sport',9,'🤸‍♀️','common',13),
+('sport',10,'🏋️‍♂️','rare',14),
+('sport',11,'🏋️‍♀️','rare',14),
+('sport',12,'🤺','rare',15),
+('sport',13,'🏊‍♂️','rare',16),
+('sport',14,'🏊‍♀️','rare',16),
+('sport',15,'🚴‍♂️','rare',17),
+('sport',16,'🚴‍♀️','rare',17),
+('sport',17,'🏇','rare',18),
+('sport',18,'🤼‍♂️','rare',19),
+('sport',19,'🤼‍♀️','rare',19),
+('sport',20,'🎣','epic',25),
+('sport',21,'🛹','epic',27),
+('sport',22,'🛼','epic',29),
+('sport',23,'🤾‍♂️','epic',32),
+('sport',24,'🤾‍♀️','epic',32),
+('sport',25,'🤽‍♂️','epic',35),
+('sport',26,'🤽‍♀️','epic',35),
+('sport',27,'🏄‍♂️','epic',38),
+('sport',28,'🏄‍♀️','epic',38),
+('sport',29,'🏂','epic',42),
+('sport',30,'🎽','mythical',60),
+('sport',31,'🏋️','mythical',65),
+('sport',32,'🤾','mythical',70),
+('sport',33,'🏆','mythical',80),
+('sport',34,'🏅','mythical',85),
+('sport',35,'🥉','legendary',150),
+('sport',36,'🥈','legendary',200),
+('sport',37,'🥇','legendary',260),
+('games',0,'🎮','common',8),
+('games',1,'🕹️','common',9),
+('games',2,'🃏','common',10),
+('games',3,'🀄','common',11),
+('games',4,'🎴','common',12),
+('games',5,'🎲','rare',20),
+('games',6,'♟️','rare',22),
+('games',7,'🎯','rare',24),
+('games',8,'🧩','rare',25),
+('games',9,'🧸','rare',26),
+('games',10,'🎪','rare',28),
+('games',11,'🎰','rare',30),
+('games',12,'🎱','rare',32),
+('games',13,'🎳','rare',36),
+('games',14,'👾','epic',50),
+('games',15,'💻','epic',55),
+('games',16,'🖥️','epic',58),
+('games',17,'🎮','epic',62),
+('games',18,'🕹️','epic',65),
+('games',19,'🧙‍♂️','mythical',90),
+('games',20,'🧙‍♀️','mythical',95),
+('games',21,'🦸‍♂️','mythical',100),
+('games',22,'🦸‍♀️','mythical',105),
+('games',23,'🦹‍♂️','mythical',110),
+('games',24,'🦹‍♀️','mythical',115),
+('games',25,'🧝‍♂️','mythical',125),
+('games',26,'🧝‍♀️','mythical',130),
+('games',27,'🧛‍♂️','mythical',135),
+('games',28,'🧛‍♀️','mythical',140),
+('games',29,'🧜‍♂️','mythical',145),
+('games',30,'🧜‍♀️','mythical',150),
+('games',31,'🧞‍♂️','legendary',250),
+('games',32,'🧞‍♀️','legendary',300),
+('games',33,'🏆','legendary',350),
+('games',34,'👑','legendary',500)
+on conflict (case_id,item_index) do update set emoji=excluded.emoji,rarity=excluded.rarity,item_price=excluded.item_price;
+
+create or replace function public.open_case_server(p_case_id text, p_cost numeric default null) returns jsonb
+language plpgsql security definer set search_path='' as $$
+declare
+  uid uuid:=auth.uid(); bal numeric; inv jsonb; cost numeric; roll numeric:=random(); v_rarity text; chosen public.case_items%rowtype; item jsonb;
+begin
+  if uid is null then raise exception 'AUTH_REQUIRED'; end if;
+  cost:=public.case_cost(p_case_id);
+  if cost is null then raise exception 'INVALID_CASE'; end if;
+  select balance,inventory into bal,inv from public.profiles where id=uid for update;
+  if bal is null then raise exception 'PROFILE_NOT_FOUND'; end if;
+  if bal<cost then raise exception 'INSUFFICIENT_FUNDS'; end if;
+  v_rarity:=case when roll<.01 then 'legendary' when roll<.06 then 'mythical' when roll<.18 then 'epic' when roll<.45 then 'rare' else 'common' end;
+  select ci.* into chosen from public.case_items ci where ci.case_id=lower(trim(p_case_id)) and ci.rarity=v_rarity order by random() limit 1;
+  if chosen.item_index is null then raise exception 'CASE_ITEMS_UNAVAILABLE'; end if;
+  item:=jsonb_build_object('id',public.gen_random_uuid()::text,'emoji',chosen.emoji,'rarity',chosen.rarity,'price',chosen.item_price,'case_id',chosen.case_id,'caseKey',chosen.case_id,'obtainedAt',now());
+  update public.profiles set balance=bal-cost,inventory=coalesce(inv,'[]'::jsonb)||jsonb_build_array(item),best_drop=case when best_drop is null or coalesce((best_drop->>'price')::numeric,0)<chosen.item_price then item else best_drop end,stats=jsonb_set(jsonb_set(jsonb_set(coalesce(stats,'{}'::jsonb),'{opens}',to_jsonb(coalesce((stats->>'opens')::int,0)+1),true),'{wins}',to_jsonb(coalesce((stats->>'wins')::int,0)+1),true),'{spent}',to_jsonb(coalesce((stats->>'spent')::numeric,0)+cost),true),'{earned}',to_jsonb(coalesce((stats->>'earned')::numeric,0)+chosen.item_price),true),updated_at=now() where id=uid;
+  if to_regclass('public.live_drops') is not null then
+    execute 'insert into public.live_drops(user_id,nickname,item,case_id,item_price,created_at) values ($1,$2,$3,$4,$5,now())' using uid,(select nickname from public.profiles where id=uid),item,chosen.case_id,chosen.item_price;
+  end if;
+  return jsonb_build_object('item',item,'balance',bal-cost,'cost',cost);
+end; $$;
+revoke execute on function public.open_case_server(text,numeric) from public,anon;
+grant execute on function public.open_case_server(text,numeric) to authenticated;
+
+-- Canonical Upgrade RPC. The 7-argument signature is the only supported client contract.
+-- Emoji Drops — authoritative Upgrade target and chance validation.
+-- Target identity is resolved against the same server-owned case catalog used by case opening.
+create or replace function public.upgrade_server(p_item_id text,p_target_price numeric,p_multiplier numeric,p_target_emoji text,p_target_rarity text,p_target_case_id text,p_chance numeric) returns jsonb
+language plpgsql security definer set search_path='' as $$
+declare
+  uid uuid:=auth.uid(); inv jsonb; src jsonb; src_price numeric; target public.case_items%rowtype; max_chance numeric; chance numeric; roll numeric:=random(); success boolean; result jsonb;
+begin
+  if uid is null then raise exception 'AUTH_REQUIRED'; end if;
+  select inventory into inv from public.profiles where id=uid for update;
+  if inv is null then raise exception 'PROFILE_NOT_FOUND'; end if;
+  select x into src from jsonb_array_elements(coalesce(inv,'[]'::jsonb)) x where x->>'id'=p_item_id limit 1;
+  if src is null then raise exception 'ITEM_NOT_FOUND'; end if;
+  src_price:=round((src->>'price')::numeric,2);
+  if src_price<=0 then raise exception 'INVALID_SOURCE'; end if;
+  select ci.* into target from public.case_items ci where ci.case_id=lower(trim(p_target_case_id)) and ci.emoji=left(trim(coalesce(p_target_emoji,'')),16) and ci.rarity=lower(trim(coalesce(p_target_rarity,''))) and ci.item_price=round(p_target_price,2) limit 1;
+  if target.item_index is null then raise exception 'INVALID_TARGET'; end if;
+  if target.item_price<=src_price then raise exception 'INVALID_TARGET'; end if;
+  if p_multiplier<=1 or p_multiplier>5 then raise exception 'INVALID_UPGRADE'; end if;
+  if target.item_price>round(src_price*p_multiplier,2) then raise exception 'INVALID_TARGET'; end if;
+  max_chance:=greatest(0.01,least(0.90,0.90/(target.item_price/src_price)));
+  chance:=greatest(0.01,least(max_chance,coalesce(p_chance,max_chance)));
+  if p_chance is null or p_chance<=0 or p_chance>max_chance+0.000001 then raise exception 'INVALID_CHANCE'; end if;
+  success:=roll<=chance;
+  if success then result:=jsonb_build_object('id',public.gen_random_uuid()::text,'emoji',target.emoji,'rarity',target.rarity,'price',target.item_price,'case_id',target.case_id,'created_at',now(),'upgraded_from',p_item_id); else result:=null; end if;
+  update public.profiles set best_drop=case when success and (best_drop is null or coalesce((best_drop->>'price')::numeric,0)<target.item_price) then result else best_drop end, inventory=(select coalesce(jsonb_agg(x),'[]'::jsonb) from jsonb_array_elements(inv) x where x->>'id'<>p_item_id) || case when success then jsonb_build_array(result) else '[]'::jsonb end,stats=jsonb_set(jsonb_set(coalesce(stats,'{}'::jsonb),'{upgrades}',to_jsonb(coalesce((stats->>'upgrades')::int,0)+1),true),'{wins}',to_jsonb(coalesce((stats->>'wins')::int,0)+case when success then 1 else 0 end),true),updated_at=now() where id=uid;
+  return jsonb_build_object('success',success,'item',result,'chance',chance,'multiplier',target.item_price/src_price,'balance',(select balance from public.profiles where id=uid));
+end; $$;
+revoke execute on function public.upgrade_server(text,numeric,numeric,text,text,text,numeric) from public,anon;
+grant execute on function public.upgrade_server(text,numeric,numeric,text,text,text,numeric) to authenticated;
+
+-- Remove superseded Upgrade overloads so the client cannot accidentally call a legacy contract.
+drop function if exists public.upgrade_server(text,numeric,numeric);
+drop function if exists public.upgrade_server(text,numeric,numeric,text,text,text);
+revoke execute on function public.upgrade_server(text,numeric,numeric,text,text,text,numeric) from public,anon;
+grant execute on function public.upgrade_server(text,numeric,numeric,text,text,text,numeric) to authenticated;
