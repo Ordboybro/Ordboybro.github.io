@@ -1,6 +1,6 @@
 (()=>{'use strict';
-/* Emoji Drops — functional case-open bridge v14. The whole case card is the touch activation surface; synthetic clicks remain suppressed after a physical touch. */
-const ID='emoji-drops-case-open-bridge-v14';
+/* Emoji Drops — functional case-open bridge v15. The whole case card is the activation surface; the inner CTA remains keyboard-accessible without stealing the physical touch point. */
+const ID='emoji-drops-case-open-bridge-v15';
 const KEYS=['smile','moves','nature','food','animals','transport','sport','games'];
 const NAMES={smile:'Smile',moves:'Moves',nature:'Nature',food:'Food',animals:'Animals',transport:'Transport',sport:'Sport',games:'Games'};
 const TOUCH_GUARD_MS=200;
@@ -16,7 +16,8 @@ function activate(opener,key,event){if(!inActiveCases(opener))return false;if(ev
 function markTouchTarget(node){if(!node)return;node.dataset.edBridgeTouchAt=String(Date.now());setTimeout(()=>{if(node.isConnected)delete node.dataset.edBridgeTouchAt},TOUCH_GUARD_MS+250)}
 function skipSyntheticTouchClick(node){const card=node?.closest?.('.ed-case');if(!card)return false;const at=Number(card.dataset.edBridgeTouchAt||0);if(!at)return false;const fresh=Date.now()-at<TOUCH_GUARD_MS;if(fresh){delete card.dataset.edBridgeTouchAt;return true}delete card.dataset.edBridgeTouchAt;return false}
 function bindOpener(opener,key){if(!opener||opener.dataset.edBridge===ID)return;opener.dataset.edBridge=ID;if(opener.getAttribute('data-open')!==key)opener.setAttribute('data-open',key);if(!opener.__edBridgeClick){opener.__edBridgeClick=true;opener.addEventListener('click',e=>{if(skipSyntheticTouchClick(opener))return;activate(opener,key,e)},true);opener.click=()=>activate(opener,key,null)}}
-function normalize(){document.querySelectorAll('.ed-case').forEach((card,index)=>{const opener=card.querySelector('[data-open]')||card.querySelector('.ed-btn');const key=keyFor(opener||card,index);if(!key)return;if(card.dataset.caseKey!==key)card.dataset.caseKey=key;bindOpener(opener,key)})}
+function bindCard(card,key){if(!card||card.dataset.edCardBridge===ID)return;card.dataset.edCardBridge=ID;card.addEventListener('click',e=>{if(skipSyntheticTouchClick(card))return;if(e.target?.closest?.('[data-open]'))return;activate(card,key,e)},true)}
+function normalize(){document.querySelectorAll('.ed-case').forEach((card,index)=>{const opener=card.querySelector('[data-open]')||card.querySelector('.ed-btn');const key=keyFor(opener||card,index);if(!key)return;if(card.dataset.caseKey!==key)card.dataset.caseKey=key;bindOpener(opener,key);bindCard(card,key)})}
 function hook(){if(window.__emojiDropsCaseOpenBridge===ID)return;window.__emojiDropsCaseOpenBridge=ID;normalize();const touchCapable=()=>Number(navigator.maxTouchPoints||0)>0;document.addEventListener('pointerdown',e=>{if(!touchCapable())return;const card=e.target?.closest?.('.ed-case');if(card)markTouchTarget(card)},true);document.addEventListener('pointerup',e=>{if(!touchCapable())return;const card=e.target?.closest?.('.ed-case');if(!card)return;markTouchTarget(card);const opener=e.target?.closest?.('[data-open]');if(opener&&opener.closest('.ed-case')===card){const key=keyFor(opener,KEYS.indexOf(card.dataset.caseKey));activate(opener,key,e);return}const key=keyFor(card,KEYS.indexOf(card.dataset.caseKey));activate(card,key,e)},true);new MutationObserver(mutations=>{if(mutations.some(m=>m.addedNodes?.length||m.type==='attributes'))normalize()}).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['data-open']});document.addEventListener('DOMContentLoaded',normalize,{once:true});window.addEventListener('pageshow',normalize)}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',hook,{once:true});else hook();
 })();
