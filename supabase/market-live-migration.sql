@@ -2,7 +2,7 @@
 -- Run this migration in the Supabase SQL editor after supabase/schema.sql.
 
 create table if not exists public.market_listings (
-  id uuid primary key default gen_random_uuid(),
+  id uuid primary key default public.gen_random_uuid(),
   seller_id uuid not null references auth.users(id) on delete cascade,
   item_id text not null,
   emoji text not null,
@@ -38,7 +38,7 @@ alter table public.live_drops enable row level security;
 drop policy if exists "live_drops_public_read" on public.live_drops;
 create policy "live_drops_public_read" on public.live_drops for select using (created_at > now() - interval '30 minutes');
 
-create or replace function public.create_market_listing(p_item_id text, p_price numeric) returns jsonb language plpgsql security definer set search_path=public as $$
+create or replace function public.create_market_listing(p_item_id text, p_price numeric) returns jsonb language plpgsql security definer set search_path='' as $$
 declare uid uuid:=auth.uid(); inv jsonb; item jsonb; clean numeric; listing jsonb;
 begin
  if uid is null then raise exception 'AUTH_REQUIRED'; end if;
@@ -56,7 +56,7 @@ begin
  return listing;
 end; $$;
 
-create or replace function public.cancel_market_listing(p_listing_id uuid) returns jsonb language plpgsql security definer set search_path=public as $$
+create or replace function public.cancel_market_listing(p_listing_id uuid) returns jsonb language plpgsql security definer set search_path='' as $$
 declare uid uuid:=auth.uid(); l public.market_listings%rowtype; inv jsonb; restored jsonb;
 begin
  if uid is null then raise exception 'AUTH_REQUIRED'; end if;
@@ -73,13 +73,12 @@ end; $$;
 
 -- Purchase reconstructs the listed item from the locked listing row.
 -- The seller's inventory no longer contains the item because create_market_listing removes it atomically.
-create or replace function public.buy_market_listing(p_listing_id uuid) returns jsonb language plpgsql security definer set search_path=public as $$
+create or replace function public.buy_market_listing(p_listing_id uuid) returns jsonb language plpgsql security definer set search_path='' as $$
 declare buyer uuid:=auth.uid(); l public.market_listings%rowtype; buyer_bal numeric; buyer_inv jsonb; item jsonb;
 begin
  if buyer is null then raise exception 'AUTH_REQUIRED'; end if;
  select * into l from public.market_listings where id=p_listing_id and status='active' for update;
  if not found then raise exception 'LISTING_NOT_FOUND'; end if;
- if l.seller_id=buyer then raise exception 'SELF_PURCHASE'; end if;
  if l.seller_id=buyer then raise exception 'SELF_PURCHASE'; end if;
  -- Lock both profiles in deterministic UUID order to prevent cross-purchase deadlocks.
  if buyer < l.seller_id then
@@ -99,13 +98,19 @@ begin
  return jsonb_build_object('listing_id',l.id,'item',item,'price',l.listing_price,'balance',buyer_bal-l.listing_price);
 end; $$;
 
+revoke execute on function public.create_market_listing(text,numeric) from public,anon;
+revoke execute on function public.cancel_market_listing(uuid) from public,anon;
+revoke execute on function public.buy_market_listing(uuid) from public,anon;
+revoke execute on function public.market_snapshot() from public,anon;
+revoke execute on function public.open_case_server(text,numeric) from public,anon;
+
 grant execute on function public.create_market_listing(text,numeric) to authenticated;
 grant execute on function public.cancel_market_listing(uuid) to authenticated;
 grant execute on function public.buy_market_listing(uuid) to authenticated;
 
 create or replace function public.market_snapshot() returns table(
  id uuid,seller_id uuid,item_id text,emoji text,rarity text,case_id text,item_price numeric,listing_price numeric,created_at timestamptz,nickname text
-) language sql security definer set search_path=public as $$
+) language sql security definer set search_path='' as $$
  select l.id,l.seller_id,l.item_id,l.emoji,l.rarity,l.case_id,l.item_price,l.listing_price,l.created_at,coalesce(p.nickname,'Player')
  from public.market_listings l left join public.profiles p on p.id=l.seller_id
  where l.status='active' order by l.listing_price asc,l.created_at asc limit 200;
@@ -121,7 +126,7 @@ do $$ begin
 end $$;
 
 -- Replace the existing case-open function so every authoritative drop is recorded for Live Drops.
-create or replace function public.open_case_server(p_case_id text, p_cost numeric default null) returns jsonb language plpgsql security definer set search_path=public as $$
+create or replace function public.open_case_server(p_case_id text, p_cost numeric default null) returns jsonb language plpgsql security definer set search_path='' as $$
 declare uid uuid:=auth.uid(); bal numeric; inv jsonb; cost numeric; roll numeric:=random(); rarity text; price numeric; item jsonb; nick text;
 begin
  if uid is null then raise exception 'AUTH_REQUIRED'; end if;
@@ -131,7 +136,7 @@ begin
  if bal<cost then raise exception 'INSUFFICIENT_FUNDS'; end if;
  rarity:=case when roll<.01 then 'legendary' when roll<.06 then 'mythical' when roll<.18 then 'epic' when roll<.45 then 'rare' else 'common' end;
  price:=case rarity when 'legendary' then round(cost*3,2) when 'mythical' then round(cost*1.7,2) when 'epic' then round(cost,2) when 'rare' then round(cost*.55,2) else round(cost*.30,2) end;
- item:=jsonb_build_object('id',gen_random_uuid()::text,'case_id',lower(trim(p_case_id)),'rarity',rarity,'price',price,'created_at',now());
+ item:=jsonb_build_object('id',public.gen_random_uuid()::text,'case_id',lower(trim(p_case_id)),'rarity',rarity,'price',price,'created_at',now());
  update public.profiles set balance=bal-cost,inventory=coalesce(inv,'[]'::jsonb)||jsonb_build_array(item),best_drop=case when best_drop is null or coalesce((best_drop->>'price')::numeric,0)<price then item else best_drop end,updated_at=now() where id=uid;
  insert into public.live_drops(user_id,nickname,item,case_id,item_price) values(uid,coalesce(nick,'Player'),item,lower(trim(p_case_id)),price);
  delete from public.live_drops where created_at < now()-interval '30 minutes';
