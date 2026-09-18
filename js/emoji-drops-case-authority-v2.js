@@ -15,8 +15,7 @@ const inject=()=>{if(document.getElementById('ed-reference-polish'))return;const
 document.head.appendChild(s)};
 const clean=()=>{const w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);const a=[];let n;while(n=w.nextNode())a.push(n);for(const x of a){if(x.nodeValue.includes('EC'))x.nodeValue=x.nodeValue.replace(/\bEC\b/g,'₽');if(/Внутриигровая экономика/i.test(x.nodeValue))x.parentElement.style.display='none'}document.querySelectorAll('.ed-title').forEach(el=>el.style.display='none')};
 markActions();inject();hideLegacy();clean();
-document.addEventListener('click',e=>{const t=e.target.closest?.('button[data-open],[data-open]');if(!t)return;const key=keyFromElement(t);if(key&&open(key)){e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();hideLegacy()}},true);
-document.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){const t=document.activeElement?.closest?.('[data-open]');const key=keyFromElement(t);if(key&&open(key)){e.preventDefault();hideLegacy()}}});
+/* Activation is owned exclusively by emoji-drops-case-open-bridge; this module only normalizes keys and legacy presentation. */
 window.addEventListener('DOMContentLoaded',()=>{markActions();inject();clean()});window.addEventListener('pageshow',()=>{markActions();hideLegacy();inject();clean()});new MutationObserver(()=>{markActions();clean()}).observe(document.documentElement,{subtree:true,childList:true,characterData:true});
 window.__emojiDropsCaseAuthority={version:6,open};
 })();
