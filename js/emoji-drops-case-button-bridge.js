@@ -18,18 +18,7 @@ function install(){
     window.__emojiDropsExactAuthoritativeApi=canonical;
     try{Object.defineProperty(window,'EmojiDropsCaseShowcaseExact',{configurable:true,enumerable:true,get:()=>canonical,set:value=>{if(value&&value.version===5)canonical=value}})}catch{}
   }
-  document.addEventListener('click',e=>{
-    const btn=e.target?.closest?.('.ed-case>.ed-btn,[data-open].ed-btn');
-    if(!btn)return;
-    const card=btn.closest('.ed-case,.case-card,[data-case-key],[data-case]');
-    if(!card)return;
-    const key=btn.getAttribute('data-open')||card.dataset.caseKey||card.dataset.case||card.getAttribute('data-key');
-    if(!key||!window.EmojiDropsCaseShowcaseExact?.open)return;
-    const catalog=window.cases?.[key];
-    const price=Number(window.casePrices?.[key]||0);
-    if(!Array.isArray(catalog)&&price<=0)return;
-    e.preventDefault();e.stopImmediatePropagation();window.EmojiDropsCaseShowcaseExact.open(key);
-  },true);
+  /* Card activation is owned exclusively by emoji-drops-case-open-bridge. */
 }
 install();
 })();
