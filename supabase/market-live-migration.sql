@@ -80,7 +80,16 @@ begin
  select * into l from public.market_listings where id=p_listing_id and status='active' for update;
  if not found then raise exception 'LISTING_NOT_FOUND'; end if;
  if l.seller_id=buyer then raise exception 'SELF_PURCHASE'; end if;
- select balance,inventory into buyer_bal,buyer_inv from public.profiles where id=buyer for update;
+ if l.seller_id=buyer then raise exception 'SELF_PURCHASE'; end if;
+ -- Lock both profiles in deterministic UUID order to prevent cross-purchase deadlocks.
+ if buyer < l.seller_id then
+   perform 1 from public.profiles where id=buyer for update;
+   perform 1 from public.profiles where id=l.seller_id for update;
+ else
+   perform 1 from public.profiles where id=l.seller_id for update;
+   perform 1 from public.profiles where id=buyer for update;
+ end if;
+ select balance,inventory into buyer_bal,buyer_inv from public.profiles where id=buyer;
  if buyer_bal is null then raise exception 'PROFILE_NOT_FOUND'; end if;
  if buyer_bal<l.listing_price then raise exception 'INSUFFICIENT_FUNDS'; end if;
  item:=jsonb_build_object('id',l.item_id,'emoji',l.emoji,'rarity',l.rarity,'case_id',l.case_id,'price',l.item_price,'created_at',l.created_at);
