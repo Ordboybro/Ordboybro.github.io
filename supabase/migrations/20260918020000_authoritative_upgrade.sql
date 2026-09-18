@@ -16,13 +16,13 @@ begin
   if target.item_index is null then raise exception 'INVALID_TARGET'; end if;
   if target.item_price<=src_price then raise exception 'INVALID_TARGET'; end if;
   if p_multiplier<=1 or p_multiplier>5 then raise exception 'INVALID_UPGRADE'; end if;
-  if abs((target.item_price/src_price)-p_multiplier)>0.01 then raise exception 'INVALID_MULTIPLIER'; end if;
+  if target.item_price>round(src_price*p_multiplier,2) then raise exception 'INVALID_TARGET'; end if;
   max_chance:=greatest(0.01,least(0.90,0.90/(target.item_price/src_price)));
   chance:=greatest(0.01,least(max_chance,coalesce(p_chance,max_chance)));
   if p_chance is null or p_chance<=0 or p_chance>max_chance+0.000001 then raise exception 'INVALID_CHANCE'; end if;
   success:=roll<=chance;
   if success then result:=jsonb_build_object('id',public.gen_random_uuid()::text,'emoji',target.emoji,'rarity',target.rarity,'price',target.item_price,'case_id',target.case_id,'created_at',now(),'upgraded_from',p_item_id); else result:=null; end if;
-  update public.profiles set inventory=(select coalesce(jsonb_agg(x),'[]'::jsonb) from jsonb_array_elements(inv) x where x->>'id'<>p_item_id) || case when success then jsonb_build_array(result) else '[]'::jsonb end,stats=jsonb_set(jsonb_set(coalesce(stats,'{}'::jsonb),'{upgrades}',to_jsonb(coalesce((stats->>'upgrades')::int,0)+1),true),'{wins}',to_jsonb(coalesce((stats->>'wins')::int,0)+case when success then 1 else 0 end),true),updated_at=now() where id=uid;
+  update public.profiles set best_drop=case when success and (best_drop is null or coalesce((best_drop->>'price')::numeric,0)<target.item_price) then result else best_drop end, inventory=(select coalesce(jsonb_agg(x),'[]'::jsonb) from jsonb_array_elements(inv) x where x->>'id'<>p_item_id) || case when success then jsonb_build_array(result) else '[]'::jsonb end,stats=jsonb_set(jsonb_set(coalesce(stats,'{}'::jsonb),'{upgrades}',to_jsonb(coalesce((stats->>'upgrades')::int,0)+1),true),'{wins}',to_jsonb(coalesce((stats->>'wins')::int,0)+case when success then 1 else 0 end),true),updated_at=now() where id=uid;
   return jsonb_build_object('success',success,'item',result,'chance',chance,'multiplier',target.item_price/src_price,'balance',(select balance from public.profiles where id=uid));
 end; $$;
 revoke execute on function public.upgrade_server(text,numeric,numeric,text,text,text,numeric) from public,anon;
