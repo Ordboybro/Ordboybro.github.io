@@ -14,7 +14,15 @@ button:not(:disabled)::after{content:'';position:absolute;inset:0;background:lin
 .v24-reward-actions button{animation:edActionIn .4s .3s var(--ed-ease) both}.v24-reward-actions button+button{animation-delay:.36s}@keyframes edActionIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 .v24-mult.active,.v24-inv-card.selected,.v24-target.selected{animation:edSelected .8s ease-in-out infinite}@keyframes edSelected{50%{box-shadow:0 0 0 3px #ff922914,0 0 25px #ff92291c}}
 .v24-slot{transition:transform .25s var(--ed-ease),border-color .25s ease,box-shadow .25s ease}.v24-slot:has(b){animation:edSlotPop .3s var(--ed-ease)}@keyframes edSlotPop{from{transform:scale(.97);opacity:.7}to{transform:none;opacity:1}}
-.ed-head-btn:hover,.ed-balance:hover{transform:translateY(-2px)}.ed-nav button:hover{transform:translateY(-2px)}.v24-listing:hover,.v26-card:hover,.v24-live-card:hover{transform:translateY(-3px);border-color:#8b5b29;box-shadow:0 15px 35px #0009}.v24-item:hover,.v24-target:hover,.v24-inv-card:hover{transform:translateY(-2px);border-color:#8b5b29}
+.ed-head-btn:hover,.ed-balance:hover{transform:translateY(-2px)}
+.ed-nav button{position:relative;overflow:hidden}
+.ed-nav button:before{content:'';position:absolute;left:12%;right:12%;bottom:5px;height:2px;border-radius:99px;background:linear-gradient(90deg,transparent,#ff9b32,transparent);transform:scaleX(0);transform-origin:center;transition:transform .3s var(--ed-ease),opacity .3s ease;opacity:.65}
+.ed-nav button:hover:before,.ed-nav button.active:before{transform:scaleX(1)}
+.ed-nav button.active{border-color:#8b5b29!important;box-shadow:0 7px 24px #0007,0 0 0 1px #ff8a2012,inset 0 1px #fff1;transform:translateY(-1px)}
+.ed-view.ed-view-enter{animation:edViewEnter .38s var(--ed-ease) both}
+@keyframes edViewEnter{from{opacity:.45;transform:translate3d(0,9px,0);filter:blur(2px)}to{opacity:1;transform:none;filter:none}}
+.ed-panel,.ed-market-card,.ed-item,.ed-stat,.ed-profile-main,.ed-day{backface-visibility:hidden;transform:translateZ(0)}
+.ed-nav button:hover{transform:translateY(-2px)}.v24-listing:hover,.v26-card:hover,.v24-live-card:hover{transform:translateY(-3px);border-color:#8b5b29;box-shadow:0 15px 35px #0009}.v24-item:hover,.v24-target:hover,.v24-inv-card:hover{transform:translateY(-2px);border-color:#8b5b29}
 #edV24Case.show{animation:edBackdropIn .25s ease both}#edV24Case.show .v24-modal{animation:edModalIn .42s var(--ed-ease) both}@keyframes edBackdropIn{from{opacity:0}to{opacity:1}}@keyframes edModalIn{from{opacity:0;transform:translateY(20px) scale(.975)}to{opacity:1;transform:none}}
 #edV24Reward.show{animation:edBackdropIn .25s ease both}.modal-lock{overflow:hidden!important}
 /* Blur only inactive/occluded content; never blur the control the user is interacting with. */
@@ -24,5 +32,5 @@ button:not(:disabled)::after{content:'';position:absolute;inset:0;background:lin
 input{transition:border-color .2s ease,box-shadow .2s ease,transform .2s ease}input:focus{transform:translateY(-1px)}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}.ed-case{opacity:1!important;transform:none!important}}
 `;document.head.appendChild(s)}
-function boot(){css();window.EmojiDropsSmoothUI={version:1}}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
+function boot(){css();const observe=()=>{const views=document.querySelectorAll('.ed-view');if(!views.length)return;const run=()=>{const active=document.querySelector('.ed-view.active');if(!active)return;active.classList.remove('ed-view-enter');void active.offsetWidth;active.classList.add('ed-view-enter');setTimeout(()=>active.classList.remove('ed-view-enter'),450)};new MutationObserver(run).observe(document.body,{subtree:true,attributes:true,attributeFilter:['class']});document.addEventListener('click',e=>{if(e.target?.closest?.('.ed-nav [data-view]'))setTimeout(run,0)},{passive:true})};observe();window.EmojiDropsSmoothUI={version:2}}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();
