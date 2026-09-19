@@ -1,6 +1,6 @@
 (()=>{'use strict';
 /* Emoji Drops — functional case-open bridge v16. The whole case card is the activation surface; the inner CTA remains keyboard-accessible without stealing the physical touch point. */
-const ID='emoji-drops-case-open-bridge-v21';
+const ID='emoji-drops-case-open-bridge-v22';
 const KEYS=['smile','moves','nature','food','animals','transport','sport','games'];
 const NAMES={smile:'Smile',moves:'Moves',nature:'Nature',food:'Food',animals:'Animals',transport:'Transport',sport:'Sport',games:'Games'};
 const TOUCH_GUARD_MS=240;
@@ -27,6 +27,7 @@ function hook(){
   document.addEventListener('pointerup',e=>{if(!touchCapable()||e.pointerType==='mouse')return;const card=e.target?.closest?.('.ed-case');if(!card)return;markTouchTarget(card);const opener=e.target?.closest?.('[data-open]');const key=opener&&opener.closest('.ed-case')===card?keyFor(opener,KEYS.indexOf(card.dataset.caseKey)):keyFor(card,KEYS.indexOf(card.dataset.caseKey));activate(opener||card,key,null)},true);
   document.addEventListener('touchstart',e=>{if(!touchCapable())return;const card=touchNode(e);if(card)markTouchTarget(card)},{capture:true,passive:true});
   document.addEventListener('touchend',e=>{if(!touchCapable())return;const card=touchNode(e);if(!card)return;markTouchTarget(card);const opener=e.target?.closest?.('[data-open]');const key=opener&&opener.closest('.ed-case')===card?keyFor(opener,KEYS.indexOf(card.dataset.caseKey)):keyFor(card,KEYS.indexOf(card.dataset.caseKey));if(!visible())activate(opener||card,key,null)},{capture:true,passive:true});
+  document.addEventListener('keydown',e=>{if((e.key!=='Enter'&&e.key!==' ')||visible())return;const opener=e.target?.closest?.('[data-open]');if(!opener||!inActiveCases(opener))return;const key=keyFor(opener,KEYS.indexOf(opener.closest('.ed-case')?.dataset?.caseKey));if(key){e.preventDefault();e.stopImmediatePropagation();activate(opener,key,null)}},true);
   new MutationObserver(mutations=>{if(mutations.some(m=>m.addedNodes?.length||m.type==='attributes'))normalize()}).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['data-open']});
   document.addEventListener('DOMContentLoaded',normalize,{once:true});window.addEventListener('pageshow',normalize);
 }
