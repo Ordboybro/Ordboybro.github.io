@@ -1,6 +1,6 @@
 (()=>{'use strict';
 /* Emoji Drops — functional case-open bridge v16. The whole case card is the activation surface; the inner CTA remains keyboard-accessible without stealing the physical touch point. */
-const ID='emoji-drops-case-open-bridge-v19';
+const ID='emoji-drops-case-open-bridge-v20';
 const KEYS=['smile','moves','nature','food','animals','transport','sport','games'];
 const NAMES={smile:'Smile',moves:'Moves',nature:'Nature',food:'Food',animals:'Animals',transport:'Transport',sport:'Sport',games:'Games'};
 const TOUCH_GUARD_MS=240;
@@ -22,7 +22,7 @@ function touchNode(e){const t=e.changedTouches?.[0];if(!t)return e.target;const 
 function hook(){
   if(window.__emojiDropsCaseOpenBridge===ID)return;window.__emojiDropsCaseOpenBridge=ID;normalize();
   const touchCapable=()=>Number(navigator.maxTouchPoints||0)>0;
-  document.addEventListener('pointerdown',e=>{if(!touchCapable())return;const card=e.target?.closest?.('.ed-case');if(card)markTouchTarget(card)},true);
+  document.addEventListener('pointerdown',e=>{if(!touchCapable()||e.pointerType==='mouse')return;const card=e.target?.closest?.('.ed-case');if(!card)return;markTouchTarget(card);if(!visible()){const opener=e.target?.closest?.('[data-open]');const key=opener&&opener.closest('.ed-case')===card?keyFor(opener,KEYS.indexOf(card.dataset.caseKey)):keyFor(card,KEYS.indexOf(card.dataset.caseKey));activate(opener||card,key,null)}},true);
   document.addEventListener('pointerup',e=>{if(!touchCapable()||e.pointerType==='mouse')return;const card=e.target?.closest?.('.ed-case');if(!card)return;markTouchTarget(card);const opener=e.target?.closest?.('[data-open]');const key=opener&&opener.closest('.ed-case')===card?keyFor(opener,KEYS.indexOf(card.dataset.caseKey)):keyFor(card,KEYS.indexOf(card.dataset.caseKey));activate(opener||card,key,null)},true);
   document.addEventListener('touchstart',e=>{if(!touchCapable())return;const card=touchNode(e);if(card)markTouchTarget(card)},{capture:true,passive:true});
   document.addEventListener('touchend',e=>{if(!touchCapable())return;const card=touchNode(e);if(!card)return;markTouchTarget(card);const opener=e.target?.closest?.('[data-open]');const key=opener&&opener.closest('.ed-case')===card?keyFor(opener,KEYS.indexOf(card.dataset.caseKey)):keyFor(card,KEYS.indexOf(card.dataset.caseKey));if(!visible())activate(opener||card,key,null)},{capture:true,passive:true});
