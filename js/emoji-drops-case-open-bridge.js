@@ -4,6 +4,7 @@ const ID='emoji-drops-case-open-bridge-v21';
 const KEYS=['smile','moves','nature','food','animals','transport','sport','games'];
 const NAMES={smile:'Smile',moves:'Moves',nature:'Nature',food:'Food',animals:'Animals',transport:'Transport',sport:'Sport',games:'Games'};
 const TOUCH_GUARD_MS=240;
+function touchCss(){if(document.getElementById('ed-case-touch-css'))return;const s=document.createElement('style');s.id='ed-case-touch-css';s.textContent='.ed-case{touch-action:manipulation;-webkit-tap-highlight-color:transparent}';document.head.appendChild(s)}
 function normalizeKey(value){const raw=String(value||'').trim().toLowerCase();if(KEYS.includes(raw))return raw;const stripped=raw.replace(/^case[-_:/]*/,'').replace(/[-_ ]*(case|open)$/,'');if(KEYS.includes(stripped))return stripped;const named=KEYS.find(k=>NAMES[k].toLowerCase()===raw||NAMES[k].toLowerCase()===stripped);return named||null}
 function keyFor(card,index){const direct=card?.dataset?.caseKey||card?.dataset?.case||card?.dataset?.key||card?.getAttribute?.('data-open');const normalized=normalizeKey(direct);if(normalized)return normalized;const title=card?.querySelector?.('h3')?.textContent?.trim();const named=normalizeKey(title);if(named)return named;return KEYS[index]||null}
 function inActiveCases(node){const card=node?.closest?.('.ed-case');return !!card&&(!!card.closest?.('#view-cases.active')||!!card.closest?.('.ed-view.active'))&&card.isConnected}
@@ -20,7 +21,7 @@ function bindCard(card,key){if(!card||card.dataset.edCardBridge===ID)return;card
 function normalize(){document.querySelectorAll('#view-cases.active .ed-case').forEach((card,index)=>{const opener=card.querySelector('[data-open]')||card.querySelector('.ed-btn');const key=keyFor(opener||card,index);if(!key)return;if(card.dataset.caseKey!==key)card.dataset.caseKey=key;bindOpener(opener,key);bindCard(card,key)})}
 function touchNode(e){const t=e.changedTouches?.[0];if(!t)return e.target;const hit=document.elementFromPoint(t.clientX,t.clientY);return hit?.closest?.('.ed-case')||e.target?.closest?.('.ed-case')||null}
 function hook(){
-  if(window.__emojiDropsCaseOpenBridge===ID)return;window.__emojiDropsCaseOpenBridge=ID;normalize();
+  if(window.__emojiDropsCaseOpenBridge===ID)return;window.__emojiDropsCaseOpenBridge=ID;touchCss();normalize();
   const touchCapable=()=>Number(navigator.maxTouchPoints||0)>0;
   document.addEventListener('pointerdown',e=>{if(!touchCapable()||e.pointerType==='mouse')return;const card=e.target?.closest?.('.ed-case');if(!card)return;markTouchTarget(card);if(!visible()){const opener=e.target?.closest?.('[data-open]');const key=opener&&opener.closest('.ed-case')===card?keyFor(opener,KEYS.indexOf(card.dataset.caseKey)):keyFor(card,KEYS.indexOf(card.dataset.caseKey));activate(opener||card,key,null)}},true);
   document.addEventListener('pointerup',e=>{if(!touchCapable()||e.pointerType==='mouse')return;const card=e.target?.closest?.('.ed-case');if(!card)return;markTouchTarget(card);const opener=e.target?.closest?.('[data-open]');const key=opener&&opener.closest('.ed-case')===card?keyFor(opener,KEYS.indexOf(card.dataset.caseKey)):keyFor(card,KEYS.indexOf(card.dataset.caseKey));activate(opener||card,key,null)},true);
