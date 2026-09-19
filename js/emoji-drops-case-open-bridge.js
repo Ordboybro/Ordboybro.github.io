@@ -1,6 +1,6 @@
 (()=>{'use strict';
 /* Emoji Drops — functional case-open bridge v16. The whole case card is the activation surface; the inner CTA remains keyboard-accessible without stealing the physical touch point. */
-const ID='emoji-drops-case-open-bridge-v18';
+const ID='emoji-drops-case-open-bridge-v19';
 const KEYS=['smile','moves','nature','food','animals','transport','sport','games'];
 const NAMES={smile:'Smile',moves:'Moves',nature:'Nature',food:'Food',animals:'Animals',transport:'Transport',sport:'Sport',games:'Games'};
 const TOUCH_GUARD_MS=240;
@@ -12,7 +12,7 @@ function visible(){return !!document.querySelector('#edExact.show')}
 function invoke(key){if(!ready(key))return false;try{window.EmojiDropsCaseShowcaseExact.open(key);return visible()}catch(err){console.warn('Emoji Drops case open deferred',err);return false}}
 function delayedRetry(key,node){return retry(key,node)}
 function retry(key,node){let attempts=0;const run=()=>{if(!inActiveCases(node)||visible())return;if(invoke(key)||++attempts>=15)return;setTimeout(run,35)};run()}
-function activate(node,key,event){if(!inActiveCases(node)||visible())return false;if(event){event.preventDefault();event.stopImmediatePropagation()}if(!invoke(key)){retry(key,node);setTimeout(()=>{if(!visible())invoke(key)},120)}return false}
+function activate(node,key,event){if(!inActiveCases(node)||visible())return false;if(event?.type==='click'){event.preventDefault();event.stopImmediatePropagation()}if(invoke(key))return true;retry(key,node);setTimeout(()=>{if(!visible())invoke(key)},120);return false}
 function markTouchTarget(node){if(!node)return;node.dataset.edBridgeTouchAt=String(Date.now());setTimeout(()=>{if(node.isConnected)delete node.dataset.edBridgeTouchAt},TOUCH_GUARD_MS+300)}
 function skipSyntheticTouchClick(node){const card=node?.closest?.('.ed-case');if(!card)return false;const at=Number(card.dataset.edBridgeTouchAt||0);if(!at)return false;const fresh=Date.now()-at<TOUCH_GUARD_MS;if(fresh){delete card.dataset.edBridgeTouchAt;return true}delete card.dataset.edBridgeTouchAt;return false}
 function bindOpener(opener,key){if(!opener||opener.dataset.edBridge===ID)return;opener.dataset.edBridge=ID;opener.setAttribute('data-open',key);opener.addEventListener('click',e=>{if(visible())return;activate(opener,key,e)},true);opener.click=()=>activate(opener,key,null)}
@@ -23,9 +23,9 @@ function hook(){
   if(window.__emojiDropsCaseOpenBridge===ID)return;window.__emojiDropsCaseOpenBridge=ID;normalize();
   const touchCapable=()=>Number(navigator.maxTouchPoints||0)>0;
   document.addEventListener('pointerdown',e=>{if(!touchCapable())return;const card=e.target?.closest?.('.ed-case');if(card)markTouchTarget(card)},true);
-  document.addEventListener('pointerup',e=>{if(!touchCapable())return;const card=e.target?.closest?.('.ed-case');if(!card)return;markTouchTarget(card);const opener=e.target?.closest?.('[data-open]');const key=opener&&opener.closest('.ed-case')===card?keyFor(opener,KEYS.indexOf(card.dataset.caseKey)):keyFor(card,KEYS.indexOf(card.dataset.caseKey));activate(opener||card,key,e)},true);
+  document.addEventListener('pointerup',e=>{if(!touchCapable()||e.pointerType==='mouse')return;const card=e.target?.closest?.('.ed-case');if(!card)return;markTouchTarget(card);const opener=e.target?.closest?.('[data-open]');const key=opener&&opener.closest('.ed-case')===card?keyFor(opener,KEYS.indexOf(card.dataset.caseKey)):keyFor(card,KEYS.indexOf(card.dataset.caseKey));activate(opener||card,key,null)},true);
   document.addEventListener('touchstart',e=>{if(!touchCapable())return;const card=touchNode(e);if(card)markTouchTarget(card)},{capture:true,passive:true});
-  document.addEventListener('touchend',e=>{if(!touchCapable())return;const card=touchNode(e);if(!card)return;markTouchTarget(card);const opener=e.target?.closest?.('[data-open]');const key=opener&&opener.closest('.ed-case')===card?keyFor(opener,KEYS.indexOf(card.dataset.caseKey)):keyFor(card,KEYS.indexOf(card.dataset.caseKey));activate(opener||card,key,e)},{capture:true,passive:false});
+  document.addEventListener('touchend',e=>{if(!touchCapable())return;const card=touchNode(e);if(!card)return;markTouchTarget(card);const opener=e.target?.closest?.('[data-open]');const key=opener&&opener.closest('.ed-case')===card?keyFor(opener,KEYS.indexOf(card.dataset.caseKey)):keyFor(card,KEYS.indexOf(card.dataset.caseKey));if(!visible())activate(opener||card,key,null)},{capture:true,passive:true});
   new MutationObserver(mutations=>{if(mutations.some(m=>m.addedNodes?.length||m.type==='attributes'))normalize()}).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['data-open']});
   document.addEventListener('DOMContentLoaded',normalize,{once:true});window.addEventListener('pageshow',normalize);
 }
