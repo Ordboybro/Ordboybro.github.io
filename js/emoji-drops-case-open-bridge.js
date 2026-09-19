@@ -1,6 +1,6 @@
 (()=>{'use strict';
 /* Emoji Drops — functional case-open bridge v16. The whole case card is the activation surface; the inner CTA remains keyboard-accessible without stealing the physical touch point. */
-const ID='emoji-drops-case-open-bridge-v20';
+const ID='emoji-drops-case-open-bridge-v21';
 const KEYS=['smile','moves','nature','food','animals','transport','sport','games'];
 const NAMES={smile:'Smile',moves:'Moves',nature:'Nature',food:'Food',animals:'Animals',transport:'Transport',sport:'Sport',games:'Games'};
 const TOUCH_GUARD_MS=240;
@@ -15,7 +15,7 @@ function retry(key,node){let attempts=0;const run=()=>{if(!inActiveCases(node)||
 function activate(node,key,event){if(!inActiveCases(node)||visible())return false;if(event?.type==='click'){event.preventDefault();event.stopImmediatePropagation()}if(invoke(key))return true;retry(key,node);setTimeout(()=>{if(!visible())invoke(key)},120);return false}
 function markTouchTarget(node){if(!node)return;node.dataset.edBridgeTouchAt=String(Date.now());setTimeout(()=>{if(node.isConnected)delete node.dataset.edBridgeTouchAt},TOUCH_GUARD_MS+300)}
 function skipSyntheticTouchClick(node){const card=node?.closest?.('.ed-case');if(!card)return false;const at=Number(card.dataset.edBridgeTouchAt||0);if(!at)return false;const fresh=Date.now()-at<TOUCH_GUARD_MS;if(fresh){delete card.dataset.edBridgeTouchAt;return true}delete card.dataset.edBridgeTouchAt;return false}
-function bindOpener(opener,key){if(!opener||opener.dataset.edBridge===ID)return;opener.dataset.edBridge=ID;opener.setAttribute('data-open',key);opener.addEventListener('click',e=>{if(visible())return;activate(opener,key,e)},true);opener.click=()=>activate(opener,key,null)}
+function bindOpener(opener,key){if(!opener||opener.dataset.edBridge===ID)return;opener.dataset.edBridge=ID;opener.setAttribute('data-open',key);opener.addEventListener('click',e=>{if(visible())return;activate(opener,key,e)},true);}
 function bindCard(card,key){if(!card||card.dataset.edCardBridge===ID)return;card.dataset.edCardBridge=ID;card.addEventListener('click',e=>{if(visible())return;if(e.target?.closest?.('[data-open]'))return;activate(card,key,e)},true)}
 function normalize(){document.querySelectorAll('#view-cases.active .ed-case').forEach((card,index)=>{const opener=card.querySelector('[data-open]')||card.querySelector('.ed-btn');const key=keyFor(opener||card,index);if(!key)return;if(card.dataset.caseKey!==key)card.dataset.caseKey=key;bindOpener(opener,key);bindCard(card,key)})}
 function touchNode(e){const t=e.changedTouches?.[0];if(!t)return e.target;const hit=document.elementFromPoint(t.clientX,t.clientY);return hit?.closest?.('.ed-case')||e.target?.closest?.('.ed-case')||null}
