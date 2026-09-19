@@ -6,17 +6,17 @@ const NAMES={smile:'Smile',moves:'Moves',nature:'Nature',food:'Food',animals:'An
 const TOUCH_GUARD_MS=240;
 function normalizeKey(value){const raw=String(value||'').trim().toLowerCase();if(KEYS.includes(raw))return raw;const stripped=raw.replace(/^case[-_:/]*/,'').replace(/[-_ ]*(case|open)$/,'');if(KEYS.includes(stripped))return stripped;const named=KEYS.find(k=>NAMES[k].toLowerCase()===raw||NAMES[k].toLowerCase()===stripped);return named||null}
 function keyFor(card,index){const direct=card?.dataset?.caseKey||card?.dataset?.case||card?.dataset?.key||card?.getAttribute?.('data-open');const normalized=normalizeKey(direct);if(normalized)return normalized;const title=card?.querySelector?.('h3')?.textContent?.trim();const named=normalizeKey(title);if(named)return named;return KEYS[index]||null}
-function inActiveCases(node){const card=node?.closest?.('.ed-case');return !!card?.closest?.('#view-cases.active')&&card.isConnected}
+function inActiveCases(node){const card=node?.closest?.('.ed-case');return !!card&&(!!card.closest?.('#view-cases.active')||!!card.closest?.('.ed-view.active'))&&card.isConnected}
 function ready(key){return !!key&&!!window.EmojiDropsCaseShowcaseExact&&typeof window.EmojiDropsCaseShowcaseExact.open==='function'}
 function visible(){return !!document.querySelector('#edExact.show')}
 function invoke(key){if(!ready(key))return false;try{window.EmojiDropsCaseShowcaseExact.open(key);return visible()}catch(err){console.warn('Emoji Drops case open deferred',err);return false}}
 function delayedRetry(key,node){return retry(key,node)}
 function retry(key,node){let attempts=0;const run=()=>{if(!inActiveCases(node)||visible())return;if(invoke(key)||++attempts>=15)return;setTimeout(run,35)};run()}
-function activate(node,key,event){if(!inActiveCases(node)||visible())return false;if(event){event.preventDefault();event.stopImmediatePropagation()}if(!invoke(key))retry(key,node);return false}
+function activate(node,key,event){if(!inActiveCases(node)||visible())return false;if(event){event.preventDefault();event.stopImmediatePropagation()}if(!invoke(key)){retry(key,node);setTimeout(()=>{if(!visible())invoke(key)},120)}return false}
 function markTouchTarget(node){if(!node)return;node.dataset.edBridgeTouchAt=String(Date.now());setTimeout(()=>{if(node.isConnected)delete node.dataset.edBridgeTouchAt},TOUCH_GUARD_MS+300)}
 function skipSyntheticTouchClick(node){const card=node?.closest?.('.ed-case');if(!card)return false;const at=Number(card.dataset.edBridgeTouchAt||0);if(!at)return false;const fresh=Date.now()-at<TOUCH_GUARD_MS;if(fresh){delete card.dataset.edBridgeTouchAt;return true}delete card.dataset.edBridgeTouchAt;return false}
-function bindOpener(opener,key){if(!opener||opener.dataset.edBridge===ID)return;opener.dataset.edBridge=ID;opener.setAttribute('data-open',key);opener.addEventListener('click',e=>{if(skipSyntheticTouchClick(opener))return;activate(opener,key,e)},true);opener.click=()=>activate(opener,key,null)}
-function bindCard(card,key){if(!card||card.dataset.edCardBridge===ID)return;card.dataset.edCardBridge=ID;card.addEventListener('click',e=>{if(skipSyntheticTouchClick(card))return;if(e.target?.closest?.('[data-open]'))return;activate(card,key,e)},true)}
+function bindOpener(opener,key){if(!opener||opener.dataset.edBridge===ID)return;opener.dataset.edBridge=ID;opener.setAttribute('data-open',key);opener.addEventListener('click',e=>{if(visible())return;activate(opener,key,e)},true);opener.click=()=>activate(opener,key,null)}
+function bindCard(card,key){if(!card||card.dataset.edCardBridge===ID)return;card.dataset.edCardBridge=ID;card.addEventListener('click',e=>{if(visible())return;if(e.target?.closest?.('[data-open]'))return;activate(card,key,e)},true)}
 function normalize(){document.querySelectorAll('#view-cases.active .ed-case').forEach((card,index)=>{const opener=card.querySelector('[data-open]')||card.querySelector('.ed-btn');const key=keyFor(opener||card,index);if(!key)return;if(card.dataset.caseKey!==key)card.dataset.caseKey=key;bindOpener(opener,key);bindCard(card,key)})}
 function touchNode(e){const t=e.changedTouches?.[0];if(!t)return e.target;const hit=document.elementFromPoint(t.clientX,t.clientY);return hit?.closest?.('.ed-case')||e.target?.closest?.('.ed-case')||null}
 function hook(){
