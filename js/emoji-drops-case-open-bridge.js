@@ -1,6 +1,6 @@
 (()=>{'use strict';
 /* Emoji Drops — functional case-open bridge v16. The whole case card is the activation surface; the inner CTA remains keyboard-accessible without stealing the physical touch point. */
-const ID='emoji-drops-case-open-bridge-v16';
+const ID='emoji-drops-case-open-bridge-v18';
 const KEYS=['smile','moves','nature','food','animals','transport','sport','games'];
 const NAMES={smile:'Smile',moves:'Moves',nature:'Nature',food:'Food',animals:'Animals',transport:'Transport',sport:'Sport',games:'Games'};
 const TOUCH_GUARD_MS=240;
