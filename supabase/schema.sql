@@ -517,3 +517,127 @@ drop function if exists public.upgrade_server(text,numeric,numeric);
 drop function if exists public.upgrade_server(text,numeric,numeric,text,text,text);
 revoke execute on function public.upgrade_server(text,numeric,numeric,text,text,text,numeric) from public,anon;
 grant execute on function public.upgrade_server(text,numeric,numeric,text,text,text,numeric) to authenticated;
+
+
+-- Market v26: server-owned listings and atomic buy/sell/cancel.
+create table if not exists public.market_listings (
+  id uuid primary key default public.gen_random_uuid(),
+  seller_id uuid not null references public.profiles(id) on delete cascade,
+  item jsonb not null,
+  listing_price numeric(12,2) not null check (listing_price > 0),
+  status text not null default 'active' check (status in ('active','sold','cancelled')),
+  buyer_id uuid references public.profiles(id),
+  created_at timestamptz not null default now(),
+  sold_at timestamptz,
+  cancelled_at timestamptz
+);
+alter table public.market_listings enable row level security;
+revoke all on table public.market_listings from anon, authenticated;
+drop policy if exists "market_listings_read_active" on public.market_listings;
+create policy "market_listings_read_active" on public.market_listings
+  for select to authenticated using (status='active');
+create index if not exists market_listings_active_created_idx on public.market_listings(status,created_at desc);
+create index if not exists market_listings_seller_idx on public.market_listings(seller_id,status);
+create index if not exists market_listings_buyer_idx on public.market_listings(buyer_id);
+
+create or replace function public.create_market_listing(p_item_id text,p_price numeric) returns jsonb
+language plpgsql security definer set search_path='' as $$
+declare uid uuid:=auth.uid(); inv jsonb; item jsonb; clean_price numeric; listing public.market_listings%rowtype;
+begin
+  if uid is null then raise exception 'AUTH_REQUIRED'; end if;
+  clean_price:=round(coalesce(p_price,0),2);
+  if clean_price<=0 then raise exception 'INVALID_LISTING_PRICE'; end if;
+  select inventory into inv from public.profiles where id=uid for update;
+  if inv is null then raise exception 'PROFILE_NOT_FOUND'; end if;
+  select x into item from jsonb_array_elements(coalesce(inv,'[]'::jsonb)) x where x->>'id'=p_item_id limit 1;
+  if item is null then raise exception 'ITEM_NOT_FOUND'; end if;
+  if exists(select 1 from public.market_listings where seller_id=uid and status='active' and item->>'id'=p_item_id) then
+    raise exception 'ITEM_ALREADY_LISTED';
+  end if;
+  insert into public.market_listings(seller_id,item,listing_price) values(uid,item,clean_price) returning * into listing;
+  update public.profiles
+    set inventory=(select coalesce(jsonb_agg(x),'[]'::jsonb) from jsonb_array_elements(inv) x where x->>'id'<>p_item_id),updated_at=now()
+    where id=uid;
+  return jsonb_build_object('id',listing.id,'item',item,'listing_price',listing.listing_price,'status',listing.status);
+end; $$;
+revoke execute on function public.create_market_listing(text,numeric) from public,anon;
+grant execute on function public.create_market_listing(text,numeric) to authenticated;
+
+create or replace function public.market_snapshot() returns table(
+  id uuid,item_id text,seller_id uuid,nickname text,emoji text,rarity text,case_id text,item_price numeric,listing_price numeric,status text,created_at timestamptz
+) language sql security definer set search_path='' as $$
+  select ml.id,(ml.item->>'id'),ml.seller_id,p.nickname,(ml.item->>'emoji'),(ml.item->>'rarity'),coalesce(ml.item->>'case_id',''),coalesce((ml.item->>'price')::numeric,ml.listing_price),ml.listing_price,ml.status,ml.created_at
+  from public.market_listings ml
+  join public.profiles p on p.id=ml.seller_id
+  where ml.status='active'
+  order by ml.created_at desc
+  limit 200
+$$;
+revoke execute on function public.market_snapshot() from public,anon;
+grant execute on function public.market_snapshot() to authenticated;
+
+create or replace function public.buy_market_listing(p_listing_id uuid) returns jsonb
+language plpgsql security definer set search_path='' as $$
+declare uid uuid:=auth.uid(); l public.market_listings%rowtype; buyer public.profiles%rowtype; seller public.profiles%rowtype; item jsonb;
+begin
+  if uid is null then raise exception 'AUTH_REQUIRED'; end if;
+  select * into l from public.market_listings where id=p_listing_id for update;
+  if l.id is null or l.status<>'active' then raise exception 'LISTING_UNAVAILABLE'; end if;
+  if l.seller_id=uid then raise exception 'SELF_PURCHASE_FORBIDDEN'; end if;
+  item:=l.item;
+  perform 1 from public.profiles where id in (uid,l.seller_id) order by id for update;
+  select * into buyer from public.profiles where id=uid;
+  select * into seller from public.profiles where id=l.seller_id;
+  if buyer.id is null or seller.id is null then raise exception 'PROFILE_NOT_FOUND'; end if;
+  if buyer.balance<l.listing_price then raise exception 'INSUFFICIENT_FUNDS'; end if;
+  update public.profiles set balance=balance-l.listing_price,inventory=coalesce(inventory,'[]'::jsonb)||jsonb_build_array(item),stats=jsonb_set(coalesce(stats,'{}'::jsonb),'{spent}',to_jsonb(coalesce((stats->>'spent')::numeric,0)+l.listing_price),true),updated_at=now() where id=uid;
+  update public.profiles set balance=balance+l.listing_price,stats=jsonb_set(coalesce(stats,'{}'::jsonb),'{earned}',to_jsonb(coalesce((stats->>'earned')::numeric,0)+l.listing_price),true),updated_at=now() where id=l.seller_id;
+  update public.market_listings set status='sold',buyer_id=uid,sold_at=now() where id=l.id;
+  return jsonb_build_object('item',item,'balance',(select balance from public.profiles where id=uid),'listing_id',l.id);
+end; $$;
+revoke execute on function public.buy_market_listing(uuid) from public,anon;
+grant execute on function public.buy_market_listing(uuid) to authenticated;
+
+create or replace function public.cancel_market_listing(p_listing_id uuid) returns jsonb
+language plpgsql security definer set search_path='' as $$
+declare uid uuid:=auth.uid(); l public.market_listings%rowtype;
+begin
+  if uid is null then raise exception 'AUTH_REQUIRED'; end if;
+  select * into l from public.market_listings where id=p_listing_id for update;
+  if l.id is null or l.status<>'active' then raise exception 'LISTING_UNAVAILABLE'; end if;
+  if l.seller_id<>uid then raise exception 'NOT_LISTING_OWNER'; end if;
+  update public.profiles set inventory=coalesce(inventory,'[]'::jsonb)||jsonb_build_array(l.item),updated_at=now() where id=uid;
+  update public.market_listings set status='cancelled',cancelled_at=now() where id=l.id;
+  return jsonb_build_object('item',l.item,'listing_id',l.id);
+end; $$;
+revoke execute on function public.cancel_market_listing(uuid) from public,anon;
+grant execute on function public.cancel_market_listing(uuid) to authenticated;
+
+-- Direct table access is intentionally denied for the economy tables; clients use the narrow RPC surface.
+revoke all on table public.profiles from anon,authenticated;
+grant select on table public.profiles to authenticated;
+revoke all on table public.case_items from anon,authenticated;
+revoke all on table public.market_listings from anon,authenticated;
+
+-- Live Drops is read-only to clients; writes are performed by server-side RPCs.
+create table if not exists public.live_drops (
+  id bigint generated always as identity primary key,
+  user_id uuid references public.profiles(id) on delete cascade,
+  nickname text not null,
+  item jsonb not null,
+  case_id text not null,
+  item_price numeric(12,2) not null check (item_price>=0),
+  created_at timestamptz not null default now()
+);
+alter table public.live_drops enable row level security;
+revoke all on table public.live_drops from anon,authenticated;
+drop policy if exists "live_drops_read_authenticated" on public.live_drops;
+create policy "live_drops_read_authenticated" on public.live_drops for select to authenticated using (true);
+grant select on table public.live_drops to authenticated;
+create index if not exists live_drops_created_idx on public.live_drops(created_at desc);
+create index if not exists live_drops_user_idx on public.live_drops(user_id);
+
+-- Make the intended public API explicit; new functions are not executable by arbitrary roles.
+alter default privileges in schema public revoke execute on functions from public;
+alter default privileges in schema public revoke execute on functions from anon;
+alter default privileges in schema public revoke execute on functions from authenticated;
