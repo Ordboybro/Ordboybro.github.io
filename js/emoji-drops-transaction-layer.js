@@ -24,6 +24,27 @@ function acquire(){const old=readLease(),t=now();if(old&&Number(old.expires)>t&&
 function refresh(){if(leaseOwned())set(LOCK,JSON.stringify({owner,expires:now()+LOCK_MS}))}
 function release(){if(lockTimer){clearInterval(lockTimer);lockTimer=0}if(leaseOwned())remove(LOCK)}
 function withLock(fn){const locks=typeof navigator!=='undefined'&&navigator?.locks?.request;if(locks)return navigator.locks.request('emoji-drops-state',async()=>fn());if(!acquire())return Promise.reject(new Error('transaction_locked'));return Promise.resolve().then(fn).finally(release)}
+async function run(label,executor,apply){
+  if(typeof executor!=='function')throw new Error('transaction_executor_required');
+  return withLock(async()=>{
+    const t=begin(label);
+    if(!t)throw new Error('transaction_busy');
+    if(!(typeof navigator!=='undefined'&&navigator?.locks?.request))t.leaseOwner=true;
+    try{
+      const result=await executor();
+      if(typeof apply==='function')await apply(result,t);
+      const save=window.__emojiDropsEconomy?.save;
+      if(typeof save==='function')save();
+      else localStorage.setItem(KEY,JSON.stringify(core()?.state?.()||{}));
+      if(!commit(t))throw new Error('transaction_commit_failed');
+      core()?.render?.();
+      return result;
+    }catch(err){
+      if(active===t)rollback(t);
+      throw err;
+    }
+  });
+}
 function history(){const s=core()?.state?.();if(!s)return[];if(!Array.isArray(s.history))s.history=[];return s.history}
 function record(label,before,after){const h=history();h.push({id:`${now()}-${Math.random().toString(36).slice(2)}`,at:now(),type:String(label||'mutation'),beforeBalance:Number(before?.balance||0),afterBalance:Number(after?.balance||0),inventoryBefore:Array.isArray(before?.inventory)?before.inventory.length:0,inventoryAfter:Array.isArray(after?.inventory)?after.inventory.length:0});if(h.length>MAX_HISTORY)h.splice(0,h.length-MAX_HISTORY)}
 function wrapStorage(){if(localStorage.__edTxnV4)return;const os=localStorage.setItem.bind(localStorage),orm=localStorage.removeItem?.bind(localStorage);try{localStorage.setItem=function(k,v){if(fault('storageWrite')){if(k===KEY&&active&&!rollingBack){rollingBack=true;try{rollback(active)}finally{rollingBack=false}}throw new Error('fault_storage_write')}try{return os(k,v)}catch(err){if(k===KEY&&active&&!rollingBack){rollingBack=true;try{rollback(active)}finally{rollingBack=false}}throw err}};if(orm)localStorage.removeItem=function(k){if(k===KEY&&active&&!rollingBack){rollingBack=true;try{rollback(active)}finally{rollingBack=false}}return orm(k)};Object.defineProperty(localStorage,'__edTxnV4',{value:true})}catch{}}
@@ -31,5 +52,5 @@ function install(){document.addEventListener?.('click',e=>{const b=e.target?.clo
 recover();wrapStorage();install();
 window.addEventListener?.('storage',e=>{if(e.key!==KEY||active||!e.newValue)return;try{const incoming=JSON.parse(e.newValue),s=core()?.state?.();if(!s)return;for(const k of Object.keys(s))delete s[k];Object.assign(s,clone(incoming));core()?.render?.()}catch{}});
 window.addEventListener?.('pagehide',release);
-window.__emojiDropsTransactions={version:8,begin,commit,rollback,recover,acquire,refresh,release,withLock,history,record,maxHistory:MAX_HISTORY,journal:JOURNAL,lock:LOCK,commitGraceMs:COMMIT_GRACE_MS,nonBlockingLease:true,webLocksPrimary:typeof navigator!=='undefined'&&!!navigator?.locks?.request,leaseOwnershipVerified:true,faultAware:true};
+window.__emojiDropsTransactions={version:9,begin,commit,rollback,recover,acquire,refresh,release,withLock,run,history,record,maxHistory:MAX_HISTORY,journal:JOURNAL,lock:LOCK,commitGraceMs:COMMIT_GRACE_MS,nonBlockingLease:true,webLocksPrimary:typeof navigator!=='undefined'&&!!navigator?.locks?.request,leaseOwnershipVerified:true,faultAware:true};
 })();
