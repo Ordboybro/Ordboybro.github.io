@@ -4,7 +4,7 @@ const ctx={window:{addEventListener:()=>{}},document:{addEventListener:()=>{},qu
 ctx.window.__emojiDropsCore={_s:{balance:250,inventory:[],stats:{},history:[]},state(){return this._s},render(){}};
 vm.createContext(ctx);vm.runInContext(fs.readFileSync('js/emoji-drops-transaction-layer.js','utf8'),ctx,{timeout:2000});
 const t=ctx.window.__emojiDropsTransactions;
-if(!t||t.version!==8||t.maxHistory!==200||t.journal!=='emojiDropsTxnV4'||t.commitGraceMs!==1200||t.nonBlockingLease!==true||t.faultAware!==true||t.leaseOwnershipVerified!==true||t.webLocksPrimary!==false)throw new Error('Transaction v8 contract missing');
+if(!t||t.version!==9||typeof t.run!=='function'||t.maxHistory!==200||t.journal!=='emojiDropsTxnV4'||t.commitGraceMs!==1200||t.nonBlockingLease!==true||t.faultAware!==true||t.leaseOwnershipVerified!==true||t.webLocksPrimary!==false)throw new Error('Transaction v8 contract missing');
 const s=ctx.window.__emojiDropsCore._s,before=JSON.parse(JSON.stringify(s));
 const tx=t.begin('test');
 if(!tx||!tx.before||!storage.has('emojiDropsTxnV4'))throw new Error('Journal begin failed');
