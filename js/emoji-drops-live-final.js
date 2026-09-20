@@ -3,7 +3,7 @@
 const ROOT='#view-cases',ID='edRealLiveDrops';
 const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const rub=v=>Math.round(Number(v)||0).toLocaleString('ru-RU')+' ₽';
-let timer=0,interval=0,observer=0,lastKey='',inFlight=false,booted=false;
+let timer=0,interval=0,observer=0,channel=0,lastKey='',inFlight=false,booted=false;
 function cfg(){return window.EMOJI_DROPS_SUPABASE||{}}
 function client(){return window.EmojiDropsAuth?.client||null}
 function css(){
@@ -13,7 +13,7 @@ function css(){
  document.head.appendChild(s)
 }
 function host(){return document.querySelector(ROOT)}
-function paint(rows,configured){
+function paint(rows,configured,error){
  const root=host();if(!root)return;
  let section=document.getElementById(ID);
  if(!section){section=document.createElement('section');section.id=ID;root.appendChild(section)}
@@ -25,28 +25,29 @@ function paint(rows,configured){
    const i=d&&d.item||{};
    return '<article class="ed-live-card"><div class="e">'+esc(i.emoji||'🎁')+'</div><div><b>'+esc(d.nickname||'Player')+' · '+esc(String(i.rarity||'common').toUpperCase())+'</b><span>'+esc(d.case_id||i.case_id||'Case')+' · '+(d.created_at?new Date(d.created_at).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'}):'')+'</span><strong>'+rub(d.item_price??i.price)+'</strong></div></article>'
  }).join('');
- section.innerHTML='<div class="ed-live-head"><div><h2>Live Drops</h2><div style="color:#777;font-size:10px;margin-top:3px">Реальные открытия игроков</div></div><span class="ed-live-status">'+(configured?'● DATABASE':'● OFFLINE')+'</span></div><div class="ed-live-list">'+(cards||'<div class="ed-live-empty"><b>Пока нет реальных открытий</b>Demo-предметы здесь не используются.</div>')+'</div>'
+ section.innerHTML='<div class="ed-live-head"><div><h2>Live Drops</h2><div style="color:#777;font-size:10px;margin-top:3px">Реальные открытия игроков</div></div><span class="ed-live-status">'+(error?'● ERROR':configured?'● DATABASE':'● OFFLINE')+'</span></div><div class="ed-live-list">'+(error?'<div class="ed-live-empty"><b>Не удалось загрузить открытия</b>Проверь соединение с базой и попробуй обновить страницу.</div>':cards||'<div class="ed-live-empty"><b>Пока нет реальных открытий</b>Demo-предметы здесь не используются.</div>')+'</div>'
 }
 async function refresh(){
  if(inFlight)return;
  const c=client(),ok=Boolean(cfg().url&&cfg().anonKey&&c);
- if(!ok){paint([],false);return}
+ if(!ok){paint([],false,false);return}
  inFlight=true;
  try{
    const q=c.from('live_drops').select('id,nickname,item,case_id,item_price,created_at').order('created_at',{ascending:false}).limit(20);
    const r=await q;if(r?.error)throw r.error;
-   paint(Array.isArray(r?.data)?r.data:[],true)
- }catch(e){paint([],true)}
+   paint(Array.isArray(r?.data)?r.data:[],true,false)
+ }catch(e){paint([],true,true)}
  finally{inFlight=false}
 }
 function schedule(){clearTimeout(timer);timer=setTimeout(refresh,60)}
+function subscribe(){const c=client();if(!c?.channel||channel)return;try{channel=c.channel('emoji-drops-live-final').on('postgres_changes',{event:'INSERT',schema:'public',table:'live_drops'},()=>schedule()).subscribe()}catch{channel=0}}
 function boot(){
- if(booted)return;booted=true;css();schedule();interval=window.setInterval(refresh,10000);
- window.addEventListener('emoji-drops-auth-ready',schedule,{passive:true});
- window.addEventListener('emoji-drops-auth-change',schedule,{passive:true});
+ if(booted)return;booted=true;css();schedule();subscribe();interval=window.setInterval(refresh,10000);
+ window.addEventListener('emoji-drops-auth-ready',()=>{schedule();subscribe()},{passive:true});
+ window.addEventListener('emoji-drops-auth-change',()=>{try{channel?.unsubscribe?.()}catch{}channel=0;schedule();subscribe()},{passive:true});
  observer=new MutationObserver(function(m){if(!m.some(x=>x.addedNodes?.length))return;if(host()&&!document.getElementById(ID))schedule()});
  observer.observe(document.body,{childList:true,subtree:true});
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
-window.EmojiDropsLiveFinal={refresh:refresh,version:2,destroy:function(){clearTimeout(timer);clearInterval(interval);observer?.disconnect();window.removeEventListener('emoji-drops-auth-ready',schedule);window.removeEventListener('emoji-drops-auth-change',schedule);booted=false}};
+window.EmojiDropsLiveFinal={refresh:refresh,version:2,destroy:function(){clearTimeout(timer);clearInterval(interval);observer?.disconnect();try{channel?.unsubscribe?.()}catch{}channel=0;window.removeEventListener('emoji-drops-auth-ready',schedule);window.removeEventListener('emoji-drops-auth-change',schedule);booted=false}};
 })();
