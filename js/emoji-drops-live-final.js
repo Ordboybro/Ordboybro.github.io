@@ -3,7 +3,7 @@
 const ROOT='#view-cases',ID='edRealLiveDrops';
 const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const rub=v=>Math.round(Number(v)||0).toLocaleString('ru-RU')+' ₽';
-let timer=0,lastKey='',inFlight=false;
+let timer=0,interval=0,observer=0,lastKey='',inFlight=false,booted=false;
 function cfg(){return window.EMOJI_DROPS_SUPABASE||{}}
 function client(){return window.EmojiDropsAuth?.client||null}
 function css(){
@@ -41,11 +41,12 @@ async function refresh(){
 }
 function schedule(){clearTimeout(timer);timer=setTimeout(refresh,60)}
 function boot(){
- css();schedule();setInterval(refresh,10000);
- window.addEventListener('emoji-drops-auth-ready',schedule);
- window.addEventListener('emoji-drops-auth-change',schedule);
- new MutationObserver(function(){if(host()&&!document.getElementById(ID))schedule()}).observe(document.body,{childList:true,subtree:true})
+ if(booted)return;booted=true;css();schedule();interval=window.setInterval(refresh,10000);
+ window.addEventListener('emoji-drops-auth-ready',schedule,{passive:true});
+ window.addEventListener('emoji-drops-auth-change',schedule,{passive:true});
+ observer=new MutationObserver(function(m){if(!m.some(x=>x.addedNodes?.length))return;if(host()&&!document.getElementById(ID))schedule()});
+ observer.observe(document.body,{childList:true,subtree:true});
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
-window.EmojiDropsLiveFinal={refresh:refresh,version:1};
+window.EmojiDropsLiveFinal={refresh:refresh,version:2,destroy:function(){clearTimeout(timer);clearInterval(interval);observer?.disconnect();window.removeEventListener('emoji-drops-auth-ready',schedule);window.removeEventListener('emoji-drops-auth-change',schedule);booted=false}};
 })();
