@@ -113,3 +113,9 @@ jobs:
         run: node tests/emoji-drops-recovery-e2e.js
       - name: Security audit
         run: node tests/emoji-drops-security-audit.js
+      - name: P2-P4 architecture audit
+        run: node tests/emoji-drops-architecture-audit.js
+      - name: P2-P4 visual regression smoke
+        run: node tests/emoji-drops-visual-regression-smoke.js
+      - name: Production smoke
+        run: node tests/emoji-drops-production-smoke.js
