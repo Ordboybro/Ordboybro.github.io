@@ -32,8 +32,38 @@ function renderDaily(){const b=document.getElementById('view-daily'),d=Math.min(
 function renderCollections(){const b=document.getElementById('view-collections');b.innerHTML=`<div class="ed-title"><div><h1>Коллекции</h1><div class="ed-muted">Прогресс коллекций.</div></div></div>${Object.keys(PRICES).map(k=>{const all=items(k),have=new Set(S.inventory.map(x=>x.emoji+'|'+x.rarity));return `<div class="ed-panel" style="margin-bottom:12px"><b>${I[k]} ${N[k]}</b><div class="ed-muted">${all.filter(x=>have.has(x.emoji+'|'+x.rarity)).length}/${all.length}</div></div>`}).join('')}`}
 function view(v){window.__edView=v;document.querySelectorAll('.ed-view').forEach(x=>x.classList.toggle('active',x.id==='view-'+v));document.querySelectorAll('[data-view]').forEach(x=>x.classList.toggle('active',x.dataset.view===v));if(v==='inventory')renderInventory();if(v==='upgrade')renderUpgrade();if(v==='market')renderMarket();if(v==='profile')renderProfile();if(v==='daily')renderDaily();if(v==='collections')renderCollections()}
 function claimDaily(){const day=today();if(S.lastDaily===day)return 0;S.lastDaily=day;S.daily=(S.daily||0)+1;const streak=((S.daily-1)%7)+1,reward=streak===7?500:50+streak*25;S.balance+=reward;S.stats.earned+=reward;addXP(30);persist();return reward}
-async function sell(id){if(busy)return;const cloud=!!(window.EMOJI_DROPS_SUPABASE?.url&&window.EMOJI_DROPS_SUPABASE?.anonKey&&window.EmojiDropsAuth?.rpc&&window.EmojiDropsAuth?.userId);if(cloud){busy=true;try{const r=await window.EmojiDropsAuth.rpc('sell_item_server',{p_item_id:id});if(r?.error)throw r.error;const data=r?.data||{};const i=S.inventory.findIndex(x=>x.id===id);if(i<0)throw Error('ITEM_NOT_FOUND');S.inventory.splice(i,1);if(Number.isFinite(Number(data.balance)))S.balance=Number(data.balance);if(Number.isFinite(Number(data.sold)))S.stats.earned+=Number(data.sold);persist();renderAll();toast(`Продано за ${money(data.sold)}`)}catch(e){toast(String(e?.message||'Не удалось продать предмет'))}finally{busy=false}return}const i=S.inventory.findIndex(x=>x.id===id);if(i<0)return;const x=S.inventory.splice(i,1)[0],v=Math.max(0,num(x.price));S.balance+=v;S.stats.earned+=v;addXP(2);persist();renderAll();toast(`Продано за ${money(v)}`)}
-function sellAll(){if(busy||!S.inventory.length)return;const v=S.inventory.reduce((a,x)=>a+Math.max(0,num(x.price)),0);S.inventory=[];S.balance+=v;S.stats.earned+=v;addXP(Math.min(25,5+Math.floor(v/100)));persist();renderAll();toast(`Продано всё: ${money(v)}`)}
+async function sell(id){
+ if(busy)return;
+ const cloud=!!(window.EMOJI_DROPS_SUPABASE?.url&&window.EMOJI_DROPS_SUPABASE?.anonKey&&window.EmojiDropsAuth?.rpc&&window.EmojiDropsAuth?.userId);
+ if(!cloud){toast('Войди в аккаунт для продажи');return}
+ const tx=window.__emojiDropsTransactions;
+ if(!tx?.run){toast('Транзакционный runtime недоступен');return}
+ busy=true;
+ try{
+  await tx.run('sell_item',()=>window.EmojiDropsAuth.rpc('sell_item_server',{p_item_id:id}).then(r=>{if(r?.error)throw r.error;return r?.data||{}}),data=>{
+   const i=S.inventory.findIndex(x=>String(x.id)===String(id));if(i<0)throw Error('ITEM_NOT_FOUND');
+   S.inventory.splice(i,1);
+   if(Number.isFinite(Number(data.balance)))S.balance=Number(data.balance);
+   if(Number.isFinite(Number(data.sold)))S.stats.earned+=Number(data.sold);
+  });
+  renderAll();toast('Предмет продан');
+ }catch(e){toast(String(e?.message||'Не удалось продать предмет'))}finally{busy=false}
+}
+async function sellAll(){
+ if(busy||!S.inventory.length)return;
+ const cloud=!!(window.EMOJI_DROPS_SUPABASE?.url&&window.EMOJI_DROPS_SUPABASE?.anonKey&&window.EmojiDropsAuth?.rpc&&window.EmojiDropsAuth?.userId);
+ if(!cloud){toast('Войди в аккаунт для продажи');return}
+ const tx=window.__emojiDropsTransactions;
+ if(!tx?.run){toast('Транзакционный runtime недоступен');return}
+ busy=true;
+ try{
+  await tx.run('sell_all',()=>window.EmojiDropsAuth.rpc('sell_all_server',{}).then(r=>{if(r?.error)throw r.error;return r?.data||{}}),data=>{
+   S.inventory=[];if(Number.isFinite(Number(data.balance)))S.balance=Number(data.balance);
+   if(Number.isFinite(Number(data.sold)))S.stats.earned+=Number(data.sold);
+  });
+  renderAll();toast('Продано всё');
+ }catch(e){toast(String(e?.message||'Не удалось продать всё'))}finally{busy=false}
+}
 function listRandom(){if(busy)return;const x=S.inventory[0];if(!x){toast('В инвентаре нет предметов');return}S.inventory.splice(0,1);const v=Math.max(1,Math.round(num(x.price)*1.1));S.market.push({id:'m-'+uuid(),itemId:x.id,emoji:x.emoji,rarity:x.rarity,price:v,seller:'Player',owner:'Player',status:'active'});persist();renderAll();toast(`Выставлено за ${money(v)}`)}
 function buy(id){if(busy)return;const all=marketListings(),x=all.find(z=>z.id===id);if(!x){toast('Лот уже недоступен');return}const v=Math.max(0,num(x.price));if(S.balance<v){toast('Недостаточно баланса');return}S.balance-=v;S.stats.spent+=v;S.inventory.push({id:uuid(),emoji:x.emoji,rarity:x.rarity,price:v});if(x.owner==='Player'){const i=S.market.findIndex(z=>z.id===id);if(i>=0)S.market.splice(i,1)}persist();renderAll();toast(`Куплено за ${money(v)}`)}
 function doUpgrade(){if(busy||!upgradeFrom||!upgradeTo)return;const a=S.inventory.find(x=>x.id===upgradeFrom),t=S.inventory.find(x=>x.id===upgradeTo);if(!a||!t)return;const av=num(a.price),tv=num(t.price),required=av*mult;if(tv<required){toast(`Цель должна быть не дешевле ${money(required)}`);return}busy=true;const chance=Math.min(99.99,100/mult),win=Math.random()*100<chance;S.inventory=S.inventory.filter(x=>x.id!==a.id&&x.id!==t.id);if(win){S.inventory.push({...t,id:uuid()});S.stats.wins++}else S.inventory.push({...a,id:uuid()});S.stats.upgrades++;addXP(win?20:10);persist();renderAll();upgradeFrom=upgradeTo=null;showUpgradeResult(win,win?t:a,chance);setTimeout(()=>busy=false,550)}
