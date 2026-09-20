@@ -3,7 +3,7 @@
 const ROOT='#view-cases',ID='edRealLiveDrops';
 const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const rub=v=>Math.round(Number(v)||0).toLocaleString('ru-RU')+' ₽';
-let timer=0,interval=0,observer=0,channel=0,lastKey='',inFlight=false,booted=false,authReady=0,authChange=0;
+let timer=0,interval=0,rotateTimer=0,observer=0,channel=0,lastKey='',inFlight=false,booted=false,authReady=0,authChange=0,lastRows=[];
 function cfg(){return window.EMOJI_DROPS_SUPABASE||{}}
 function client(){return window.EmojiDropsAuth?.client||null}
 function css(){
@@ -17,7 +17,7 @@ function paint(rows,configured,error){
  const root=host();if(!root)return;
  let section=document.getElementById(ID);
  if(!section){section=document.createElement('section');section.id=ID;root.appendChild(section)}
- const clean=Array.isArray(rows)?rows.slice(0,20):[];
+ const clean=Array.isArray(rows)?rows.slice(0,20):[];lastRows=clean;
  const key=JSON.stringify(clean.map(x=>[x.id,x.created_at,x.item_price]));
  if(key===lastKey&&section.childElementCount)return;
  lastKey=key;
@@ -42,12 +42,12 @@ async function refresh(){
 function schedule(){clearTimeout(timer);timer=setTimeout(refresh,60)}
 function subscribe(){const c=client();if(!c?.channel||channel)return;try{channel=c.channel('emoji-drops-live-final').on('postgres_changes',{event:'INSERT',schema:'public',table:'live_drops'},()=>schedule()).subscribe()}catch{channel=0}}
 function boot(){
- if(booted)return;booted=true;css();schedule();subscribe();interval=window.setInterval(refresh,10000);
+ if(booted)return;booted=true;css();schedule();subscribe();interval=window.setInterval(refresh,3000);rotateTimer=window.setInterval(()=>{const list=document.querySelector('#edRealLiveDrops .ed-live-list');if(list&&lastRows.length>1)list.scrollBy({left:190,behavior:'smooth'});},3000);
  authReady=()=>{schedule();subscribe()};authChange=()=>{try{channel?.unsubscribe?.()}catch{}channel=0;schedule();subscribe()};window.addEventListener('emoji-drops-auth-ready',authReady,{passive:true});
  window.addEventListener('emoji-drops-auth-change',authChange,{passive:true});
  observer=new MutationObserver(function(m){if(!m.some(x=>x.addedNodes?.length))return;if(host()&&!document.getElementById(ID))schedule()});
  observer.observe(document.body,{childList:true,subtree:true});
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
-window.EmojiDropsLiveFinal={refresh:refresh,version:2,destroy:function(){clearTimeout(timer);clearInterval(interval);observer?.disconnect();try{channel?.unsubscribe?.()}catch{}channel=0;if(authReady)window.removeEventListener('emoji-drops-auth-ready',authReady);if(authChange)window.removeEventListener('emoji-drops-auth-change',authChange);authReady=0;authChange=0;booted=false}};
+window.EmojiDropsLiveFinal={refresh:refresh,version:3,destroy:function(){clearTimeout(timer);clearInterval(interval);clearInterval(rotateTimer);observer?.disconnect();try{channel?.unsubscribe?.()}catch{}channel=0;if(authReady)window.removeEventListener('emoji-drops-auth-ready',authReady);if(authChange)window.removeEventListener('emoji-drops-auth-change',authChange);authReady=0;authChange=0;booted=false}};
 })();
