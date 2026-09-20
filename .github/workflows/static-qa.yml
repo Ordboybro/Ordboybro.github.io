@@ -19,7 +19,7 @@ jobs:
         run: |
           set -euo pipefail
           find js tests -type f -name '*.js' -print0 | while IFS= read -r -d '' f; do node --check "$f"; done
-          node --check data.js
+          node --check js/data.js
       - name: Assets and boot
         run: |
           set -euo pipefail
@@ -84,6 +84,8 @@ jobs:
         run: node tests/emoji-drops-action-resilience-self-test.js
       - name: P3/P4 contracts
         run: node tests/emoji-drops-p3-p4-self-test.js
+      - name: Supabase schema security and atomicity audit
+        run: node tests/emoji-drops-supabase-schema-audit.js
       - name: Security/privacy audit
         run: node tests/emoji-drops-security-audit.js
       - name: Final hardening contract
