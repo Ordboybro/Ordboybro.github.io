@@ -35,7 +35,7 @@ jobs:
           runtime=[Path(x).name for x in re.findall(r"['\"]([^'\"]+\.js)(?:\?[^'\"]*)?['\"]",m.group(1))]
           positions=[runtime.index(x) if x in runtime else -1 for x in order]
           if any(x<0 for x in positions) or positions!=sorted(positions): raise SystemExit('Runtime order failed: '+str(list(zip(order,positions))))
-          for v in ['schema-1','data-bridge-1','hardening-9','core-13','txn-11','guards-8','final-2','release-1','product-5','product-plus-6','action-20','quality-final-1','p3-polish-v8','p4-3','v23-stability-1','exact-landscape-1','case-showcase-exact-7','authority-7','case-open-bridge-23','studio-32','exact-txn-1','case-button-bridge-5','authority-finalizer-6','market-v26-4','market-authority-final-1','smooth-ui-3','final-product-polish-6','modal-finalizer-10','upgrade-final-18','upgrade-interaction-guard-5','final-ux-v5','live-final-4','p5-final-audit-1']:
+          for v in ['schema-1','data-bridge-1','supabase-auth-4','hardening-9','core-13','txn-11','guards-8','final-2','release-1','product-5','product-plus-6','action-20','quality-final-1','p3-polish-v8','p4-3','v23-stability-1','exact-landscape-1','case-showcase-exact-7','authority-7','case-open-bridge-24','studio-32','exact-txn-1','case-button-bridge-5','authority-finalizer-6','market-v26-4','market-authority-final-1','smooth-ui-3','final-product-polish-6','modal-finalizer-10','upgrade-final-18','upgrade-interaction-guard-5','final-ux-v5','live-final-4','p5-final-audit-1']:
               if v not in a: raise SystemExit('Cache version missing: '+v)
           market=Path('js/emoji-drops-market-v26.js').read_text()
           txlayer=Path('js/emoji-drops-transaction-layer.js').read_text()
