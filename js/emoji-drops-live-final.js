@@ -41,7 +41,7 @@ async function refresh(){
 }
 function schedule(){clearTimeout(timer);timer=setTimeout(refresh,60)}
 function subscribe(){const c=client();if(!c?.channel||channel)return;try{channel=c.channel('emoji-drops-live-final').on('postgres_changes',{event:'INSERT',schema:'public',table:'live_drops'},()=>schedule()).subscribe()}catch{channel=0}}
-function stopLoops(){if(interval){clearInterval(interval);interval=0}if(rotateTimer){clearInterval(rotateTimer);rotateTimer=0}}
+function stopLoops(unsubscribe=false){if(interval){clearInterval(interval);interval=0}if(rotateTimer){clearInterval(rotateTimer);rotateTimer=0}if(unsubscribe&&channel){try{channel.unsubscribe?.()}catch{}channel=0}}
 function startLoops(){if(!booted||document.hidden)return;if(!interval)interval=window.setInterval(refresh,3000);if(!rotateTimer&&!rotationPaused&&!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches)rotateTimer=window.setInterval(()=>{const list=document.querySelector('#edRealLiveDrops .ed-live-list');if(list&&lastRows.length>1&&!rotationPaused)list.scrollBy({left:190,behavior:'smooth'});},3000)}
 function bindInteractionPause(){const root=document.getElementById(ID);const list=root?.querySelector('.ed-live-list');if(!list||list.dataset.pauseBound)return;list.dataset.pauseBound='1';const pause=()=>{rotationPaused=true;if(rotateTimer){clearInterval(rotateTimer);rotateTimer=0}};const resume=()=>{rotationPaused=false;startLoops()};list.addEventListener('pointerenter',pause,{passive:true});list.addEventListener('pointerleave',resume,{passive:true});list.addEventListener('touchstart',pause,{passive:true});list.addEventListener('touchend',resume,{passive:true});list.addEventListener('touchcancel',resume,{passive:true})}
 function boot(){
@@ -50,8 +50,8 @@ function boot(){
  window.addEventListener('emoji-drops-auth-change',authChange,{passive:true});
  observer=new MutationObserver(function(m){if(!m.some(x=>x.addedNodes?.length))return;if(host()&&!document.getElementById(ID))schedule()});
  observer.observe(document.body,{childList:true,subtree:true});
- document.addEventListener('visibilitychange',()=>{if(document.hidden)stopLoops();else{schedule();startLoops()}});
- window.addEventListener('pagehide',stopLoops,{passive:true});
+ document.addEventListener('visibilitychange',()=>{if(document.hidden)stopLoops(true);else{schedule();subscribe();startLoops()}});
+ window.addEventListener('pagehide',()=>stopLoops(true),{passive:true});
  window.addEventListener('pageshow',startLoops,{passive:true});
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
