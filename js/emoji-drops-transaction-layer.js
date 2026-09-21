@@ -24,6 +24,21 @@ function acquire(){const old=readLease(),t=now();if(old&&Number(old.expires)>t&&
 function refresh(){if(leaseOwned())set(LOCK,JSON.stringify({owner,expires:now()+LOCK_MS}))}
 function release(){if(lockTimer){clearInterval(lockTimer);lockTimer=0}if(leaseOwned())remove(LOCK)}
 function withLock(fn){const locks=typeof navigator!=='undefined'&&navigator?.locks?.request;if(locks)return navigator.locks.request('emoji-drops-state',async()=>fn());if(!acquire())return Promise.reject(new Error('transaction_locked'));return Promise.resolve().then(fn).finally(release)}
+async function resyncRemote(){
+  const auth=window.EmojiDropsAuth,client=auth?.client,uid=auth?.userId;
+  if(!client||!uid)throw new Error('REMOTE_RESYNC_UNAVAILABLE');
+  const q=await client.from('profiles').select('balance,inventory,stats,best_drop,nickname').eq('id',uid).single();
+  if(q?.error)throw q.error;
+  const s=core()?.state?.();if(!s||!q?.data)throw new Error('REMOTE_RESYNC_EMPTY');
+  s.balance=Math.max(0,Number(q.data.balance)||0);
+  s.inventory=Array.isArray(q.data.inventory)?clone(q.data.inventory):[];
+  s.stats={...(s.stats||{}),...(q.data.stats&&typeof q.data.stats==='object'?clone(q.data.stats):{})};
+  s.best_drop=q.data.best_drop&&typeof q.data.best_drop==='object'?clone(q.data.best_drop):null;
+  if(typeof q.data.nickname==='string'&&q.data.nickname)s.nickname=q.data.nickname;
+  try{localStorage.setItem(KEY,JSON.stringify(s))}catch{}
+  core()?.render?.();
+  return true;
+}
 async function run(label,executor,apply){
   if(typeof executor!=='function')throw new Error('transaction_executor_required');
   return withLock(async()=>{
@@ -81,5 +96,5 @@ function wrapStorage(){if(localStorage.__edTxnV4)return;const os=localStorage.se
 recover();wrapStorage();
 window.addEventListener?.('storage',e=>{if(e.key!==KEY||active||!e.newValue)return;try{const incoming=JSON.parse(e.newValue),s=core()?.state?.();if(!s)return;for(const k of Object.keys(s))delete s[k];Object.assign(s,clone(incoming));core()?.render?.()}catch{}});
 window.addEventListener?.('pagehide',release);
-window.__emojiDropsTransactions={version:10,phases:PHASES,begin,commit,rollback,recover,acquire,refresh,release,withLock,run,history,record,maxHistory:MAX_HISTORY,journal:JOURNAL,lock:LOCK,commitGraceMs:COMMIT_GRACE_MS,nonBlockingLease:true,webLocksPrimary:typeof navigator!=='undefined'&&!!navigator?.locks?.request,leaseOwnershipVerified:true,faultAware:true};
+window.__emojiDropsTransactions={version:10,phases:PHASES,begin,commit,rollback,recover,resyncRemote,acquire,refresh,release,withLock,run,history,record,maxHistory:MAX_HISTORY,journal:JOURNAL,lock:LOCK,commitGraceMs:COMMIT_GRACE_MS,nonBlockingLease:true,webLocksPrimary:typeof navigator!=='undefined'&&!!navigator?.locks?.request,leaseOwnershipVerified:true,faultAware:true};
 })();
