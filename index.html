@@ -57,7 +57,71 @@ main{padding-top:28px}
 @media(max-width:700px){main{padding:18px 14px 60px}.profile-center{min-height:210px}.profile-layout{gap:12px!important}.avatar{width:84px;height:84px;font-size:48px}.profile-name{font-size:25px!important}.stats{gap:8px!important}.stat{padding:15px}.stat b{font-size:25px}.upgrade-panel{gap:11px}.upgrade-arrow{width:74px!important;height:74px!important}}
 @media(prefers-reduced-motion:reduce){.profile-center:after{animation:none!important}.case-card,.profile-btn,.inventory-item,.upgrade-target{transition:none!important}}
 </style>
-<style>html{-webkit-text-size-adjust:100%;text-size-adjust:100%}body{overscroll-behavior-x:none}::selection{background:#ff8a2033;color:#fff}header .top-pill:has(#onlineCount){display:none}</style></head><body>
+<style>html{-webkit-text-size-adjust:100%;text-size-adjust:100%}body{overscroll-behavior-x:none}::selection{background:#ff8a2033;color:#fff}header .top-pill:has(#onlineCount){display:none}</style><style id="emoji-drops-phase1-polish">
+/* Phase pass: mobile stability + existing-surface polish. No new controls. */
+:root{--ed-focus:#ff9a3d}
+button,a,input,select,textarea{outline-offset:3px}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--ed-focus);outline-offset:3px}
+.top-pill{font-variant-numeric:tabular-nums;white-space:nowrap}
+.case-card{isolation:isolate}
+.case-card:after{content:"";position:absolute;inset:1px;border-radius:23px;pointer-events:none;background:linear-gradient(180deg,#fff08,transparent 28%);opacity:.45}
+.case-card>*{position:relative;z-index:1}
+.case-art{filter:drop-shadow(0 12px 24px #000b);transition:transform .24s var(--ed-ease),filter .24s var(--ed-ease)}
+.case-card:hover .case-art{transform:translateY(-3px) scale(1.025);filter:drop-shadow(0 16px 30px #000)}
+.case-price span{font-variant-numeric:tabular-nums;text-shadow:0 0 18px #ff8a1833}
+.live-container{scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.live-container::-webkit-scrollbar{display:none}
+.live-drop{min-width:0;box-shadow:0 8px 24px #0008,inset 0 1px #fff1}
+.primary,.secondary,.profile-btn,.reel-fast,.amount,.upgrade-mult,.close{min-height:48px}
+.primary,.secondary{display:inline-flex;align-items:center;justify-content:center}
+.modal{padding:max(14px,env(safe-area-inset-top)) max(14px,env(safe-area-inset-right)) max(14px,env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left))}
+.panel{max-height:min(92dvh,900px)}
+.panel-body{padding-bottom:max(24px,env(safe-area-inset-bottom))}
+@media(max-width:430px){
+  header{height:64px;padding-left:max(12px,env(safe-area-inset-left));padding-right:max(12px,env(safe-area-inset-right))}
+  .logo{font-size:21px}
+  .top-right{min-width:0}
+  .top-pill{padding:9px 10px;font-size:14px}
+  .profile-top{max-width:44vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:9px 10px}
+  main{padding-left:max(12px,env(safe-area-inset-left));padding-right:max(12px,env(safe-area-inset-right))}
+  .cases{gap:10px}
+  .case-card{border-radius:19px;padding:14px 8px 12px;min-height:218px;height:auto}
+  .case-art{height:86px;font-size:54px}
+  .case-name{font-size:18px}
+  .case-meta{font-size:13px}
+  .case-price span{font-size:18px}
+  .live-drop{flex-basis:150px;height:60px}
+  .panel{width:100%;border-radius:20px}
+  .panel-head{padding:16px}
+  .panel-head h2{font-size:19px}
+  .panel-body{padding:15px}
+  .case-reel{height:104px}
+  .reel-item{flex-basis:78px;height:80px}
+  .reel-item strong{font-size:30px}
+  .win-card{padding:22px 14px}
+  .win-card .emoji{font-size:76px}
+}
+@media(max-width:340px){
+  .cases{grid-template-columns:1fr;max-width:290px;margin-inline:auto}
+  .case-card{min-height:205px}
+  .case-art{height:72px}
+  .top-pill{font-size:13px}
+  .profile-top{max-width:39vw}
+}
+@media(orientation:landscape) and (max-height:520px){
+  header{height:58px}
+  main{padding-top:12px;padding-bottom:30px}
+  .panel{max-height:96dvh}
+  .panel-head{padding:12px 16px}
+  .panel-body{padding:14px 16px}
+  .case-reel{height:90px}
+  .win-card{padding:14px}
+  .win-card .emoji{font-size:58px}
+}
+@media(prefers-reduced-motion:reduce){
+  .case-card,.case-art,.live-drop,.primary,.secondary,.profile-btn,.upgrade-target{transition:none!important;animation:none!important}
+}
+</style></head><body>
 <header><div class="logo">Emoji <span>Drops</span></div><div class="top-right"><div class="balance-menu"><div class="top-pill">💰 <span id="balance">1000</span>₽</div><div class="reward-pop"><button id="rewardHeader" class="reward-btn">Получить 100₽</button></div></div><button id="profileBtn" class="profile-top">👤 <span id="nickname">Гость</span></button></div></header>
 <main><section id="cases" class="cases"></section><section class="live-section"><div class="live-title"><span>●</span> LIVE DROPS</div><div id="liveContainer" class="live-container"></div></section></main>
 <div id="openModal" class="modal"><div class="panel"><div class="panel-head"><h2 id="openTitle">Кейс</h2><button class="close close-any" data-close="#openModal">✕</button></div><div class="panel-body"><div class="muted" id="amountLabel">Количество открытий</div><div id="amounts" class="amounts"></div><div id="costRow">Стоимость: <span id="openCost" class="open-cost">0₽</span></div><div class="actions" style="margin-top:16px"><button id="openBtn" class="primary">Открыть кейс</button></div><div id="caseItems" class="case-items"></div></div></div></div>
