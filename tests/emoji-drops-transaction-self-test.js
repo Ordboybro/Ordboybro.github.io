@@ -4,6 +4,8 @@ const ctx={window:{addEventListener:()=>{}},document:{addEventListener:()=>{},qu
 ctx.window.__emojiDropsCore={_s:{balance:250,inventory:[],stats:{},history:[]},state(){return this._s},render(){}};
 vm.createContext(ctx);vm.runInContext(fs.readFileSync('js/emoji-drops-transaction-layer.js','utf8'),ctx,{timeout:2000});
 const t=ctx.window.__emojiDropsTransactions;
+const txSource=fs.readFileSync('js/emoji-drops-transaction-layer.js','utf8');
+for(const marker of ['remote_committed_resynced','recoverySynced','resyncRemote()'])if(!txSource.includes(marker))throw new Error('Remote recovery contract missing: '+marker);
 if(!t||t.version!==10||typeof t.run!=='function'||typeof t.resyncRemote!=='function'||t.maxHistory!==200||t.journal!=='emojiDropsTxnV4'||t.commitGraceMs!==1200||t.nonBlockingLease!==true||t.faultAware!==true||t.leaseOwnershipVerified!==true||t.webLocksPrimary!==false||!t.phases||t.phases.PREPARING!=='PREPARING'||t.phases.SUBMITTING!=='SUBMITTING'||t.phases.COMMITTED!=='COMMITTED'||t.phases.ROLLED_BACK!=='ROLLED_BACK')throw new Error('Transaction v10 contract missing');
 const s=ctx.window.__emojiDropsCore._s,before=JSON.parse(JSON.stringify(s));
 const tx=t.begin('test');
