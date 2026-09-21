@@ -597,3 +597,9 @@ end $;
 alter default privileges in schema public revoke execute on functions from public;
 alter default privileges in schema public revoke execute on functions from anon;
 alter default privileges in schema public revoke execute on functions from authenticated;
+
+-- Canonical client execution grants (final overload surface).
+revoke execute on function public.open_case_server(text,numeric) from public,anon;
+grant execute on function public.open_case_server(text,numeric) to authenticated;
+revoke execute on function public.upgrade_server(text,numeric,numeric,text,text,text,numeric) from public,anon;
+grant execute on function public.upgrade_server(text,numeric,numeric,text,text,text,numeric) to authenticated;
