@@ -1,15 +1,10 @@
 (()=>{'use strict';
-/* Emoji Drops product-plus v4 (product-plus-3): activity history, market cancellation, case details, keyboard UX and Live Drops DOM ownership. Favorite UI is delegated to final-ux when that owner is present. */
-const KEY='emojiDropsStateV3',META='emojiDropsProductV1',FAV='emojiDropsFavoritesV1',HIST='emojiDropsHistoryV1';
-const q=(s,r=document)=>r.querySelector(s),qa=(s,r=document)=>[...r.querySelectorAll(s)],safe=f=>{try{return f()}catch{return null}};
-const txt=e=>(e?.textContent||'').replace(/\s+/g,' ').trim();
-const get=(k,d)=>safe(()=>JSON.parse(localStorage.getItem(k)||'null'))??d;
-const set=(k,v)=>safe(()=>localStorage.setItem(k,JSON.stringify(v)));
-let favorites=new Set(get(FAV,[])), history=get(HIST,[]);if(!Array.isArray(history))history=[];
-function saveFavorites(){set(FAV,[...favorites])}
-function log(type,payload){history=[{at:Date.now(),type,...payload},...history].slice(0,100);set(HIST,history)}
-function style(){if(q('#ed-product-plus-style'))return;const s=document.createElement('style');s.id='ed-product-plus-style';s.textContent=`.ed-fav{position:absolute;right:10px;top:10px;width:48px;height:48px;min-width:48px;min-height:48px;border:1px solid #333;border-radius:12px;background:#111;color:#aaa;z-index:7;display:grid;place-items:center;padding:0;line-height:1}.ed-fav.active{color:#ff9d3d;border-color:#ff7b00;box-shadow:0 0 18px #ff8a2026}.ed-case{position:relative}.ed-case-detail{display:grid;grid-template-columns:140px 1fr;gap:16px;align-items:center}.ed-case-detail-art{font-size:96px;text-align:center}.ed-history{display:grid;gap:8px}.ed-history-row{display:flex;justify-content:space-between;gap:10px;border:1px solid #292929;background:#111;border-radius:12px;padding:10px}.ed-market-card{position:relative}.ed-market-cancel{margin-top:8px}@media(max-width:600px){.ed-case-detail{grid-template-columns:1fr}.ed-case-detail-art{font-size:72px}.ed-fav{right:8px;top:8px}}`;document.head.appendChild(s)}
-function liveSlot(){const root=q('#view-cases'),sec=root&&q('.live-section',root);if(!root||!sec)return;let slot=sec.closest('.ed-live-slot');if(!slot){slot=document.createElement('div');slot.className='ed-live-slot';sec.parentNode.insertBefore(slot,sec);slot.appendChild(sec)}const title=q('.live-title',sec);if(title)title.textContent='Live Drops';const container=q('.live-container',sec);if(container)container.setAttribute('aria-label','Live Drops')}
-function caseFavorites(){if(window.EmojiDropsFinalUX)return;qa('.ed-case').forEach(card=>{if(card.querySelector('.ed-fav'))return;const open=card.querySelector('[data-open]'),id=open?.getAttribute('data-open');if(!id)return;const btn=document.createElement('button');btn.className='ed-fav'+(favorites.has(id)?' active':'');btn.type='button';btn.textContent=favorites.has(id)?'★':'☆';btn.setAttribute('aria-label',favorites.has(id)?'Remove from favorites':'Add to favorites');btn.dataset.favorite=id;card.appendChild(btn)})}
-function historyPanel(){const profile=q('.ed-profile-main');if(!profile||profile.querySelector('.ed-history'))return;const box=document.createElement('div');box.className='ed-history';box.setAttribute('aria-label','Activity history');box.innerHTML=`<div class="ed-panel"><b>Recent activity</b>${history.filter((h,i,a)=>i===0||h.label!==a[i-1].label).slice(0,5).map(h=>`<div class="ed-history-row"><span>${h.label||h.type}</span><small>${new Date(h.at).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</small></div>`).join('')||'<span class="ed-muted">No activity yet.</span>'}</div>`;profile.appendChild(box)}
-function marketManagement(){})();
+const ID='ed-product-plus-style';
+function boot(){
+ if(!document.getElementById(ID)){
+  const s=document.createElement('style');s.id=ID;s.textContent='.ed-fav{min-width:48px;min-height:48px}.ed-case-detail{display:grid;grid-template-columns:140px 1fr;gap:16px;align-items:center}.ed-case-detail-art{font-size:96px;text-align:center}.ed-history{display:grid;gap:8px}.ed-history-row{display:flex;justify-content:space-between;gap:10px;border:1px solid #292929;background:#111;border-radius:12px;padding:10px}@media(max-width:600px){.ed-case-detail{grid-template-columns:1fr}.ed-case-detail-art{font-size:72px}}';document.head.appendChild(s)
+ }
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
+window.EmojiDropsProductPlus={version:6,run:boot};
+})();
