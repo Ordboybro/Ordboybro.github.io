@@ -10,7 +10,7 @@ function keyFor(card,index){const direct=card?.dataset?.caseKey||card?.dataset?.
 function inActiveCases(node){const card=node?.closest?.('.ed-case');return !!card&&(!!card.closest?.('#view-cases.active')||!!card.closest?.('.ed-view.active'))&&card.isConnected}
 function ready(key){return !!key&&!!window.EmojiDropsCaseShowcaseExact&&typeof window.EmojiDropsCaseShowcaseExact.open==='function'}
 function visible(){return !!document.querySelector('#edExact.show')}
-function touchOpenGuard(){window.__emojiDropsCaseTouchGuardUntil=Date.now()+TOUCH_GUARD_MS}
+function touchOpenGuard(){const until=Date.now()+TOUCH_GUARD_MS;window.__emojiDropsCaseTouchGuardUntil=until;window.__emojiDropsCaseTouchSessionUntil=until+900}
 function invoke(key){if(!ready(key))return false;try{window.EmojiDropsCaseShowcaseExact.open(key);return visible()}catch(err){console.warn('Emoji Drops case open deferred',err);return false}}
 function delayedRetry(key,node){return retry(key,node)}
 function retry(key,node){let attempts=0;const run=()=>{if(!inActiveCases(node)||visible())return;if(invoke(key)||++attempts>=15)return;setTimeout(run,35)};run()}
