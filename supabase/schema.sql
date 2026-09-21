@@ -64,25 +64,6 @@ begin
 end; $$;
 revoke execute on function public.sell_item_server(text) from public,anon;
 grant execute on function public.sell_item_server(text) to authenticated;
-create or replace function public.upgrade_server(p_item_id text,p_target_price numeric,p_multiplier numeric,p_target_emoji text,p_target_rarity text,p_target_case_id text) returns jsonb language plpgsql security definer set search_path='' as $$
-declare uid uuid:=auth.uid(); inv jsonb; src jsonb; src_price numeric; chance numeric; roll numeric:=random(); success boolean; result jsonb; clean_rarity text; clean_case text; clean_emoji text;
-begin
- if uid is null then raise exception 'AUTH_REQUIRED'; end if;
- if p_multiplier not in (1.5,2,3,5) or p_target_price<=0 then raise exception 'INVALID_UPGRADE'; end if;
- clean_emoji:=left(trim(coalesce(p_target_emoji,'')),16); clean_rarity:=lower(trim(coalesce(p_target_rarity,''))); clean_case:=lower(trim(coalesce(p_target_case_id,'')));
- if clean_emoji='' or clean_rarity not in ('common','rare','epic','mythical','legendary') or clean_case='' then raise exception 'INVALID_TARGET'; end if;
- select inventory into inv from public.profiles where id=uid for update;
- select x into src from jsonb_array_elements(coalesce(inv,'[]'::jsonb)) x where x->>'id'=p_item_id limit 1;
- if src is null then raise exception 'ITEM_NOT_FOUND'; end if;
- src_price:=round((src->>'price')::numeric,2);
- if p_target_price<=src_price or p_target_price>src_price*p_multiplier then raise exception 'INVALID_TARGET'; end if;
- chance:=greatest(0.01,least(0.95,(src_price*p_multiplier-p_target_price)/(src_price*p_multiplier-src_price)));
- success:=roll<=chance;
- if success then result:=jsonb_build_object('id',gen_random_uuid()::text,'emoji',clean_emoji,'rarity',clean_rarity,'case_id',clean_case,'price',round(p_target_price,2),'created_at',now(),'upgraded_from',p_item_id); else result:=null; end if;
- update public.profiles set inventory=(select coalesce(jsonb_agg(x),'[]'::jsonb) from jsonb_array_elements(inv) x where x->>'id'<>p_item_id) || case when success then jsonb_build_array(result) else '[]'::jsonb end,stats=jsonb_set(coalesce(stats,'{}'::jsonb),'{wins}',to_jsonb(coalesce((stats->>'wins')::int,0)+case when success then 1 else 0 end),true),updated_at=now() where id=uid;
- return jsonb_build_object('success',success,'item',result,'chance',chance,'balance',(select balance from public.profiles where id=uid));
-end; $$;
-grant execute on function public.upgrade_server(text,numeric,numeric,text,text,text) to authenticated;
 
 
 -- Harden the fresh schema against legacy/public execution and remove superseded overloads.
@@ -438,6 +419,7 @@ begin
   update public.profiles set balance=bal-cost,inventory=coalesce(inv,'[]'::jsonb)||jsonb_build_array(item),best_drop=case when best_drop is null or coalesce((best_drop->>'price')::numeric,0)<chosen.item_price then item else best_drop end,stats=jsonb_set(jsonb_set(jsonb_set(coalesce(stats,'{}'::jsonb),'{opens}',to_jsonb(coalesce((stats->>'opens')::int,0)+1),true),'{wins}',to_jsonb(coalesce((stats->>'wins')::int,0)+1),true),'{spent}',to_jsonb(coalesce((stats->>'spent')::numeric,0)+cost),true),'{earned}',to_jsonb(coalesce((stats->>'earned')::numeric,0)+chosen.item_price),true),updated_at=now() where id=uid;
   if to_regclass('public.live_drops') is not null then
     execute 'insert into public.live_drops(user_id,nickname,item,case_id,item_price,created_at) values ($1,$2,$3,$4,$5,now())' using uid,(select nickname from public.profiles where id=uid),item,chosen.case_id,chosen.item_price;
+    execute 'delete from public.live_drops where created_at < now()-interval ''30 minutes''';
   end if;
   return jsonb_build_object('item',item,'balance',bal-cost,'cost',cost);
 end; $$;
@@ -601,6 +583,15 @@ create policy "live_drops_read_authenticated" on public.live_drops for select to
 grant select on table public.live_drops to authenticated;
 create index if not exists live_drops_created_idx on public.live_drops(created_at desc);
 create index if not exists live_drops_user_idx on public.live_drops(user_id);
+
+-- Realtime is optional in local Supabase projects; add the table only when the publication exists.
+do $ begin
+  if exists (select 1 from pg_publication where pubname='supabase_realtime')
+     and not exists (select 1 from pg_publication_tables where pubname='supabase_realtime' and schemaname='public' and tablename='live_drops') then
+    execute 'alter publication supabase_realtime add table public.live_drops';
+  end if;
+exception when others then null;
+end $;
 
 -- Make the intended public API explicit; new functions are not executable by arbitrary roles.
 alter default privileges in schema public revoke execute on functions from public;
