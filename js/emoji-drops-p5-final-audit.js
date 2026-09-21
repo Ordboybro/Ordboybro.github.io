@@ -1,0 +1,21 @@
+(()=>{'use strict';
+/* Emoji Drops P5 final polish: presentation/accessibility/performance guardrails only. No new product controls. */
+const ID='ed-p5-final-audit',q=(s,r=document)=>r.querySelector(s),qa=(s,r=document)=>[...r.querySelectorAll(s)];
+function style(){if(q('#'+ID))return;const s=document.createElement('style');s.id=ID;s.textContent=`
+:root{--ed-ease:cubic-bezier(.22,1,.36,1)}
+html{scrollbar-gutter:stable}body{overscroll-behavior-x:none}
+button,a,input,select,textarea{font:inherit}button,a{touch-action:manipulation}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid #ffc76a;outline-offset:3px}
+[aria-busy="true"]{cursor:progress}
+[role="dialog"][aria-hidden="true"],.ed-modal[aria-hidden="true"]{pointer-events:none}
+@media(max-width:700px){.ed-view{min-width:0;max-width:100%;overflow-x:clip}.ed-main,.ed-panel,.ed-market,.v26-market,.edfp-up{min-width:0;max-width:100%}.ed-nav{scrollbar-width:none}.ed-nav::-webkit-scrollbar{display:none}.ed-case,.v26-card,.edfp-panel{contain:layout paint}.ed-head-btn,.ed-close,.ed-btn,.primary,.secondary{min-width:48px;min-height:48px}}
+@media(orientation:landscape) and (max-height:600px){.ed-view{padding-bottom:max(12px,env(safe-area-inset-bottom))}.ed-modal-box,.edfp-panel{max-height:calc(100dvh - 20px);overflow:auto}.edfp-wheel{width:min(42vh,320px)}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}.ed-case,.v26-card,.edfp-panel,.edfp-target,.edfp-owned-card{animation:none!important;transform:none!important}}
+@media(prefers-contrast:more){button,a,input,select,textarea{outline-color:currentColor}.ed-muted,.v26-sub,.edfp-head p{color:#ddd!important}}
+`;document.head.appendChild(s)}
+function a11y(){qa('button,a,input,select,textarea').forEach(el=>{if(el.matches('button')&&!el.textContent.trim()&&!el.getAttribute('aria-label')&&!el.getAttribute('title'))el.setAttribute('aria-label','Action');if(el.disabled)el.setAttribute('aria-disabled','true');else el.removeAttribute('aria-disabled')});qa('.ed-modal,.modal,[role="dialog"]').forEach(m=>{if(!m.hasAttribute('aria-hidden'))m.setAttribute('aria-hidden',m.classList.contains('show')?'false':'true');if(m.classList.contains('show'))m.setAttribute('aria-modal','true')})}
+function rarity(){const map={common:'#9ca3af',rare:'#4d86ff',epic:'#a855f7',mythical:'#ef4b4b',legendary:'#ff9d2e'};qa('[data-rarity],.rarity-common,.rarity-rare,.rarity-epic,.rarity-mythical,.rarity-legendary').forEach(el=>{const r=(el.dataset.rarity||[...el.classList].find(x=>x.startsWith('rarity-'))?.slice(7)||'common').toLowerCase();const c=map[r]||map.common;el.style.setProperty('--ed-rarity',c);el.style.setProperty('--ed-rarity-glow',`color-mix(in srgb,${c} 24%,transparent)`)})}
+function perf(){if(window.__edP5Perf)return;window.__edP5Perf=true;let raf=0,last=performance.now();const tick=now=>{if(now-last>120)document.documentElement.dataset.edFrameDrop='1';last=now;raf=requestAnimationFrame(tick)};raf=requestAnimationFrame(tick);document.addEventListener('visibilitychange',()=>{if(document.hidden)cancelAnimationFrame(raf);else{last=performance.now();raf=requestAnimationFrame(tick)}},{passive:true});if(typeof PerformanceObserver==='function'){try{const o=new PerformanceObserver(list=>{if(list.getEntries().some(x=>x.duration>80))document.documentElement.dataset.edLongTask='1'});o.observe({entryTypes:['longtask']})}catch{}}}
+function run(){style();a11y();rarity();perf();document.documentElement.dataset.edP5='ready';window.__emojiDropsP5FinalAudit={version:1,motion:true,rarity:true,mobile:true,accessibility:true,performance:true};const mo=new MutationObserver(()=>{a11y();rarity()});mo.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['aria-hidden','disabled','data-rarity']});setTimeout(()=>mo.disconnect(),8000)}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run,{once:true});else run();
+})();
