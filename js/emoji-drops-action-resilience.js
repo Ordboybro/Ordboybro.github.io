@@ -2,6 +2,7 @@
 /* Emoji Drops action resilience v17: deterministic actions, touch navigation guard, transaction-safe upgrade recovery and keyboard focus safety. Case-modal activation is UI state, not a state transaction, so it is never retried after the modal is opened. Upgrade recovery never mutates state directly; the transaction layer remains authoritative. No polling. */
 const KEY='emojiDropsStateV3',MARK='emojiDropsActionResilienceV8',VERSION=18,RETRY_DELAY=720,TOUCH_CLICK_GUARD_MS=3500;
 /* Emoji Drops action resilience v7 compatibility marker retained intentionally; active implementation is v17. */
+/* Emoji Drops action resilience v7 compatibility marker retained intentionally; active implementation is v18. */
 const ACTIONS=['data-do-open','data-sell','data-sell-all','data-upgrade','data-buy','data-list-random','data-daily','data-reset'];
 const cloneState=()=>{try{const s=JSON.parse(localStorage.getItem(KEY)||'null');return s&&typeof s==='object'?{opens:Number(s.stats?.opens)||0,inventory:Array.isArray(s.inventory)?s.inventory.length:0,balance:Number(s.balance)||0,upgrades:Number(s.stats?.upgrades)||0}:null}catch{return null}};
 const changed=(a,b)=>!!a&&!!b&&(a.opens!==b.opens||a.inventory!==b.inventory||a.balance!==b.balance||a.upgrades!==b.upgrades);
