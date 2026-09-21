@@ -102,14 +102,14 @@ jobs:
           schema=Path('supabase/schema.sql').read_text()
           prices={'smile':100,'moves':80,'nature':60,'food':40,'animals':20,'transport':10,'sport':250,'games':500}
           for k,p in prices.items():
-            if not re.search(r'(?m)^\\s*["\\']?'+re.escape(k)+r'["\\']?\\s*:\\s*\\[' ,data): raise SystemExit('Missing frontend case: '+k)
-            if not re.search(r'when [\\'\\"]'+re.escape(k)+r'[\\'\\"] then '+str(p)+r'\\b',schema,re.I): raise SystemExit('Case price drift: '+k)
-          rows=re.findall(r"\\('([^']+)',\\d+,'([^']*)','(common|rare|epic|mythical|legendary)',([0-9.]+)\\)",schema)
+            if not re.search(r'(?m)^\s*["\']?'+re.escape(k)+r'["\']?\s*:\s*\[' ,data): raise SystemExit('Missing frontend case: '+k)
+            if not re.search(r'when [\'\"]'+re.escape(k)+r'[\'\"] then '+str(p)+r'\b',schema,re.I): raise SystemExit('Case price drift: '+k)
+          rows=re.findall(r"\('([^']+)',\d+,'([^']*)','(common|rare|epic|mythical|legendary)',([0-9.]+)\)",schema)
           if len(rows)<300: raise SystemExit('Server catalog unexpectedly small: '+str(len(rows)))
           for k in prices:
             if sum(1 for r in rows if r[0]==k)<10: raise SystemExit('Server catalog incomplete: '+k)
-          if len(re.findall(r'create or replace function public\\.open_case_server\\(',schema))!=1: raise SystemExit('Multiple open_case_server definitions')
-          if len(re.findall(r'create or replace function public\\.upgrade_server\\(',schema))!=1: raise SystemExit('Multiple upgrade_server definitions')
+          if len(re.findall(r'create or replace function public\.open_case_server\(',schema))!=1: raise SystemExit('Multiple open_case_server definitions')
+          if len(re.findall(r'create or replace function public\.upgrade_server\(',schema))!=1: raise SystemExit('Multiple upgrade_server definitions')
           for marker in ['for update','SELF_PURCHASE_FORBIDDEN','INVALID_TARGET','case_items_lookup_idx','alter publication supabase_realtime add table public.live_drops']:
             if marker not in schema: raise SystemExit('Economy/realtime contract missing: '+marker)
           print('Canonical economy consistency OK')
