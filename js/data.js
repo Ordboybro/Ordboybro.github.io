@@ -1,10 +1,9 @@
 function updateOnline(){
-    const users = getUsers() || [];
-
     const el = document.getElementById("onlineCount");
-    if (el) el.innerText = 128 + users.length;
+    if (el) el.remove();
 }
 
+/* Production UI must never fabricate an online-player count. Live activity is sourced from Supabase. */
 updateOnline();
 
 /* RARITIES */
