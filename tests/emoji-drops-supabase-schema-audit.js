@@ -26,7 +26,7 @@ const required=[
   'revoke all on table public.profiles from anon,authenticated'
 ];
 for(const x of required)if(!s.toLowerCase().includes(x.toLowerCase()))throw new Error('Supabase schema contract missing: '+x);
-const blocks=s.split(/(?=create or replace function public\\.)/i);
+const blocks=s.split(/(?=create or replace function public\.)/i);
 for(const block of blocks){
   if(/security definer/i.test(block) && !/security definer\\s+set search_path='' /i.test(block) && !/security definer set search_path=''/i.test(block)){
     const name=block.match(/create or replace function public\\.([a-z0-9_]+)/i)?.[1]||'unknown';
