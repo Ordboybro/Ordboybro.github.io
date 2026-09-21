@@ -4,10 +4,10 @@ const ctx={window:{addEventListener:()=>{}},document:{addEventListener:()=>{},qu
 ctx.window.__emojiDropsCore={_s:{balance:250,inventory:[],stats:{},history:[]},state(){return this._s},render(){this.rendered=(this.rendered||0)+1}};
 vm.createContext(ctx);vm.runInContext(fs.readFileSync('js/emoji-drops-transaction-layer.js','utf8'),ctx,{timeout:2000});
 const t=ctx.window.__emojiDropsTransactions,s=ctx.window.__emojiDropsCore._s;
-if(t.version!==8)throw Error('transaction v8 required');
+if(t.version!==10)throw Error('transaction v10 required');
 storage.set('emojiDropsStateV3',JSON.stringify(s));
-const pending={v:8,id:'crash-1',label:'open',before:{...s,balance:250,inventory:[]},raw:JSON.stringify(s),beforeHash:'',startedAt:Date.now(),status:'pending'};storage.set('emojiDropsTxnV4',JSON.stringify(pending));
+const pending={v:10,id:'crash-1',label:'open',before:{...s,balance:250,inventory:[]},raw:JSON.stringify(s),beforeHash:'',startedAt:Date.now(),status:'pending'};storage.set('emojiDropsTxnV4',JSON.stringify(pending));
 s.balance=0;s.inventory=[{id:'crashed',emoji:'💥',rarity:'common',price:'1₽'}];if(!t.recover())throw Error('Crash recovery did not complete');if(s.balance!==250||s.inventory.length!==0)throw Error('Crash recovery did not restore pre-transaction state');if(JSON.parse(storage.get('emojiDropsTxnV4')).status!=='recovered_rolled_back')throw Error('Recovery journal status mismatch');
 ctx.window.__emojiDropsFaults={transaction:false,storageWrite:false,storageRead:false};const tx=t.begin('storage-failure');if(!tx)throw Error('Storage-failure setup failed');ctx.window.__emojiDropsFaults.storageWrite=true;s.balance=100;let threw=false;try{ctx.localStorage.setItem('emojiDropsStateV3',JSON.stringify(s))}catch{threw=true}if(!threw)throw Error('Storage write fault was not injected');if(s.balance!==250)throw Error('Storage failure did not restore state');
 ctx.window.__emojiDropsFaults.storageWrite=false;ctx.window.__emojiDropsFaults.storageRead=true;const tx2=t.begin('read-failure');if(!tx2)throw Error('Read-failure setup failed');s.balance=175;if(t.commit(tx2)!==false)throw Error('Read failure did not reject commit');ctx.window.__emojiDropsFaults.storageRead=false;
-console.log('Reliability self-test OK: crash journal recovery, storage-write rollback and storage-read commit rejection');
+console.log('Reliability self-test OK: v10 crash journal recovery, storage-write rollback and storage-read commit rejection');
