@@ -21,7 +21,7 @@ const required=[
   'revoke all on table public.market_listings from anon,authenticated',
   'revoke all on table public.profiles from anon,authenticated',
   'case_items_lookup_idx',
-  'TARGET_NOT_IN_CATALOG',
+  'INVALID_TARGET',
   'SELF_PURCHASE_FORBIDDEN',
   'for update'
 ];
