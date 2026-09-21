@@ -64,7 +64,7 @@ jobs:
               if marker not in Path(path).read_text(): raise SystemExit('Observer budget contract missing: '+path)
           if 'const version=277' not in app: raise SystemExit('Runtime version/cache bump missing')
           exact=Path('js/emoji-drops-case-showcase-exact.js').read_text()
-          for marker in ['version:6','aria-modal="true"','case-open','translateX','role="dialog"','₽','Case items']:
+          for marker in ['version:6','aria-modal="true"','case-open','translateX','role="dialog"','₽','Case items','edx-result-actions','edx-claim','edx-sell','sell_item_server']:
               if marker not in exact: raise SystemExit('Exact showcase contract missing: '+marker)
           landscape=Path('js/emoji-drops-exact-landscape-polish.js').read_text()
           for marker in ['orientation:landscape','max-height:500px','position:sticky','.edx-open button']:
