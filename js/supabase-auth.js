@@ -19,7 +19,7 @@ if(A.configured){
   rpc:async(name,args={})=>{try{return {data:await request(`/rest/v1/rpc/${encodeURIComponent(name)}`,{method:'POST',body:JSON.stringify(args)},read()?.access_token),error:null}}catch(error){return {data:null,error}}},
   from:(table)=>{const q={table,select:'*',order:null,limit:null};const run=async()=>{try{const params=new URLSearchParams({select:q.select});if(q.order)params.set('order',q.order);if(q.limit)params.set('limit',String(q.limit));return {data:await request(`/rest/v1/${encodeURIComponent(q.table)}?${params.toString()}`,{method:'GET'},read()?.access_token),error:null}}catch(error){return {data:null,error}}};return {select:(columns='*')=>{q.select=columns;return {order:(column,{ascending=true}={})=>{q.order=`${column}.${ascending?'asc':'desc'}`;return {limit:n=>{q.limit=n;return run()}}},limit:n=>{q.limit=n;return run()}}}}},
   channel:(name)=>{
-   let socket=null,joined=false,closed=false,ref=0,heartbeat=0,handler=null;
+   let socket=null,joined=false,closed=false,ref=0,joinRef=null,heartbeat=0,retryTimer=0,handler=null;
    const topic=String(name||'emoji-drops-live-final').startsWith('realtime:')?String(name):'realtime:'+String(name||'emoji-drops-live-final');
    const api={
     on(event,filter,cb){if(event==='postgres_changes'&&typeof cb==='function')handler={event,filter:filter||{},cb};return api},
@@ -34,7 +34,7 @@ if(A.configured){
        socket=new WebSocket(url);
        socket.onopen=()=>{
         if(closed)return;
-        const joinRef=String(++ref);
+        joinRef=String(++ref);
         socket.send(JSON.stringify({event:'phx_join',topic,payload:{config:{broadcast:{ack:false,self:false},presence:{enabled:false,key:''},postgres_changes:[{event:handler?.filter?.event||'INSERT',schema:handler?.filter?.schema||'public',table:handler?.filter?.table||'live_drops'}],private:false},access_token:token},ref:joinRef,join_ref:joinRef}));
         heartbeat=window.setInterval(()=>{if(socket?.readyState===1)socket.send(JSON.stringify({event:'heartbeat',topic:'phoenix',payload:{},ref:String(++ref),join_ref:null}))},25000);
        };
@@ -45,13 +45,13 @@ if(A.configured){
         }catch{}
        };
        socket.onerror=()=>{};
-       socket.onclose=()=>{joined=false;if(heartbeat){clearInterval(heartbeat);heartbeat=0}};
+       socket.onclose=()=>{joined=false;if(heartbeat){clearInterval(heartbeat);heartbeat=0}if(!closed&&!retryTimer)retryTimer=window.setTimeout(()=>{retryTimer=0;api.subscribe()},3000)};
        joined=true;return 'ok';
       }catch{return 'error'}
     },
     unsubscribe:async()=>{
-      closed=true;if(heartbeat){clearInterval(heartbeat);heartbeat=0}
-      try{if(socket?.readyState===1)socket.send(JSON.stringify({event:'phx_leave',topic,payload:{},ref:String(++ref),join_ref:String(ref)}))}catch{}
+      closed=true;if(heartbeat){clearInterval(heartbeat);heartbeat=0}if(retryTimer){clearTimeout(retryTimer);retryTimer=0}
+      try{if(socket?.readyState===1)socket.send(JSON.stringify({event:'phx_leave',topic,payload:{},ref:String(++ref),join_ref:joinRef}))}catch{}
       try{socket?.close()}catch{}
       socket=null;joined=false;
     }
