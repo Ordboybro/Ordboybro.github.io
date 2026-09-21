@@ -2,6 +2,7 @@
 /* Emoji Drops Upgrade final v17 — server-authoritative transaction, robust session detection and synced local state. */
 const KEY='emojiDropsStateV3',$=s=>document.querySelector(s),esc=x=>String(x??'').replace(/[&<>\"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[m])),num=x=>Math.max(0,Math.round(Number(String(x??0).replace(/[^0-9.-]/g,''))||0)),rub=x=>`${num(x).toLocaleString('ru-RU')} ₽`,R={common:'COMMON',rare:'RARE',epic:'EPIC',mythical:'MYTHICAL',legendary:'LEGENDARY'},MULT=[1.5,2,3,5],read=()=>window.__emojiDropsCore?.state?.()||(()=>{try{return JSON.parse(localStorage.getItem(KEY)||'{}')}catch{return{}}})();
 const save=s=>{try{localStorage.setItem(KEY,JSON.stringify({...s,schemaVersion:3}))}catch{}};const cloud=()=>{if(!window.EmojiDropsAuth?.configured||typeof window.EmojiDropsAuth?.rpc!=='function')return false;try{return !!JSON.parse(localStorage.getItem('emojiDropsSupabaseSession')||'null')?.access_token}catch{return false}};
+/* Stage 3 visual scale: keep the result wheel dominant but not overwhelming. */
 function css(){if($('#ed-upgrade-v18-css'))return;const s=document.createElement('style');s.id='ed-upgrade-v18-css';s.textContent=`
 .edfp-up{max-width:1120px;margin:0 auto;padding:8px 0 76px;color:#fff}
 .edfp-head{display:flex;justify-content:space-between;gap:18px;align-items:end;margin-bottom:16px}
@@ -17,7 +18,7 @@ function css(){if($('#ed-upgrade-v18-css'))return;const s=document.createElement
 .edfp-owned-card small{color:#ffbd62;font-weight:900}
 .edfp-owned-card.sel{border-color:#ff9b2f;box-shadow:0 0 0 1px #ff9b2f33,0 0 30px #ff8a0018;background:radial-gradient(circle at 50% 35%,#ff8a0017,transparent 55%),#15110d}
 .edfp-wheel-wrap{display:grid;place-items:center;padding:8px 0 22px}
-.edfp-wheel{position:relative;width:min(62vw,390px);aspect-ratio:1;border-radius:50%;border:9px solid #282828;background:conic-gradient(from -45deg,#ff9d33 0 25%,#252936 25% 50%,#3a2844 50% 75%,#302419 75%);box-shadow:inset 0 0 0 3px #050505,inset 0 0 50px #000,0 0 70px #ff8a0015;transition:transform 2.6s cubic-bezier(.08,.82,.12,1)}
+.edfp-wheel{position:relative;width:min(54vw,330px);aspect-ratio:1;border-radius:50%;border:9px solid #282828;background:conic-gradient(from -45deg,#ff9d33 0 25%,#252936 25% 50%,#3a2844 50% 75%,#302419 75%);box-shadow:inset 0 0 0 3px #050505,inset 0 0 50px #000,0 0 70px #ff8a0015;transition:transform 2.6s cubic-bezier(.08,.82,.12,1)}
 .edfp-wheel:after{content:"";position:absolute;inset:10%;border-radius:50%;border:1px dashed #ffffff12;pointer-events:none}
 .edfp-pointer{position:absolute;left:50%;top:-18px;transform:translateX(-50%);width:0;height:0;border-left:17px solid transparent;border-right:17px solid transparent;border-top:32px solid #ffc45c;filter:drop-shadow(0 0 11px #ff8a00);z-index:4}
 .edfp-center{position:absolute;inset:25%;border-radius:50%;background:radial-gradient(circle at 50% 30%,#191919,#070707);display:grid;place-items:center;box-shadow:inset 0 0 30px #000,0 0 0 1px #ffffff0a}
@@ -37,7 +38,7 @@ function css(){if($('#ed-upgrade-v18-css'))return;const s=document.createElement
 .edfp-spin{width:100%;min-height:66px;margin-top:16px;border:1px solid #ffc45e;border-radius:18px;background:linear-gradient(135deg,#ff8d13,#ffc258);color:#1b1207;font-size:20px;font-weight:950;box-shadow:0 14px 38px #ff7b0038,inset 0 1px #fff8;transition:transform .18s,filter .18s,box-shadow .18s}
 .edfp-spin:hover:not(:disabled){transform:translateY(-2px);filter:brightness(1.05);box-shadow:0 18px 45px #ff7b0048,inset 0 1px #fff8}
 .edfp-spin:disabled{filter:grayscale(.55);box-shadow:none}
-@media(max-width:700px){.edfp-head h1{font-size:27px}.edfp-head{align-items:start}.edfp-badge{font-size:10px}.edfp-wheel{width:min(84vw,350px)}.edfp-chances{grid-template-columns:repeat(2,1fr)}.edfp-target-list{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:700px){.edfp-head h1{font-size:27px}.edfp-head{align-items:start}.edfp-badge{font-size:10px}.edfp-wheel{width:min(72vw,320px)}.edfp-chances{grid-template-columns:repeat(2,1fr)}.edfp-target-list{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:380px){.edfp-panel{padding:14px;border-radius:21px}.edfp-wheel{width:76vw}.edfp-center b{font-size:42px}.edfp-owned{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(prefers-reduced-motion:reduce){.edfp-wheel{transition:none!important}.edfp-owned-card,.edfp-target,.edfp-chance,.edfp-spin{transition:none!important}}
 `;document.head.appendChild(s)}
