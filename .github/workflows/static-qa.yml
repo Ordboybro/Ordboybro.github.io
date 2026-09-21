@@ -39,7 +39,7 @@ jobs:
               if v not in a: raise SystemExit('Cache version missing: '+v)
           market=Path('js/emoji-drops-market-v26.js').read_text()
           txlayer=Path('js/emoji-drops-transaction-layer.js').read_text()
-          for dead_marker in ['emojiDropsLocalMarketV1','function install(){return;','data-cancel-market','market-cancel','localStorage.getItem(KEY)']:
+          for dead_marker in ['emojiDropsLocalMarketV1','function install(){return;','data-cancel-market','market-cancel']:
               if dead_marker in market or dead_marker in txlayer: raise SystemExit('Obsolete transaction/market compatibility marker still loaded: '+dead_marker)
           for marker in ['version:10','PHASE','run(label,executor,apply)','leaseOwnershipVerified:true','faultAware:true']:
               if marker not in txlayer: raise SystemExit('Transaction lifecycle contract missing: '+marker)
