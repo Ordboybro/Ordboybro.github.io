@@ -14,7 +14,25 @@ function invoke(key){if(!ready(key))return false;try{window.EmojiDropsCaseShowca
 function delayedRetry(key,node){return retry(key,node)}
 function retry(key,node){let attempts=0;const run=()=>{if(!inActiveCases(node)||visible())return;if(invoke(key)||++attempts>=15)return;setTimeout(run,35)};run()}
 function activate(node,key,event){if(!inActiveCases(node)||visible())return false;if(event?.type==='click'){event.preventDefault();event.stopImmediatePropagation()}if(invoke(key))return true;retry(key,node);setTimeout(()=>{if(!visible())invoke(key)},120);return false}
-function bindOpener(opener,key){if(!opener||opener.dataset.edBridge===ID)return;opener.dataset.edBridge=ID;opener.setAttribute('data-open',key);opener.addEventListener('click',e=>{if(visible())return;activate(opener,key,e)},true);}
+let suppressSyntheticClickUntil=0,lastTouchOpener=null;
+function skipSyntheticTouchClick(){return Date.now()<suppressSyntheticClickUntil}
+function bindOpener(opener,key){
+ if(!opener||opener.dataset.edBridge===ID)return;
+ opener.dataset.edBridge=ID;opener.setAttribute('data-open',key);
+ opener.addEventListener('pointerdown',e=>{
+   if(e.pointerType==='touch'||e.pointerType==='pen'){lastTouchOpener=opener}
+ },{capture:true,passive:true});
+ opener.addEventListener('pointerup',e=>{
+   if((e.pointerType==='touch'||e.pointerType==='pen')&&lastTouchOpener===opener){
+     lastTouchOpener=null;suppressSyntheticClickUntil=Date.now()+TOUCH_GUARD_MS;
+     activate(opener,key,e);
+   }
+ },{capture:true});
+ opener.addEventListener('click',e=>{
+   if(skipSyntheticTouchClick()){e.preventDefault();e.stopImmediatePropagation();return}
+   if(visible())return;activate(opener,key,e)
+ },true);
+}
 function normalize(){document.querySelectorAll('#view-cases.active .ed-case').forEach((card,index)=>{const opener=card.querySelector('[data-open]')||card.querySelector('.ed-btn');const key=keyFor(opener||card,index);if(!key)return;if(card.dataset.caseKey!==key)card.dataset.caseKey=key;bindOpener(opener,key)})}
 function hook(){
   if(window.__emojiDropsCaseOpenBridge===ID)return;window.__emojiDropsCaseOpenBridge=ID;touchCss();normalize();
