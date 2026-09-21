@@ -30,17 +30,45 @@ async function run(label,executor,apply){
     const t=begin(label);
     if(!t)throw new Error('transaction_busy');
     if(!(typeof navigator!=='undefined'&&navigator?.locks?.request))t.leaseOwner=true;
+    let remoteCommitted=false,result;
     try{
-      const result=await executor();
+      result=await executor();
+      remoteCommitted=true;
       if(typeof apply==='function')await apply(result,t);
-      const save=window.__emojiDropsEconomy?.save;
-      if(typeof save==='function')save();
-      else localStorage.setItem(KEY,JSON.stringify(core()?.state?.()||{}));
-      if(!commit(t))throw new Error('transaction_commit_failed');
+      try{
+        const save=window.__emojiDropsEconomy?.save;
+        if(typeof save==='function')save();
+        else localStorage.setItem(KEY,JSON.stringify(core()?.state?.()||{}));
+      }catch(persistError){
+        t.persistenceDegraded=true;
+        t.persistenceError=String(persistError?.message||persistError);
+      }
+      if(!commit(t)){
+        if(remoteCommitted){
+          t.status='remote_committed_local_recovery';
+          t.remoteResult=clone(result);
+          t.finishedAt=now();
+          try{journalWrite(t)}catch{}
+          active=null;
+          core()?.render?.();
+          return result;
+        }
+        throw new Error('transaction_commit_failed');
+      }
       core()?.render?.();
       return result;
     }catch(err){
-      if(active===t)rollback(t);
+      if(active===t){
+        if(remoteCommitted){
+          t.status='remote_committed_local_recovery';
+          t.remoteResult=clone(result);
+          t.error=String(err?.message||err);
+          t.finishedAt=now();
+          try{journalWrite(t)}catch{}
+          active=null;
+          core()?.render?.();
+        }else rollback(t);
+      }
       throw err;
     }
   });
