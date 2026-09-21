@@ -83,6 +83,7 @@ async function run(label,executor,apply){
           try{journalWrite(t)}catch{}
           active=null;
           core()?.render?.();
+          return result;
         }else rollback(t);
       }
       throw err;
