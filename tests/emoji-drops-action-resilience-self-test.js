@@ -5,5 +5,5 @@ for(const marker of ['Emoji Drops action resilience v7','emojiDropsActionResilie
 if(/setInterval\s*\(/.test(s))throw Error('Action resilience must not poll');
 const active=loader.match(/emoji-drops-action-resilience\.js\?v=([^'\"]+)/)?.[1];
 if(!active)throw Error('Action resilience loader entry missing');
-if(active!=='action-20')throw Error(`Action resilience loader version mismatch: expected action-20, got ${active}`);
+if(active!=='action-21')throw Error(`Action resilience loader version mismatch: expected action-20, got ${active}`);
 console.log(`Action resilience self-test OK: compatibility markers + active loader ${active} + deterministic pointer activation + upgrade recovery + modal lifecycle + keyboard focus safety + one-shot verification/retry, no polling`);
