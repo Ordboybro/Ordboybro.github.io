@@ -14,7 +14,7 @@ function style(){
 function profile(){
  const root=$('#view-profile');if(!root)return;
  const s=state(),inv=Array.isArray(s.inventory)?s.inventory:[],st=s.stats||{};
- let best=null;for(const x of inv)if(!best||n(x.price)>n(best.price))best=x;
+ let best=s.best_drop&&typeof s.best_drop==='object'?s.best_drop:null;if(!best){for(const x of inv)if(!best||n(x.price)>n(best.price))best=x;}
  const cards=inv.length?inv.map(x=>'<div class="edfp-inv"><span class="e">'+esc(x.emoji||'🎁')+'</span><small>'+rub(x.price)+'</small></div>').join(''):'<div class="edfp-empty">Пока пусто. Открой первый кейс.</div>';
  root.innerHTML='<section class="edfp-profile"><div class="edfp-profile-hero"><div class="edfp-avatar">✨</div><div><h1>'+esc(s.nickname||'Player')+'</h1><p>Emoji Drops · коллекция и статистика</p></div><div class="edfp-stats"><div class="edfp-stat"><b>'+rub(s.balance||0)+'</b><span>Баланс</span></div><div class="edfp-stat"><b>'+inv.length+'</b><span>Предметов</span></div><div class="edfp-stat"><b>'+n(st.opens)+'</b><span>Открытий</span></div><div class="edfp-stat"><b>'+rub(st.earned||0)+'</b><span>Получено</span></div></div></div><div class="edfp-profile-grid"><section class="edfp-profile-panel"><h2>Коллекция · '+inv.length+'</h2><div class="edfp-inventory">'+cards+'</div></section><section class="edfp-profile-panel"><h2>Лучший дроп</h2><div class="edfp-empty">'+(best?esc(best.emoji||'🎁')+' '+rub(best.price):'Пока нет предметов')+'</div><h2 style="margin-top:14px">Статистика</h2><div class="edfp-empty" style="text-align:left;border-style:solid">Открыто: <b>'+n(st.opens)+'</b><br>Потрачено: <b>'+rub(st.spent||0)+'</b><br>Upgrade: <b>'+n(st.upgrades)+'</b></div></section></div></section>';
 }
