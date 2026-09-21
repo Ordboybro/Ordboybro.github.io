@@ -37,7 +37,13 @@ jobs:
           if any(x<0 for x in positions) or positions!=sorted(positions): raise SystemExit('Runtime order failed: '+str(list(zip(order,positions))))
           for v in ['schema-1','data-bridge-1','hardening-9','core-13','txn-11','guards-8','final-2','release-1','product-5','product-plus-5','action-20','quality-final-1','p3-polish-v8','p4-3','v23-stability-1','exact-landscape-1','case-showcase-exact-7','authority-7','case-open-bridge-23','studio-32','exact-txn-1','case-button-bridge-5','authority-finalizer-6','market-v26-3','market-authority-final-1','smooth-ui-3','final-product-polish-5','modal-finalizer-10','upgrade-final-17','upgrade-interaction-guard-5','final-ux-v5','live-final-4','p5-final-audit-1']:
               if v not in a: raise SystemExit('Cache version missing: '+v)
-          for dead in ['js/emoji-drops-case-showcase.js','js/emoji-drops-case-showcase-final.js','js/emoji-drops-case-showcase-override.js','js/emoji-drops-case-authority.js']:
+                    market=Path('js/emoji-drops-market-v26.js').read_text()
+          txlayer=Path('js/emoji-drops-transaction-layer.js').read_text()
+          for dead_marker in ['emojiDropsLocalMarketV1','function install(){return;','document.addEventListener?.(\'click\',e=>{const b=e.target?.closest?.(\'[data-do-open],[data-sell],[data-sell-all],[data-upgrade],[data-buy],[data-list-random],[data-daily],[data-reset]\')']:
+              if dead_marker in market or dead_marker in txlayer: raise SystemExit('Obsolete transaction/market compatibility marker still loaded: '+dead_marker)
+          for marker in ['version:10','PHASE','run(label,executor,apply)','leaseOwnershipVerified:true','faultAware:true']:
+              if marker not in txlayer: raise SystemExit('Transaction lifecycle contract missing: '+marker)
+for dead in ['js/emoji-drops-case-showcase.js','js/emoji-drops-case-showcase-final.js','js/emoji-drops-case-showcase-override.js','js/emoji-drops-case-authority.js']:
               if Path(dead).exists(): raise SystemExit('Legacy case file still present: '+dead)
           for dead in ['emoji-drops-ui-polish-v2.js','emoji-drops-main-reference-v2.js','emoji-drops-layout-v3.js','emoji-drops-reference-v5.js','emoji-drops-reference-interaction-fix.js','emoji-drops-reference-v8-luxe.js','emoji-drops-reference-v9-hitfix.js','emoji-drops-reference-v10-stability.js','emoji-drops-reference-v11-modal-reset.js','emoji-drops-reference-v13-fixed-action.js','emoji-drops-reference-v15-case-precedence.js','emoji-drops-reference-v18-modal-cleanup.js','emoji-drops-reference-v20-studio.js']:
               if dead in a: raise SystemExit('Legacy visual layer still loaded: '+dead)
