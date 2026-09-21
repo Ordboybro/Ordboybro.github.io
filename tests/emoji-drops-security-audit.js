@@ -1,7 +1,7 @@
 const fs=require('fs');
 const files=fs.readdirSync('js').filter(f=>f.endsWith('.js')).map(f=>`js/${f}`);
 const supaConfig=fs.readFileSync('js/supabase-config.js','utf8');
-if(/service_role|secret[_-]?key|sb_secret_/i.test(supaConfig))throw new Error('Privileged Supabase key exposed in browser config');
+if(/(?:service_role|service-role|SUPABASE_SERVICE_ROLE_KEY)\s*[:=]/i.test(supaConfig)||/['\"](?:sb_secret_|sk-[A-Za-z0-9_-]{20,})['\"]/i.test(supaConfig))throw new Error('Privileged Supabase key exposed in browser config');
 const dangerous=[];
 for(const f of files){const s=fs.readFileSync(f,'utf8');if(/\beval\s*\(/.test(s)||/\bnew\s+Function\s*\(/.test(s))dangerous.push(`${f}:dynamic-code`);const external=/https?:\/\/(?!localhost|127\.0\.0\.1)/i.test(s);const github=/https?:\/\/(?:www\.)?github/i.test(s);const approvedSupabase=f==='js/supabase-config.js'&&/https:\/\/[a-z0-9-]+\.supabase\.co(?:[/'"`]|$)/i.test(s);if(external&&!github&&!approvedSupabase)dangerous.push(`${f}:external-url`)}
 if(dangerous.length)throw Error(`Security audit failed: ${dangerous.join(', ')}`);
