@@ -35,7 +35,7 @@ jobs:
           runtime=[Path(x).name for x in re.findall(r"['\"]([^'\"]+\.js)(?:\?[^'\"]*)?['\"]",m.group(1))]
           positions=[runtime.index(x) if x in runtime else -1 for x in order]
           if any(x<0 for x in positions) or positions!=sorted(positions): raise SystemExit('Runtime order failed: '+str(list(zip(order,positions))))
-          for v in ['schema-1','data-bridge-1','supabase-auth-4','hardening-9','core-13','txn-11','guards-8','final-2','release-1','product-5','product-plus-6','action-20','quality-final-1','p3-polish-v8','p4-3','v23-stability-1','exact-landscape-1','case-showcase-exact-7','authority-7','case-open-bridge-24','studio-32','exact-txn-1','case-button-bridge-5','authority-finalizer-6','market-v26-4','market-authority-final-1','smooth-ui-3','final-product-polish-6','modal-finalizer-10','upgrade-final-18','upgrade-interaction-guard-5','final-ux-v5','live-final-4','p5-final-audit-1']:
+          for v in ['schema-1','data-bridge-1','core-14','supabase-auth-4','hardening-9','core-13','txn-11','guards-8','final-2','release-1','product-5','product-plus-6','action-20','quality-final-1','p3-polish-v8','p4-3','v23-stability-1','exact-landscape-1','case-showcase-exact-7','authority-7','case-open-bridge-24','studio-32','exact-txn-1','case-button-bridge-5','authority-finalizer-6','market-v26-4','market-authority-final-1','smooth-ui-3','final-product-polish-6','modal-finalizer-10','upgrade-final-18','upgrade-interaction-guard-5','final-ux-v5','live-final-4','p5-final-audit-1']:
               if v not in a: raise SystemExit('Cache version missing: '+v)
           market=Path('js/emoji-drops-market-v26.js').read_text()
           txlayer=Path('js/emoji-drops-transaction-layer.js').read_text()
@@ -92,6 +92,28 @@ jobs:
         run: node tests/emoji-drops-p3-p4-self-test.js
       - name: Supabase schema security and atomicity audit
         run: node tests/emoji-drops-supabase-schema-audit.js
+      - name: Canonical economy consistency
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          data=Path('js/data.js').read_text()
+          schema=Path('supabase/schema.sql').read_text()
+          prices={'smile':100,'moves':80,'nature':60,'food':40,'animals':20,'transport':10,'sport':250,'games':500}
+          for k,p in prices.items():
+            if not re.search(r'(?m)^\\s*["\\']?'+re.escape(k)+r'["\\']?\\s*:\\s*\\[' ,data): raise SystemExit('Missing frontend case: '+k)
+            if not re.search(r'when [\\'\\"]'+re.escape(k)+r'[\\'\\"] then '+str(p)+r'\\b',schema,re.I): raise SystemExit('Case price drift: '+k)
+          rows=re.findall(r"\\('([^']+)',\\d+,'([^']*)','(common|rare|epic|mythical|legendary)',([0-9.]+)\\)",schema)
+          if len(rows)<300: raise SystemExit('Server catalog unexpectedly small: '+str(len(rows)))
+          for k in prices:
+            if sum(1 for r in rows if r[0]==k)<10: raise SystemExit('Server catalog incomplete: '+k)
+          if len(re.findall(r'create or replace function public\\.open_case_server\\(',schema))!=1: raise SystemExit('Multiple open_case_server definitions')
+          if len(re.findall(r'create or replace function public\\.upgrade_server\\(',schema))!=1: raise SystemExit('Multiple upgrade_server definitions')
+          for marker in ['for update','SELF_PURCHASE_FORBIDDEN','INVALID_TARGET','case_items_lookup_idx','alter publication supabase_realtime add table public.live_drops']:
+            if marker not in schema: raise SystemExit('Economy/realtime contract missing: '+marker)
+          print('Canonical economy consistency OK')
+          PY
       - name: Security/privacy audit
         run: node tests/emoji-drops-security-audit.js
       - name: Final hardening contract
