@@ -61,8 +61,9 @@ async function run(label,executor,apply){
       }
       if(!commit(t)){
         if(remoteCommitted){
-          t.phase=PHASES.COMMITTED;t.status='remote_committed_local_recovery';
-          t.remoteResult=clone(result);
+          t.phase=PHASES.COMMITTED;t.remoteResult=clone(result);
+          try{await resyncRemote();t.status='remote_committed_resynced';t.recoverySynced=true}
+          catch(recoveryError){t.status='remote_committed_local_recovery';t.recoveryError=String(recoveryError?.message||recoveryError)}
           t.finishedAt=now();
           try{journalWrite(t)}catch{}
           active=null;
@@ -76,9 +77,10 @@ async function run(label,executor,apply){
     }catch(err){
       if(active===t){
         if(remoteCommitted){
-          t.status='remote_committed_local_recovery';
           t.remoteResult=clone(result);
           t.error=String(err?.message||err);
+          try{await resyncRemote();t.status='remote_committed_resynced';t.recoverySynced=true}
+          catch(recoveryError){t.status='remote_committed_local_recovery';t.recoveryError=String(recoveryError?.message||recoveryError)}
           t.finishedAt=now();
           try{journalWrite(t)}catch{}
           active=null;
