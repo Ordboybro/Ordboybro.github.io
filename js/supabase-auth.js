@@ -26,7 +26,7 @@ if(A.configured){
     subscribe:async()=>{
       if(closed)return 'closed';
       const token=read()?.access_token||cfg.anonKey;
-      let base=String(cfg.url||'').replace(/^https?:/,'').replace(/^\\/\\//,'');
+      let base=String(cfg.url||'').replace(/^https?:/,'').replace(/^\/\//,'');
       const host=base.split('/')[0];
       if(!host||typeof WebSocket==='undefined')return 'unsupported';
       const url='wss://'+host+'/realtime/v1/websocket?apikey='+encodeURIComponent(cfg.anonKey)+'&vsn=1.0.0';
