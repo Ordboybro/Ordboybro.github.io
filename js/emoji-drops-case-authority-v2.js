@@ -17,5 +17,5 @@ const clean=()=>{const w=document.createTreeWalker(document.body,NodeFilter.SHOW
 markActions();inject();hideLegacy();clean();
 /* Activation is owned exclusively by emoji-drops-case-open-bridge; this module only normalizes keys and legacy presentation. */
 window.addEventListener('DOMContentLoaded',()=>{markActions();inject();clean()});window.addEventListener('pageshow',()=>{markActions();hideLegacy();inject();clean()});let cleanTimer=0;const cleanObserver=new MutationObserver(()=>{if(cleanTimer)return;cleanTimer=setTimeout(()=>{cleanTimer=0;markActions();clean()},120)});cleanObserver.observe(document.documentElement,{subtree:true,childList:true,characterData:true});
-window.__emojiDropsCaseAuthority={version:7,open,observerDebounceMs:120};
+window.__emojiDropsCaseAuthority={version:8,open,observerDebounceMs:120};
 })();
