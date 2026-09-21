@@ -14,7 +14,7 @@ function touchOpenGuard(){const until=Date.now()+TOUCH_GUARD_MS;window.__emojiDr
 function invoke(key){if(!ready(key))return false;try{window.EmojiDropsCaseShowcaseExact.open(key);return visible()}catch(err){console.warn('Emoji Drops case open deferred',err);return false}}
 function delayedRetry(key,node){return retry(key,node)}
 function retry(key,node){let attempts=0;const run=()=>{if(!inActiveCases(node)||visible())return;if(invoke(key)||++attempts>=15)return;setTimeout(run,35)};run()}
-function activate(node,key,event){if(!inActiveCases(node)||visible())return false;if(event?.type==='click'){event.preventDefault();event.stopImmediatePropagation()}if(invoke(key))return true;retry(key,node);setTimeout(()=>{if(!visible())invoke(key)},120);return false}
+function activate(node,key,event){if(!inActiveCases(node)||visible())return false;if(event?.type==='click'){event.preventDefault();event.stopImmediatePropagation()}const touch=event?.pointerType==='touch'||event?.pointerType==='pen';if(touch){setTimeout(()=>{if(!visible())invoke(key)},60);return true}if(invoke(key))return true;retry(key,node);setTimeout(()=>{if(!visible())invoke(key)},120);return false}
 let suppressSyntheticClickUntil=0,lastTouchOpener=null;
 function skipSyntheticTouchClick(){return Date.now()<suppressSyntheticClickUntil}
 function bindOpener(opener,key){
@@ -37,7 +37,7 @@ function bindOpener(opener,key){
 function normalize(){document.querySelectorAll('#view-cases.active .ed-case').forEach((card,index)=>{const opener=card.querySelector('[data-open]')||card.querySelector('.ed-btn');const key=keyFor(opener||card,index);if(!key)return;if(card.dataset.caseKey!==key)card.dataset.caseKey=key;bindOpener(opener,key)})}
 function hook(){
   if(window.__emojiDropsCaseOpenBridge===ID)return;window.__emojiDropsCaseOpenBridge=ID;touchCss();normalize();
-  document.addEventListener('pointerup',e=>{if(!['touch','pen'].includes(e.pointerType))return;if(visible())return;const card=e.target?.closest?.('.ed-case');if(!card||e.target?.closest?.('[data-open]'))return;const key=keyFor(card,KEYS.indexOf(card.dataset.caseKey));if(!key)return;e.preventDefault();e.stopImmediatePropagation();suppressSyntheticClickUntil=Date.now()+TOUCH_GUARD_MS;touchOpenGuard();setTimeout(()=>activate(card,key,null),0)},true);
+  document.addEventListener('pointerup',e=>{if(!['touch','pen'].includes(e.pointerType))return;if(visible())return;const card=e.target?.closest?.('.ed-case');if(!card||e.target?.closest?.('[data-open]'))return;const key=keyFor(card,KEYS.indexOf(card.dataset.caseKey));if(!key)return;e.preventDefault();e.stopImmediatePropagation();suppressSyntheticClickUntil=Date.now()+TOUCH_GUARD_MS;touchOpenGuard();setTimeout(()=>activate(card,key,e),0)},true);
   document.addEventListener('keydown',e=>{if((e.key!=='Enter'&&e.key!==' ')||visible())return;const opener=e.target?.closest?.('[data-open]');if(!opener||!inActiveCases(opener))return;const key=keyFor(opener,KEYS.indexOf(opener.closest('.ed-case')?.dataset?.caseKey));if(key){e.preventDefault();e.stopImmediatePropagation();activate(opener,key,null)}},true);
   new MutationObserver(mutations=>{if(mutations.some(m=>m.addedNodes?.length||m.type==='attributes'))normalize()}).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['data-open']});
   document.addEventListener('DOMContentLoaded',normalize,{once:true});window.addEventListener('pageshow',normalize);
