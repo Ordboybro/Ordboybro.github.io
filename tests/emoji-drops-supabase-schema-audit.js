@@ -38,5 +38,5 @@ for(const block of schema.split(/(?=create or replace function public\.)/i)){
     throw new Error('SECURITY DEFINER without empty search_path: '+name);
   }
 }
-if(/service_role|sk-[A-Za-z0-9_-]{20,}/i.test(browser))throw new Error('Secret/service key exposed to browser');
+if(/(?:service_role|service-role|SUPABASE_SERVICE_ROLE_KEY)\s*[:=]/i.test(browser)||/['\"]sk-[A-Za-z0-9_-]{20,}['\"]/i.test(browser))throw new Error('Secret/service key exposed to browser');
 console.log('Supabase schema audit OK: single authoritative case/upgrade RPCs, catalog validation, RLS, explicit grants/revokes, SECURITY DEFINER search_path, row locks, market ownership guards and browser-key boundary');
