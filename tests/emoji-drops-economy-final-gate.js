@@ -20,7 +20,25 @@ function sell(balance,itemPrice){if(!Number.isFinite(balance)||balance<0||!Numbe
 function invariant(balance,price,itemPrice){const o=open(balance,price);if(!o)return false;const after=sell(o.balance,itemPrice);return Number.isFinite(after)&&after===balance-price+itemPrice}
 for(let i=0;i<100000;i++){const b=Math.floor(Math.random()*1e9),p=Math.floor(Math.random()*1000)+1,v=Math.floor(Math.random()*100000);if(b>=p&&!invariant(b,p,v))throw Error('Open/sell consistency fuzz failed')}
 const tx=fs.readFileSync('js/emoji-drops-transaction-layer.js','utf8');for(const x of ['begin','commit','rollback','recover','beforeHash','afterHash'])if(!tx.includes(x))throw Error(`Transaction/economy consistency contract missing: ${x}`);
+// Distribution simulation: deterministic 100,000 opens per case. This is a QA diagnostic, not a gameplay path.
+let seed=0xED11010;const rnd=()=>{seed|=0;seed=(Math.imul(seed,1664525)+1013904223)|0;return (seed>>>0)/4294967296};
+const sim={};
+for(const [key,list] of Object.entries(d.cases)){
+  const buckets=[];let total=0,profitable=0,jackpot=0;
+  const sorted=[];
+  for(let i=0;i<100000;i++){
+    let n=rnd()*100,r='common';for(const rr of rarities){n-=weights[rr];if(n<0){r=rr;break}}
+    const pool=list.filter(x=>x.rarity===r),item=pool[Math.floor(rnd()*pool.length)],v=Number(item.price);
+    buckets.push(v);total+=v;
+    if(v>=Number(d.casePrices[key]))profitable++;
+    if(r==='legendary')jackpot++;
+  }
+  buckets.sort((a,b)=>a-b);
+  const q=p=>buckets[Math.min(buckets.length-1,Math.floor((buckets.length-1)*p))];
+  sim[key]={casePrice:Number(d.casePrices[key]),mean:Number((total/buckets.length).toFixed(2)),median:q(.5),p75:q(.75),p90:q(.9),p95:q(.95),p99:q(.99),max:buckets[buckets.length-1],breakEvenRate:Number((profitable/buckets.length).toFixed(4)),legendaryRate:Number((jackpot/buckets.length).toFixed(4)),houseEdgeFromMean:Number((1-(total/buckets.length)/Number(d.casePrices[key])).toFixed(4))};
+}
 console.log('Economy final gate OK');
+console.log('100k deterministic case simulation:',JSON.stringify(sim));
 console.log('EV sanity:',Object.fromEntries(Object.entries(ev).map(([k,v])=>[k,Number(v.toFixed(2))] )));
 console.log('Upgrade boundary fuzz: 11x11 domain, finite [0,1] invariant');
 console.log('Transaction/economy consistency: 100,000 open/sell fuzz cases + transaction journal/hash contract');
