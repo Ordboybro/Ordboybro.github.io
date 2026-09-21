@@ -502,6 +502,7 @@ create index if not exists case_items_lookup_idx on public.case_items(case_id,ra
 
 create index if not exists market_listings_active_created_idx on public.market_listings(status,created_at desc);
 create index if not exists market_listings_seller_idx on public.market_listings(seller_id,status);
+create unique index if not exists market_listings_active_item_unique_idx on public.market_listings(seller_id,(item->>'id')) where status='active';
 create index if not exists market_listings_buyer_idx on public.market_listings(buyer_id);
 
 create or replace function public.create_market_listing(p_item_id text,p_price numeric) returns jsonb
