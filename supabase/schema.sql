@@ -64,8 +64,6 @@ begin
 end; $$;
 revoke execute on function public.sell_item_server(text) from public,anon;
 grant execute on function public.sell_item_server(text) to authenticated;
-grant execute on function public.upgrade_server(text,numeric,numeric) to authenticated;
-
 create or replace function public.upgrade_server(p_item_id text,p_target_price numeric,p_multiplier numeric,p_target_emoji text,p_target_rarity text,p_target_case_id text) returns jsonb language plpgsql security definer set search_path='' as $$
 declare uid uuid:=auth.uid(); inv jsonb; src jsonb; src_price numeric; chance numeric; roll numeric:=random(); success boolean; result jsonb; clean_rarity text; clean_case text; clean_emoji text;
 begin
@@ -461,7 +459,7 @@ begin
   src_price:=round((src->>'price')::numeric,2);
   if src_price<=0 then raise exception 'INVALID_SOURCE'; end if;
   select ci.* into target from public.case_items ci where ci.case_id=lower(trim(p_target_case_id)) and ci.emoji=left(trim(coalesce(p_target_emoji,'')),16) and ci.rarity=lower(trim(coalesce(p_target_rarity,''))) and ci.item_price=round(p_target_price,2) limit 1;
-  if target.item_index is null then raise exception 'INVALID_TARGET'; end if;
+  if target.item_index is null then raise exception 'TARGET_NOT_IN_CATALOG'; end if;
   if target.item_price<=src_price then raise exception 'INVALID_TARGET'; end if;
   if p_multiplier<=1 or p_multiplier>5 then raise exception 'INVALID_UPGRADE'; end if;
   if target.item_price>round(src_price*p_multiplier,2) then raise exception 'INVALID_TARGET'; end if;
@@ -500,6 +498,8 @@ revoke all on table public.market_listings from anon, authenticated;
 drop policy if exists "market_listings_read_active" on public.market_listings;
 create policy "market_listings_read_active" on public.market_listings
   for select to authenticated using (status='active');
+create index if not exists case_items_lookup_idx on public.case_items(case_id,rarity,item_price,emoji);
+
 create index if not exists market_listings_active_created_idx on public.market_listings(status,created_at desc);
 create index if not exists market_listings_seller_idx on public.market_listings(seller_id,status);
 create index if not exists market_listings_buyer_idx on public.market_listings(buyer_id);
