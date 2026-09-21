@@ -74,6 +74,8 @@ jobs:
         run: node tests/emoji-drops-economy-self-test.js
       - name: Economy final gate
         run: node tests/emoji-drops-economy-final-gate.js
+      - name: Economy source-of-truth audit
+        run: node tests/emoji-drops-economy-source-audit.js
       - name: Runtime hardening
         run: node tests/emoji-drops-runtime-hardening-self-test.js
       - name: Transaction layer
