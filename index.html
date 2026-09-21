@@ -15,6 +15,48 @@ main{max-width:1240px;margin:0 auto;padding:22px 24px 80px}.hero{display:none}.s
 @media(max-width:700px){header{padding:0 14px}.cases{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.case-card{height:245px;min-height:245px;padding:18px 12px 14px}.case-art{font-size:64px;height:105px}.top-pill{padding:10px 11px}.top-right{gap:8px}.live-drop{flex-basis:155px}.profile-side{grid-template-columns:1fr}.profile-dashboard{grid-template-columns:1fr!important}.stats{grid-template-columns:1fr 1fr}.panel{max-height:94vh}.panel-body{padding:18px}.win-grid{max-height:55vh;overflow:auto}}
 @media(max-width:340px){.cases{grid-template-columns:1fr}.case-card{height:230px;min-height:230px}}
 </style>
+<style id="emoji-drops-110-ui">
+/* 11/10 visual pass — hierarchy, depth, touch, premium surfaces. No new controls. */
+:root{--ed-orange:#ff8a18;--ed-gold:#ffbd62;--ed-panel:#101010;--ed-panel2:#151515;--ed-line:#292929;--ed-ease:cubic-bezier(.22,1,.36,1)}
+body{background:radial-gradient(900px 420px at 50% -180px,#ff8a180c,transparent 70%),#070707}
+header{background:rgba(8,8,8,.82)!important;border-bottom-color:#252525!important}
+header:after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:1px;background:linear-gradient(90deg,transparent,#ff8a184d,transparent);pointer-events:none}
+main{padding-top:28px}
+.section-title{letter-spacing:.11em}
+.case-card{background:radial-gradient(300px 180px at 50% 20%,#ff8a0015,transparent 65%),linear-gradient(145deg,#181818,#0d0d0d)!important;border-color:#2d2d2d!important}
+.case-card:hover{border-color:#ff9b38!important;box-shadow:0 22px 55px #000,0 0 35px #ff8a0014!important}
+.live-section{padding:16px 0 4px}
+.live-title{display:flex;align-items:center;gap:8px}
+.live-title span{font-size:12px;text-shadow:0 0 12px #ff8a18}
+.live-container{padding:7px 3px 14px!important}
+.live-drop{background:linear-gradient(145deg,#171717,#0d0d0d)!important}
+.profile-layout{gap:24px!important}
+.profile-center{min-height:230px;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;background:radial-gradient(circle at 50% 10%,#ff9b3022,transparent 45%),linear-gradient(145deg,#15120f,#0b0b0b)!important;box-shadow:0 22px 70px #000,0 0 45px #ff8a0010}
+.profile-center:before{content:"";position:absolute;inset:12px;border:1px solid #ffffff09;border-radius:18px;pointer-events:none}
+.avatar{width:100px;height:100px;display:grid;place-items:center;border-radius:30px;background:linear-gradient(145deg,#242424,#0e0e0e);border:1px solid #ff9b3840;box-shadow:inset 0 1px #fff1,0 18px 45px #000;font-size:58px}
+.profile-name{font-size:30px!important;letter-spacing:-.03em}
+.profile-btn{background:linear-gradient(145deg,#191919,#101010)!important;box-shadow:inset 0 1px #fff1,0 10px 25px #0008}
+.profile-btn.reward{box-shadow:0 12px 30px #ff7b002b,inset 0 1px #fff4!important}
+.stats{gap:10px!important}
+.stat{background:linear-gradient(145deg,#181818,#0e0e0e)!important;box-shadow:inset 0 1px #fff1,0 12px 28px #0007}
+.stat b{font-variant-numeric:tabular-nums}
+.best{background:linear-gradient(145deg,#19140d,#0d0d0d)!important;box-shadow:0 14px 34px #0008,inset 0 1px #fff1}
+.inventory-item{background:linear-gradient(145deg,#181818,#0d0d0d)!important;box-shadow:inset 0 1px #fff1,0 10px 25px #0007}
+.upgrade-panel{background:radial-gradient(circle at 50% 50%,#ff8a0010,transparent 35%)}
+.upgrade-slot{background:linear-gradient(145deg,#191919,#0d0d0d)!important;box-shadow:inset 0 1px #fff1,0 16px 38px #0008}
+.upgrade-arrow{width:92px!important;height:92px!important;box-shadow:0 0 35px #ff7b0044,inset 0 0 25px #ff7b0028!important}
+.upgrade-mult{min-width:74px;min-height:44px}
+.upgrade-target{background:linear-gradient(145deg,#181818,#0d0d0d)!important}
+.upgrade-target:hover{transform:translateY(-2px);border-color:#8f5b25}
+.case-reel{border-color:#3c3025!important;box-shadow:inset 0 0 45px #ff7b0012,0 14px 35px #0008!important}
+.reel-item{background:linear-gradient(145deg,#181818,#0c0c0c)!important}
+.reel-marker{width:4px!important}
+.modal{background:#000d!important}
+.panel{background:linear-gradient(145deg,#151515,#0b0b0b)!important;border-color:#353535!important}
+.panel-head{background:rgba(14,14,14,.78);backdrop-filter:blur(14px)}
+@media(max-width:700px){main{padding:18px 14px 60px}.profile-center{min-height:210px}.profile-layout{gap:12px!important}.avatar{width:84px;height:84px;font-size:48px}.profile-name{font-size:25px!important}.stats{gap:8px!important}.stat{padding:15px}.stat b{font-size:25px}.upgrade-panel{gap:11px}.upgrade-arrow{width:74px!important;height:74px!important}}
+@media(prefers-reduced-motion:reduce){.profile-center:after{animation:none!important}.case-card,.profile-btn,.inventory-item,.upgrade-target{transition:none!important}}
+</style>
 <style>html{-webkit-text-size-adjust:100%;text-size-adjust:100%}body{overscroll-behavior-x:none}::selection{background:#ff8a2033;color:#fff}header .top-pill:has(#onlineCount){display:none}</style></head><body>
 <header><div class="logo">Emoji <span>Drops</span></div><div class="top-right"><div class="top-pill">🔴 <span id="onlineCount">128</span> online</div><div class="balance-menu"><div class="top-pill">💰 <span id="balance">1000</span>₽</div><div class="reward-pop"><button id="rewardHeader" class="reward-btn">Получить 100₽</button></div></div><button id="profileBtn" class="profile-top">👤 <span id="nickname">Гость</span></button></div></header>
 <main><section id="cases" class="cases"></section><section class="live-section"><div class="live-title"><span>●</span> LIVE DROPS</div><div id="liveContainer" class="live-container"></div></section></main>
