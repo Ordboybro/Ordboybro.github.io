@@ -443,7 +443,7 @@ begin
   select ci.* into target from public.case_items ci where ci.case_id=lower(trim(p_target_case_id)) and ci.emoji=left(trim(coalesce(p_target_emoji,'')),16) and ci.rarity=lower(trim(coalesce(p_target_rarity,''))) and ci.item_price=round(p_target_price,2) limit 1;
   if target.item_index is null then raise exception 'TARGET_NOT_IN_CATALOG'; end if;
   if target.item_price<=src_price then raise exception 'INVALID_TARGET'; end if;
-  if p_multiplier<=1 or p_multiplier>5 then raise exception 'INVALID_UPGRADE'; end if;
+  if p_multiplier<=1 or p_multiplier>5 or p_target_price>100000000 then raise exception 'INVALID_UPGRADE'; end if;
   if target.item_price>round(src_price*p_multiplier,2) then raise exception 'INVALID_TARGET'; end if;
   max_chance:=greatest(0.01,least(0.90,0.90/(target.item_price/src_price)));
   chance:=greatest(0.01,least(max_chance,coalesce(p_chance,max_chance)));
@@ -493,7 +493,7 @@ declare uid uuid:=auth.uid(); inv jsonb; item jsonb; clean_price numeric; listin
 begin
   if uid is null then raise exception 'AUTH_REQUIRED'; end if;
   clean_price:=round(coalesce(p_price,0),2);
-  if clean_price<=0 then raise exception 'INVALID_LISTING_PRICE'; end if;
+  if clean_price<=0 or clean_price>100000000 then raise exception 'INVALID_LISTING_PRICE'; end if;
   select inventory into inv from public.profiles where id=uid for update;
   if inv is null then raise exception 'PROFILE_NOT_FOUND'; end if;
   select x into item from jsonb_array_elements(coalesce(inv,'[]'::jsonb)) x where x->>'id'=p_item_id limit 1;
