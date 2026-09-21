@@ -7,8 +7,8 @@ if(!/emoji-drops-product-layer\.js\?v=product-5/.test(loader))throw Error('Produ
 if(!/emoji-drops-transaction-layer\.js\?v=txn-(?:8|9)/.test(loader))throw Error('Product loader transaction marker missing: txn-8/txn-9');
 for(const marker of ['product-layer','Emoji Coin','emoji-coin','ed-product-tools','Поиск кейсов','Поиск предметов','Все редкости','По умолчанию','ed-product-achievements','First Drop','Collector','Veteran','Upgrader','High Roller','storage','PerformanceObserver'])if(!product.includes(marker))throw Error(`Product contract missing: ${marker}`);
 if(!/KEY='emojiDropsStateV3'/.test(product)||!/KEY='emojiDropsStateV3'/.test(core)||!/KEY='emojiDropsStateV3'/.test(tx))throw Error('Shared state key contract missing');
-if(!/version[:=]8/.test(tx)||!/beforeHash/.test(tx)||!/afterHash/.test(tx)||!/COMMIT_GRACE_MS/.test(tx)||!/nonBlockingLease/.test(tx)||!/faultAware/.test(tx))throw Error('Transaction v8 verification contract missing');
+if(!/version[:=]10/.test(tx)||!/beforeHash/.test(tx)||!/afterHash/.test(tx)||!/COMMIT_GRACE_MS/.test(tx)||!/nonBlockingLease/.test(tx)||!/faultAware/.test(tx))throw Error('Transaction v8 verification contract missing');
 if(/setInterval\s*\(/.test(product))throw Error('Product layer must not use polling intervals');
 if(!/classList\.contains\('ed-coin'\)/.test(product))throw Error('Semantic currency transform must be idempotent');
 if(!/__emojiDropsMutationHub/.test(product))throw Error('Product layer shared mutation contract missing');
-console.log('Product self-test OK: semantic Emoji Coin, idempotent currency transform, shared mutation hub, catalog/inventory tools, progression, achievements, persistence/performance contracts, transaction v8/9 compatibility');
+console.log('Product self-test OK: semantic Emoji Coin, idempotent currency transform, shared mutation hub, catalog/inventory tools, progression, achievements, persistence/performance contracts, transaction v10/11 compatibility');
