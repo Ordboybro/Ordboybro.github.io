@@ -1,6 +1,6 @@
 (()=>{'use strict';
 /* Emoji Drops — functional case-open bridge v23. Only the explicit Open button opens a case; scrolling or touching the card never opens it. */
-const ID='emoji-drops-case-open-bridge-v23';
+const ID='emoji-drops-case-open-bridge-v24';
 const KEYS=['smile','moves','nature','food','animals','transport','sport','games'];
 const NAMES={smile:'Smile',moves:'Moves',nature:'Nature',food:'Food',animals:'Animals',transport:'Transport',sport:'Sport',games:'Games'};
 const TOUCH_GUARD_MS=240;
@@ -26,7 +26,7 @@ function bindOpener(opener,key){
  opener.addEventListener('pointerup',e=>{
    if((e.pointerType==='touch'||e.pointerType==='pen')&&lastTouchOpener===opener){
      lastTouchOpener=null;suppressSyntheticClickUntil=Date.now()+TOUCH_GUARD_MS;touchOpenGuard();
-     activate(opener,key,e);
+     setTimeout(()=>activate(opener,key,e),0);
    }
  },{capture:true});
  opener.addEventListener('click',e=>{
@@ -37,7 +37,7 @@ function bindOpener(opener,key){
 function normalize(){document.querySelectorAll('#view-cases.active .ed-case').forEach((card,index)=>{const opener=card.querySelector('[data-open]')||card.querySelector('.ed-btn');const key=keyFor(opener||card,index);if(!key)return;if(card.dataset.caseKey!==key)card.dataset.caseKey=key;bindOpener(opener,key)})}
 function hook(){
   if(window.__emojiDropsCaseOpenBridge===ID)return;window.__emojiDropsCaseOpenBridge=ID;touchCss();normalize();
-  document.addEventListener('pointerup',e=>{if(!['touch','pen'].includes(e.pointerType))return;if(visible())return;const card=e.target?.closest?.('.ed-case');if(!card||e.target?.closest?.('[data-open]'))return;const key=keyFor(card,KEYS.indexOf(card.dataset.caseKey));if(!key)return;e.preventDefault();e.stopImmediatePropagation();suppressSyntheticClickUntil=Date.now()+TOUCH_GUARD_MS;touchOpenGuard();activate(card,key,null)},true);
+  document.addEventListener('pointerup',e=>{if(!['touch','pen'].includes(e.pointerType))return;if(visible())return;const card=e.target?.closest?.('.ed-case');if(!card||e.target?.closest?.('[data-open]'))return;const key=keyFor(card,KEYS.indexOf(card.dataset.caseKey));if(!key)return;e.preventDefault();e.stopImmediatePropagation();suppressSyntheticClickUntil=Date.now()+TOUCH_GUARD_MS;touchOpenGuard();setTimeout(()=>activate(card,key,null),0)},true);
   document.addEventListener('keydown',e=>{if((e.key!=='Enter'&&e.key!==' ')||visible())return;const opener=e.target?.closest?.('[data-open]');if(!opener||!inActiveCases(opener))return;const key=keyFor(opener,KEYS.indexOf(opener.closest('.ed-case')?.dataset?.caseKey));if(key){e.preventDefault();e.stopImmediatePropagation();activate(opener,key,null)}},true);
   new MutationObserver(mutations=>{if(mutations.some(m=>m.addedNodes?.length||m.type==='attributes'))normalize()}).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['data-open']});
   document.addEventListener('DOMContentLoaded',normalize,{once:true});window.addEventListener('pageshow',normalize);
