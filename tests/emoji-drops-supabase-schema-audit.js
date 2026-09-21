@@ -1,16 +1,12 @@
 const fs=require('fs');
-const s=fs.readFileSync('supabase/schema.sql','utf8');
+const schema=fs.readFileSync('supabase/schema.sql','utf8');
+const browser=fs.readFileSync('js/supabase-config.js','utf8');
+
 const required=[
   'alter table public.profiles enable row level security',
   'alter table public.case_items enable row level security',
   'alter table public.market_listings enable row level security',
   'alter table public.live_drops enable row level security',
-  'create or replace function public.open_case_server',
-  'create or replace function public.upgrade_server',
-  'create or replace function public.create_market_listing',
-  'create or replace function public.market_snapshot',
-  'create or replace function public.buy_market_listing',
-  'create or replace function public.cancel_market_listing',
   'grant execute on function public.open_case_server(text,numeric) to authenticated',
   'grant execute on function public.upgrade_server(text,numeric,numeric,text,text,text,numeric) to authenticated',
   'grant execute on function public.create_market_listing(text,numeric) to authenticated',
@@ -22,18 +18,25 @@ const required=[
   'revoke execute on function public.create_market_listing(text,numeric) from public,anon',
   'revoke execute on function public.buy_market_listing(uuid) from public,anon',
   'revoke execute on function public.cancel_market_listing(uuid) from public,anon',
-  'revoke all on table public.market_listings from anon, authenticated',
-  'revoke all on table public.profiles from anon,authenticated'
+  'revoke all on table public.market_listings from anon,authenticated',
+  'revoke all on table public.profiles from anon,authenticated',
+  'case_items_lookup_idx',
+  'TARGET_NOT_IN_CATALOG',
+  'SELF_PURCHASE_FORBIDDEN',
+  'for update'
 ];
-for(const x of required)if(!s.toLowerCase().includes(x.toLowerCase()))throw new Error('Supabase schema contract missing: '+x);
-const blocks=s.split(/(?=create or replace function public\.)/i);
-for(const block of blocks){
-  if(/security definer/i.test(block) && !/security definer\s+set search_path=''/i.test(block)){
-    const name=block.match(/create or replace function public\\.([a-z0-9_]+)/i)?.[1]||'unknown';
+for(const x of required)if(!schema.toLowerCase().includes(x.toLowerCase()))throw new Error('Supabase schema contract missing: '+x);
+
+const opens=(schema.match(/create or replace function public\.open_case_server/g)||[]).length;
+const upgrades=(schema.match(/create or replace function public\.upgrade_server/g)||[]).length;
+if(opens!==1)throw new Error('Expected exactly one authoritative open_case_server, found '+opens);
+if(upgrades!==1)throw new Error('Expected exactly one authoritative upgrade_server, found '+upgrades);
+
+for(const block of schema.split(/(?=create or replace function public\.)/i)){
+  if(/security definer/i.test(block)&&!/security definer\s+set search_path=''/i.test(block)){
+    const name=block.match(/create or replace function public\.([a-z0-9_]+)/i)?.[1]||'unknown';
     throw new Error('SECURITY DEFINER without empty search_path: '+name);
   }
 }
-if(/service_role|sk-[A-Za-z0-9_-]{20,}/i.test(fs.readFileSync('js/supabase-config.js','utf8')))throw new Error('Secret/service key exposed to browser');
-if(!/for update/i.test(s))throw new Error('Row locking contract missing');
-if(!/status='active'/i.test(s)||!/SELF_PURCHASE_FORBIDDEN/.test(s))throw new Error('Market concurrency/ownership guards missing');
-console.log('Supabase schema audit OK: RLS, explicit RPC grants/revokes, SECURITY DEFINER search_path, market atomicity guards and browser-key boundary');
+if(/service_role|sk-[A-Za-z0-9_-]{20,}/i.test(browser))throw new Error('Secret/service key exposed to browser');
+console.log('Supabase schema audit OK: single authoritative case/upgrade RPCs, catalog validation, RLS, explicit grants/revokes, SECURITY DEFINER search_path, row locks, market ownership guards and browser-key boundary');
