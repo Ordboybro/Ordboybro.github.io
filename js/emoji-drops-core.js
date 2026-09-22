@@ -46,7 +46,7 @@ function renderProfile(){
      <h2 id="edProfileIdentity">${esc(S.nickname||'Player')}</h2>
      <div class="ed-profile-level">LEVEL ${esc(String(S.level||1))}</div>
      <div class="ed-profile-balance">${money(S.balance)}</div>
-     <div class="ed-level" aria-label="Progress ${Math.round(p)} percent"><i style="width:${p}%"></i></div>
+     <div class="ed-level" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(p)}" aria-label="Level progress"><i style="width:${p}%"></i></div>
      <div class="ed-profile-xp">${Math.round(num(S.xp))} / ${xpNeed()} XP</div>
    </section>
    <section class="ed-panel ed-profile-best" aria-labelledby="edProfileBest">
