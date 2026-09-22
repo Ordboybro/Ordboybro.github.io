@@ -60,6 +60,7 @@ begin
  return jsonb_build_object('balance',(select balance from public.profiles where id=uid),'sold',total);
 end; $$;
 
+revoke execute on function public.case_cost(text) from public,anon;
 grant execute on function public.case_cost(text) to authenticated;
 grant execute on function public.set_nickname(text) to authenticated;
 grant execute on function public.profile_snapshot() to authenticated;
