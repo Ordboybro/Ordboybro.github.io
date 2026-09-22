@@ -75,6 +75,7 @@ if(!/grant select \(id,nickname,item,case_id,item_price,created_at\) on public\.
 
 console.log('Supabase schema audit OK');
 
-if(!/market_snapshot\(\).*?is_owner boolean/s.test(schema))throw new Error('market_snapshot must expose is_owner instead of seller_id');
-if(/market_snapshot\(\)[\\s\\S]*seller_id uuid/i.test(schema))throw new Error('market_snapshot must not expose seller_id');
+const marketSig=schema.match(/market_snapshot\(\)\s*returns table\(([\s\S]*?)\)\s+language/i)?.[1]||'';
+if(!/\bis_owner\s+boolean\b/i.test(marketSig))throw new Error('market_snapshot must expose is_owner instead of seller_id');
+if(/\bseller_id\s+uuid\b/i.test(marketSig))throw new Error('market_snapshot must not expose seller_id');
 if(!fs.existsSync('supabase/migrations/20260922150000_market_snapshot_privacy.sql'))throw new Error('market snapshot privacy migration missing');
