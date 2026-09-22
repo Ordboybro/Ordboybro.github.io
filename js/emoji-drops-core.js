@@ -24,7 +24,41 @@ function renderLive(){}
 function renderInventory(){const b=document.getElementById('view-inventory');if(!b)return;const q=b.dataset.q||'',sort=b.dataset.sort||'value';let a=S.inventory.filter(x=>(`${x.emoji} ${x.rarity} ${x.price}`).toLowerCase().includes(q.toLowerCase()));if(sort==='value')a.sort((x,y)=>num(y.price)-num(x.price));else if(sort==='rarity')a.sort((x,y)=>Object.keys(R).indexOf(y.rarity)-Object.keys(R).indexOf(x.rarity));b.innerHTML=`<div class="ed-title"><div><h1>Инвентарь</h1><div class="ed-muted">${a.length} из ${S.inventory.length} предметов</div></div><button class="ed-btn danger" data-sell-all>Продать всё</button></div><div class="ed-tools"><input class="ed-search" data-search placeholder="Поиск предмета…" value="${esc(q)}" aria-label="Search items"><button class="ed-btn ${sort==='value'?'primary':''}" data-sort="value">💎 Цена</button><button class="ed-btn ${sort==='rarity'?'primary':''}" data-sort="rarity">⭐ Редкость</button></div><div class="ed-inventory">${a.map(x=>{const r=rarity(x);return `<div class="ed-item" style="--rarity:${r.color}"><div class="emoji">${esc(x.emoji)}</div><b>${r.label}</b><small>${money(x.price)}</small><button class="ed-btn" data-sell="${esc(x.id)}">Продать</button><button class="ed-btn" data-up-from="${esc(x.id)}">Upgrade</button></div>`}).join('')||'<div class="ed-panel">Инвентарь пуст. Открой кейс.</div>'}</div>`}
 function renderMarket(){const b=document.getElementById('view-market');if(!b)return;if(window.EmojiDropsMarketV26?.render){window.EmojiDropsMarketV26.render();return}b.replaceChildren()}
 function renderUpgrade(){const b=document.getElementById('view-upgrade');if(!b)return;if(window.EmojiDropsUpgradeFinal?.build){window.EmojiDropsUpgradeFinal.build();return}b.replaceChildren()}
-function renderProfile(){const b=document.getElementById('view-profile'),p=Math.min(100,S.xp/xpNeed()*100),best=S.best_drop||[...S.inventory].sort((x,y)=>num(y.price)-num(x.price))[0];b.innerHTML=`<div class="ed-profile"><div class="ed-panel"><h3>Статистика</h3><div class="ed-stat">Открытий<b>${S.stats.opens}</b></div><div class="ed-stat" style="margin-top:8px">Upgrade<b>${S.stats.upgrades}</b></div><div class="ed-stat" style="margin-top:8px">Потрачено<b>${money(S.stats.spent)}</b></div><div class="ed-stat" style="margin-top:8px">Получено<b>${money(S.stats.earned)}</b></div></div><div class="ed-profile-main"><div class="ed-avatar">🧑‍💻</div><h2>${esc(S.nickname||'Player')}</h2><div class="ed-muted">Level ${S.level}</div><div class="ed-level"><i style="width:${p}%"></i></div><div class="ed-muted">${Math.round(S.xp)} / ${xpNeed()} XP</div></div><div class="ed-panel"><h3>Лучший предмет</h3>${best?`<div style="font-size:72px;text-align:center">${esc(best.emoji)}</div><div style="text-align:center;color:${rarity(best).color};font-weight:900">${rarity(best).label}</div><div style="text-align:center;color:#ff9d3d;font-size:20px">${money(best.price)}</div>`:'<span class="ed-muted">Пока пусто</span>'}</div></div>`}
+function renderProfile(){
+ const b=document.getElementById('view-profile');if(!b)return;
+ const inv=Array.isArray(S.inventory)?S.inventory:[],stats=S.stats||{},p=Math.min(100,Math.max(0,num(S.xp)/Math.max(1,xpNeed())*100));
+ const best=S.best_drop||[...inv].sort((x,y)=>num(y.price)-num(x.price))[0],br=best?rarity(best):null;
+ const stat=(label,value)=>'<div class="ed-stat"><span>'+esc(label)+'</span><b>'+esc(String(value))+'</b></div>';
+ const preview=inv.slice().sort((a,z)=>num(z.price)-num(a.price)).slice(0,8);
+ b.innerHTML=`<div class="ed-profile ed-profile-dashboard" aria-label="Profile dashboard">
+   <section class="ed-panel ed-profile-stats" aria-labelledby="edProfileStats">
+     <div class="ed-profile-section-head"><div><span class="ed-kicker">PROFILE</span><h3 id="edProfileStats">Statistics</h3></div><span class="ed-profile-count">${inv.length} items</span></div>
+     <div class="ed-profile-stat-grid">
+       ${stat('Cases opened',stats.opens)}
+       ${stat('Upgrades',stats.upgrades)}
+       ${stat('Spent',money(stats.spent))}
+       ${stat('Earned',money(stats.earned))}
+     </div>
+   </section>
+   <section class="ed-profile-main" aria-labelledby="edProfileIdentity">
+     <div class="ed-profile-main-kicker">YOUR ACCOUNT</div>
+     <div class="ed-avatar" aria-hidden="true">🧑‍💻</div>
+     <h2 id="edProfileIdentity">${esc(S.nickname||'Player')}</h2>
+     <div class="ed-profile-level">LEVEL ${esc(String(S.level||1))}</div>
+     <div class="ed-profile-balance">${money(S.balance)}</div>
+     <div class="ed-level" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(p)}" aria-label="Level progress"><i style="width:${p}%"></i></div>
+     <div class="ed-profile-xp">${Math.round(num(S.xp))} / ${xpNeed()} XP</div>
+   </section>
+   <section class="ed-panel ed-profile-best" aria-labelledby="edProfileBest">
+     <div class="ed-profile-section-head"><div><span class="ed-kicker">HIGHLIGHT</span><h3 id="edProfileBest">Best Drop</h3></div></div>
+     ${best?'<div class="ed-best-art" style="--rarity:'+(br?.color||'#9ca3af')+'">'+esc(best.emoji)+'</div><div class="ed-best-rarity" style="--rarity:'+(br?.color||'#9ca3af')+'">'+esc(br?.label||best.rarity||'Item')+'</div><div class="ed-best-price">'+money(best.price)+'</div>':'<div class="ed-profile-empty">No drops yet.</div>'}
+   </section>
+   <section class="ed-panel ed-profile-collection" aria-labelledby="edProfileInventory">
+     <div class="ed-profile-section-head"><div><span class="ed-kicker">COLLECTION</span><h3 id="edProfileInventory">Your Inventory</h3></div><span class="ed-profile-count">${inv.length}</span></div>
+     ${preview.length?'<div class="ed-profile-inventory-grid">'+preview.map(x=>{const rr=rarity(x);return '<div class="ed-profile-item" style="--rarity:'+rr.color+'" title="'+esc(rr.label)+'"><span class="ed-profile-item-emoji">'+esc(x.emoji)+'</span><span class="ed-profile-item-name">'+esc(rr.label)+'</span><span class="ed-profile-item-price">'+money(x.price)+'</span></div>'}).join('')+'</div>':'<div class="ed-profile-empty">Your collection is empty.<br><span>Open a case to get your first item.</span></div>'}
+   </section>
+ </div>`;
+}
 function renderDaily(){const b=document.getElementById('view-daily'),d=Math.min(7,(S.daily||0)%7||0);b.innerHTML=`<div class="ed-title"><div><h1>Daily</h1><div class="ed-muted">Серия наград за ежедневный вход.</div></div><button class="ed-btn primary" data-daily>Получить сегодня</button></div><div class="ed-panel"><div class="ed-daily">${Array.from({length:7},(_,i)=>`<div class="ed-day ${i<d?'done':''}">День ${i+1}<br><b>${i===6?'500':`+${50+(i+1)*25} ₽`}</b></div>`).join('')}</div></div>`}
 function renderCollections(){const b=document.getElementById('view-collections');b.innerHTML=`<div class="ed-title"><div><h1>Коллекции</h1><div class="ed-muted">Прогресс коллекций.</div></div></div>${Object.keys(PRICES).map(k=>{const all=items(k),have=new Set(S.inventory.map(x=>x.emoji+'|'+x.rarity));return `<div class="ed-panel" style="margin-bottom:12px"><b>${I[k]} ${N[k]}</b><div class="ed-muted">${all.filter(x=>have.has(x.emoji+'|'+x.rarity)).length}/${all.length}</div></div>`}).join('')}`}
 function view(v){window.__edView=v;document.querySelectorAll('.ed-view').forEach(x=>x.classList.toggle('active',x.id==='view-'+v));document.querySelectorAll('[data-view]').forEach(x=>x.classList.toggle('active',x.dataset.view===v));if(v==='inventory')renderInventory();if(v==='upgrade')renderUpgrade();if(v==='market')renderMarket();if(v==='profile')renderProfile();if(v==='daily')renderDaily();if(v==='collections')renderCollections()}
