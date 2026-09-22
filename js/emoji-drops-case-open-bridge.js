@@ -1,6 +1,6 @@
 (()=>{'use strict';
 /* Emoji Drops — functional case-open bridge v23. Only the explicit Open button opens a case; scrolling or touching the card never opens it. */
-const ID='emoji-drops-case-open-bridge-v26';
+const ID='emoji-drops-case-open-bridge-v27';
 const KEYS=['smile','moves','nature','food','animals','transport','sport','games'];
 const NAMES={smile:'Smile',moves:'Moves',nature:'Nature',food:'Food',animals:'Animals',transport:'Transport',sport:'Sport',games:'Games'};
 const TOUCH_GUARD_MS=700;
@@ -35,7 +35,7 @@ function bindOpener(opener,key){
    if(visible())return;activate(opener,key,e)
  },true);
 }
-function normalize(){document.querySelectorAll('#view-cases.active .ed-case').forEach((card,index)=>{const opener=card.querySelector('[data-open]')||card.querySelector('.ed-btn');const key=keyFor(opener||card,index);if(!key)return;if(card.dataset.caseKey!==key)card.dataset.caseKey=key;bindOpener(opener,key)})}
+function normalize(){document.querySelectorAll('#view-cases.active .ed-case').forEach((card,index)=>{const opener=card.querySelector('.ed-btn')||card.querySelector('[data-open]');const key=keyFor(opener||card,index);if(!key)return;if(card.dataset.caseKey!==key)card.dataset.caseKey=key;if(opener){opener.setAttribute('data-open',key);if(opener.tagName!=='BUTTON'&&opener.tagName!=='A'){opener.setAttribute('role','button');if(!opener.hasAttribute('tabindex'))opener.setAttribute('tabindex','0')}}bindOpener(opener,key)})}
 function scheduleNormalize(){if(normalizeTimer)return;normalizeTimer=setTimeout(()=>{normalizeTimer=0;normalize()},120)}
 function hook(){
   if(window.__emojiDropsCaseOpenBridge===ID)return;window.__emojiDropsCaseOpenBridge=ID;touchCss();normalize();
