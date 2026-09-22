@@ -48,6 +48,42 @@ begin
   );
 end; $profile$;
 
+create or replace function public.claim_daily_server() returns jsonb
+language plpgsql security definer set search_path='' as $daily$
+declare
+  uid uuid:=auth.uid();
+  p public.profiles%rowtype;
+  st jsonb;
+  last_date text;
+  today_date text:=to_char(current_date,'YYYY-MM-DD');
+  streak integer;
+  reward numeric;
+  next_st jsonb;
+begin
+  if uid is null then raise exception 'AUTH_REQUIRED'; end if;
+  select * into p from public.profiles where id=uid for update;
+  if p.id is null then raise exception 'PROFILE_NOT_FOUND'; end if;
+  st:=coalesce(p.stats,'{}'::jsonb);
+  last_date:=nullif(st->>'daily_last_date','');
+  streak:=greatest(0,coalesce((st->>'daily_streak')::integer,0));
+  if last_date=today_date then
+    return jsonb_build_object('claimed',false,'reward',0,'streak',streak,'date',today_date,'balance',p.balance);
+  end if;
+  if last_date=to_char(current_date-1,'YYYY-MM-DD') then
+    streak:=streak+1;
+  else
+    streak:=1;
+  end if;
+  reward:=case when streak>=7 then 500 else 50+streak*25 end;
+  next_st:=jsonb_set(st,'{daily_streak}',to_jsonb(streak),true);
+  next_st:=jsonb_set(next_st,'{daily_last_date}',to_jsonb(today_date),true);
+  next_st:=jsonb_set(next_st,'{earned}',to_jsonb(coalesce((st->>'earned')::numeric,0)+reward),true);
+  update public.profiles
+    set balance=balance+reward,stats=next_st,updated_at=now()
+    where id=uid;
+  return jsonb_build_object('claimed',true,'reward',reward,'streak',streak,'date',today_date,'balance',(select balance from public.profiles where id=uid));
+end; $daily$;
+
 create or replace function public.case_cost(p_case_id text) returns numeric language sql immutable as $casecost$
 select case lower(trim(p_case_id)) when 'smile' then 100 when 'moves' then 80 when 'nature' then 60 when 'food' then 40 when 'animals' then 20 when 'transport' then 20 when 'sport' then 250 when 'games' then 500 else null end $casecost$;
 
@@ -64,6 +100,7 @@ revoke execute on function public.case_cost(text) from public,anon;
 grant execute on function public.case_cost(text) to authenticated;
 grant execute on function public.set_nickname(text) to authenticated;
 grant execute on function public.profile_snapshot() to authenticated;
+grant execute on function public.claim_daily_server() to authenticated;
 grant execute on function public.sell_all_server() to authenticated;
 
 
@@ -92,6 +129,8 @@ revoke execute on function public.set_nickname(text) from public,anon;
 grant execute on function public.set_nickname(text) to authenticated;
 revoke execute on function public.profile_snapshot() from public,anon;
 grant execute on function public.profile_snapshot() to authenticated;
+revoke execute on function public.claim_daily_server() from public,anon;
+grant execute on function public.claim_daily_server() to authenticated;
 revoke execute on function public.open_case_server(text,numeric) from public,anon;
 revoke execute on function public.sell_all_server() from public,anon;
 grant execute on function public.sell_all_server() to authenticated;
