@@ -71,13 +71,13 @@ jobs:
           if 'prefers-reduced-motion:reduce' not in app or '.edfp-wheel' not in app or '.edx-reel' not in app: raise SystemExit('Reduced-motion coverage missing for cinematic surfaces')
           live=Path('js/emoji-drops-live-final.js').read_text()
           if 'version:14' not in live: raise SystemExit('Live Drops owner version mismatch')
-          if 'live-final-13' not in app: raise SystemExit('Live Drops cache contract missing')
+          if 'live-final-14' not in app: raise SystemExit('Live Drops cache contract missing')
           if 'SUBSCRIBED' not in live or 'FALLBACK' not in live or '● LIVE' not in live: raise SystemExit('Live Drops Realtime status contract missing')
           if '--ed-bg:#070707' not in app or '--ed-surface:#101010' not in app or 'prefers-reduced-motion:reduce' not in app: raise SystemExit('Design-system/reduced-motion contract missing')
           if 'profile_snapshot' not in Path('supabase/schema.sql').read_text() or 'profile_snapshot' not in Path('js/emoji-drops-core.js').read_text(): raise SystemExit('Server profile sync contract missing')
           if 'authoritative owner' not in app or 'case-showcase-exact' not in app or 'transaction-layer' not in app: raise SystemExit('Runtime ownership contract missing')
           exact=Path('js/emoji-drops-case-showcase-exact.js').read_text()
-          for marker in ['version:12','aria-modal="true"','case-open','translateX','role="dialog"','₽','Case items','edx-result-actions','edx-claim','edx-sell','sell_item_server']:
+          for marker in ['version:13','aria-modal="true"','case-open','translateX','role="dialog"','₽','Case items','edx-result-actions','edx-claim','edx-sell','sell_item_server']:
               if marker not in exact: raise SystemExit('Exact showcase contract missing: '+marker)
           if "onpointerup=closeEvent" in exact or "ontouchend=closeEvent" in exact: raise SystemExit('Duplicate modal close touch handlers remain')
           if "window.addEventListener('click',e=>{const closeButton" in exact: raise SystemExit('Global case modal click owner still duplicates native button owner')
