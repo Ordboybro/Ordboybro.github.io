@@ -18,7 +18,7 @@ need(!/Level \$\{S\.level\}|\$\{Math\.round\(S\.xp\)/.test(core),'profile still 
 need(schema.includes('create or replace function public.profile_snapshot()'),'profile_snapshot RPC missing');
 need(/profile_snapshot\(\).*?security definer set search_path=''/s.test(schema),'profile_snapshot is not locked to empty search_path');
 need(/stats=jsonb_set\(coalesce\(stats,'\{\}'::jsonb\),'{earned}'/.test(schema),'sell-all server stats are not updated atomically');
-need(live.includes('version:14'),'Live Drops owner version mismatch');
+need(live.includes('version:15'),'Live Drops owner version mismatch');
 need(!live.includes('}}@media'),'Live Drops CSS parser guard failed');
 need(live.includes('SUBSCRIBED')&&live.includes('CHANNEL_ERROR')&&live.includes('FALLBACK'),'Live Drops fallback lifecycle incomplete');
 need(app.includes('--ed-bg:#070707')&&app.includes('--ed-surface:#101010')&&app.includes('--ed-surface-2:#151515')&&app.includes('--ed-border:#292929'),'shared design tokens missing');
