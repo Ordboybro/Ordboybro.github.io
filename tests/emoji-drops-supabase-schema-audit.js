@@ -1,6 +1,9 @@
 const fs=require('fs');
 const schema=fs.readFileSync('supabase/schema.sql','utf8');
 const browser=fs.readFileSync('js/supabase-config.js','utf8');
+const tx=fs.readFileSync('js/emoji-drops-transaction-layer.js','utf8');
+if(/\.from\(['"]profiles['"]\)/i.test(tx))throw new Error('Transaction recovery must not read profiles directly; use profile_snapshot RPC');
+
 const dollarStarts=[...schema.matchAll(/\\bas\\s+(\\$[A-Za-z_][A-Za-z0-9_]*\\$|\\$\\$)\\s*\\n/g)].map(m=>m[1]);
 for(const tag of dollarStarts){const count=(schema.match(new RegExp(tag.replace(/\\$/g,'\\\\
 
