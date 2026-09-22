@@ -2,7 +2,7 @@
 const fs=require('fs');
 const read=p=>fs.readFileSync(p,'utf8');
 const app=read('js/app-v2.js'),auth=read('js/supabase-auth.js'),live=read('js/emoji-drops-live-final.js'),core=read('js/emoji-drops-core.js'),market=read('js/emoji-drops-market-v26.js'),schema=read('supabase/schema.sql'),index=read('index.html');
-const fail=[];
+const fail=[];const exact=read('js/emoji-drops-case-showcase-exact.js');
 const need=(ok,msg)=>{if(!ok)fail.push(msg)};
 need(/const version=323;/.test(app),'runtime version must be 323');
 need(app.includes('supabase-auth-7')&&app.includes('core-20'),'runtime cache contract missing');
@@ -15,7 +15,7 @@ need(auth.includes('refreshSession')&&auth.includes('scheduleRefresh'),'Supabase
 need(auth.includes('/auth/v1/token?grant_type=refresh_token'),'refresh-token endpoint missing');
 need(auth.includes('emoji-drops-auth-change'),'auth lifecycle event missing');
 need(core.includes("rpc('profile_snapshot',{})")&&core.includes('syncRemoteProfile'),'server profile synchronization missing');
-need(!/Level \$\{S\.level\}|\$\{Math\.round\(S\.xp\)/.test(core),'profile still exposes local-only progression values');
+need(!/Level \$\{S\.level\}|\$\{Math\.round\(S\.xp\)/.test(core),'profile still exposes local-only progression values');need(exact.includes('resultTimer')&&exact.includes('caseRun')&&exact.includes('data-result-locked'),'case result lifecycle lock missing');
 need(schema.includes('create or replace function public.profile_snapshot()'),'profile_snapshot RPC missing');
 need(schema.includes('create or replace function public.claim_daily_server()'),'server Daily RPC missing');
 need(core.includes("claim_daily_server")&&core.includes("tx.run('daily_claim'"),'authenticated Daily must use the transaction boundary');
