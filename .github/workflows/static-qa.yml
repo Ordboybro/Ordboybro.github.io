@@ -65,7 +65,7 @@ jobs:
               if marker not in Path(path).read_text(): raise SystemExit('Observer budget contract missing: '+path)
           if 'const version=315' not in app: raise SystemExit('Runtime version/cache bump missing')
           upgrade=Path('js/emoji-drops-upgrade-final.js').read_text()
-          rpc_i=upgrade.find("await tx.run('upgrade'")
+          rpc_i=upgrade.find('const result=await tx.run(')
           wheel_i=upgrade.find('wheel.style.transform')
           if rpc_i < 0 or wheel_i < 0 or wheel_i < rpc_i: raise SystemExit('Upgrade animation starts before authoritative RPC result')
           if 'prefers-reduced-motion:reduce' not in app or '.edfp-wheel' not in app or '.edx-reel' not in app: raise SystemExit('Reduced-motion coverage missing for cinematic surfaces')
