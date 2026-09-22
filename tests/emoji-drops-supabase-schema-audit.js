@@ -38,6 +38,7 @@ const required=[
 ];
 for(const x of required)if(!schema.toLowerCase().includes(x.toLowerCase()))throw new Error('Supabase schema contract missing: '+x);
 if(/revoke all on table public\.profiles from anon,authenticated;\s*grant select on table public\.profiles to authenticated;/i.test(schema))throw new Error('Profiles table is directly exposed to authenticated clients; use profile_snapshot RPC only');
+for(const x of ['revoke select,insert,update,delete on tables from anon,authenticated','revoke usage,select on sequences from anon,authenticated'])if(!schema.toLowerCase().includes(x))throw new Error('Future public grant hardening missing: '+x);
 
 const opens=(schema.match(/create or replace function public\.open_case_server/g)||[]).length;
 const upgrades=(schema.match(/create or replace function public\.upgrade_server/g)||[]).length;
