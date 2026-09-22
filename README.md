@@ -25,7 +25,7 @@ Emoji Drops is a static-first web application built with vanilla HTML, CSS and J
 
 ## 🧱 Runtime architecture
 
-`js/app-v2.js` is the deterministic bootstrap/loader. The production runtime uses a deterministic bootstrap with server-authoritative Case/Upgrade/Market transactions, a single Live Drops controller with controlled Realtime/polling fallback, explicit case-open interaction, shared visual tokens, reduced-motion handling and lifecycle cleanup. Existing UX surfaces are polished in place; no new user-facing feature set is being added.
+`js/app-v2.js` is the deterministic bootstrap/loader. The production runtime uses a deterministic bootstrap with server-authoritative Case/Upgrade/Market transactions, a single Live Drops controller with controlled Realtime/polling fallback, explicit case-open interaction, shared visual tokens, reduced-motion handling, lifecycle cleanup, responsive safe-area treatment and non-native settings feedback. Existing UX surfaces are polished in place; no new user-facing feature set is being added.
 
 ## 🧪 Quality & CI
 
