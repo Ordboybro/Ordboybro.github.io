@@ -47,35 +47,11 @@ function css(){if($('#'+ID+'-style'))return;const s=document.createElement('styl
 `;document.head.appendChild(s)}
 function nav(){const n=$('.ed-nav');if(!n)return;qsa('button',n).forEach(b=>{if(!LABEL[b.dataset.view]){b.style.display='none';return}b.textContent=LABEL[b.dataset.view];b.setAttribute('aria-label',LABEL[b.dataset.view])})}
 let liveTimer=0,liveBusy=false;
-async function loadLive(){
-  const root=$('#view-cases'),container=$('#edLive',root)||$('.live-container',root);
-  if(!container||liveBusy)return;
-  const auth=window.EmojiDropsAuth;
-  if(!auth?.configured||!auth.client?.from){container.replaceChildren();container.setAttribute('aria-live','polite');return}
-  liveBusy=true;
-  try{
-    const r=await auth.client.from('live_drops').select('id,nickname,item,case_id,item_price,created_at').order('created_at',{ascending:false}).limit(8);
-    if(r?.error)throw r.error;
-    const rows=Array.isArray(r?.data)?r.data:[];
-    container.replaceChildren();
-    rows.forEach(x=>{
-      const item=x?.item&&typeof x.item==='object'?x.item:{};
-      const d=document.createElement('div');
-      d.className='live-drop';
-      d.dataset.liveIcon=String(item.emoji||'🎁');
-      d.innerHTML='<b>'+esc(String(item.rarity||'common').toUpperCase())+'</b><span>'+esc(String(x.nickname||'Player'))+'</span><strong>'+esc(rub(Number(x.item_price??item.price??0)))+'</strong>';
-      container.appendChild(d);
-    });
-    container.setAttribute('aria-live','polite');
-  }catch(err){
-    console.warn('Emoji Drops Live Drops unavailable',err);
-    container.replaceChildren();
-  }finally{liveBusy=false}
-}
+async function loadLive(){return;}
 function live(){return}
 function cases(){const root=$('#view-cases');if(!root)return;qsa('.ed-case',root).forEach(c=>{const b=c.querySelector('[data-open]'),k=b?.dataset.open;if(!k)return;c.dataset.refCase=k;const a=c.querySelector('.ed-case-art');if(a){a.textContent=ICON[k]||'🎁';a.setAttribute('aria-hidden','true')}})}
 function profile(){return}
 function studio(type){const root=$('#view-'+type);if(!root||root.dataset.v23studio==='1')return;root.dataset.v23studio='1';const wrap=document.createElement('div');wrap.className='ed-studio-page';const title=type==='upgrade'?'Upgrade':'Market',sub=type==='upgrade'?'Risk, multiplier and target in one focused workspace.':'Browse available items, compare value and buy instantly.';wrap.innerHTML='<div class="ed-studio-hero"><div><div class="ed-studio-kicker">Emoji Drops</div><h1 class="ed-studio-title">'+title+'</h1><div class="ed-studio-sub">'+sub+'</div></div><div class="ed-studio-balance">250 ₽</div></div><div class="ed-studio-content"></div>';const content=wrap.querySelector('.ed-studio-content');while(root.firstChild)content.appendChild(root.firstChild);root.appendChild(wrap)}
-function run(){css();nav();cases();studio('upgrade');studio('market');const bal=$('.ed-balance');const raw=bal?.textContent?.replace(/[^0-9]/g,'');qsa('.ed-studio-balance').forEach(x=>x.textContent=(raw||'250')+' ₽');window.__emojiDropsReferenceV23={version:24,ready:true,observerDebounceMs:90}}
-function schedule(){if(q)return;q=1;requestAnimationFrame(()=>{q=0;run()})}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run,{once:true});else run();window.addEventListener('emoji-drops-auth-change',()=>{const root=$('#view-cases'),container=$('#edLive',root)||$('.live-container',root);if(container){delete container.dataset.liveLoaded;loadLive()}});let moTimer=0;const mo=new MutationObserver(()=>{if(moTimer)return;moTimer=setTimeout(()=>{moTimer=0;schedule()},90)});mo.observe(document.body,{childList:true,subtree:true,characterData:false});
+function run(){css();nav();cases();studio('upgrade');studio('market');const bal=$('.ed-balance');const raw=bal?.textContent?.replace(/[^0-9]/g,'');qsa('.ed-studio-balance').forEach(x=>x.textContent=raw?raw+' ₽':'—');window.__emojiDropsReferenceV23={version:24,ready:true,observerDebounceMs:90}}
+function schedule(){if(q)return;q=1;requestAnimationFrame(()=>{q=0;run()})}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run,{once:true});else run();let moTimer=0;const mo=new MutationObserver(()=>{if(moTimer)return;moTimer=setTimeout(()=>{moTimer=0;schedule()},90)});mo.observe(document.body,{childList:true,subtree:true,characterData:false});
 })();
