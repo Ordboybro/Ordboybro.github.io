@@ -30,6 +30,7 @@ const required=[
   'revoke execute on function public.create_market_listing(text,numeric) from public,anon',
   'revoke execute on function public.buy_market_listing(uuid) from public,anon',
   'revoke execute on function public.cancel_market_listing(uuid) from public,anon',
+  'revoke execute on function public.claim_daily_server() from public,anon',
   'revoke all on table public.market_listings from anon,authenticated',
   'revoke all on table public.profiles from anon,authenticated',
   'revoke select,insert,update,delete on tables from anon,authenticated',
@@ -46,6 +47,7 @@ const required=[
   'INVALID_CHANCE',
   'ITEM_ALREADY_LISTED',
   'INVALID_LISTING_PRICE',
+  'claim_daily_server',
   'LISTING_UNAVAILABLE',
   'NOT_LISTING_OWNER',
   'for update'
