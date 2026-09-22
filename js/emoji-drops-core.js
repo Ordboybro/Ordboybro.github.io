@@ -1,7 +1,7 @@
 (()=>{'use strict';
 /* Emoji Drops — core v2. Economy, state, inventory, upgrade and market runtime. */
 const APP='emoji-drops-core-v2',KEY='emojiDropsStateV3',VERSION=4;
-let remoteSyncing=false;
+let remoteSyncing=false,remoteSyncTimer=0;
 const R={common:{label:'COMMON',color:'#9ca3af',w:55},rare:{label:'RARE',color:'#60a5fa',w:27},epic:{label:'EPIC',color:'#a78bfa',w:12},mythical:{label:'MYTHICAL',color:'#e879f9',w:5},legendary:{label:'LEGENDARY',color:'#ff8a18',w:1}};
 const PRICES=window.casePrices||{smile:100,moves:80,nature:60,food:40,animals:20,transport:10,sport:250,games:500};
 const CASES=window.cases||{},N={smile:'Smile',moves:'Moves',nature:'Nature',food:'Food',animals:'Animals',transport:'Transport',sport:'Sport',games:'Games'},I={smile:'😀',moves:'🕺',nature:'🌿',food:'🍔',animals:'🐶',transport:'🚗',sport:'⚽',games:'🎮'};
@@ -98,6 +98,6 @@ function bind(){document.body.innerHTML=appHTML();document.addEventListener('cli
 document.addEventListener('change',e=>{if(!e.target.matches('[data-auth-mode]'))return;const n=e.target.closest('#edAuthForm')?.querySelector('[data-auth-nickname]');if(n)n.style.display=e.target.value==='signup'?'block':'none';});
 document.addEventListener('input',e=>{if(e.target.matches('[data-search]')){const b=document.getElementById('view-inventory');b.dataset.q=e.target.value;const caret=e.target.selectionStart;renderInventory();const n=b.querySelector('[data-search]');if(n){n.focus();try{n.setSelectionRange(caret,caret)}catch{}}}});document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelector('#edExact.show .edx-close')?.click()});document.addEventListener('pointerdown',e=>{const b=e.target.closest('button');if(!b||b.disabled)return;const r=b.getBoundingClientRect(),d=Math.max(r.width,r.height)*1.8,sp=document.createElement('span');sp.className='ed-ripple';sp.style.width=d+'px';sp.style.height=d+'px';sp.style.left=(e.clientX-r.left-d/2)+'px';sp.style.top=(e.clientY-r.top-d/2)+'px';b.style.position=b.style.position||'relative';b.appendChild(sp);setTimeout(()=>sp.remove(),600)},{passive:true});renderAll()}
 style();if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind,{once:true});else bind();
-window.addEventListener('emoji-drops-auth-ready',()=>setTimeout(syncRemoteProfile,0),{passive:true});window.addEventListener('emoji-drops-auth-change',()=>setTimeout(syncRemoteProfile,0),{passive:true});setTimeout(syncRemoteProfile,250);
+const scheduleRemoteSync=()=>{clearTimeout(remoteSyncTimer);if(document.hidden)return;remoteSyncTimer=setTimeout(()=>{remoteSyncTimer=0;syncRemoteProfile()},160)};window.addEventListener('emoji-drops-auth-ready',scheduleRemoteSync,{passive:true});window.addEventListener('emoji-drops-auth-change',scheduleRemoteSync,{passive:true});document.addEventListener('visibilitychange',()=>{if(!document.hidden)scheduleRemoteSync()});window.addEventListener('pageshow',scheduleRemoteSync,{passive:true});window.addEventListener('focus',scheduleRemoteSync,{passive:true});setTimeout(scheduleRemoteSync,250);
 window.__emojiDropsCore={version:APP,state:()=>S,render:renderAll};window.__emojiDropsEconomy={version:2,state:S,save:persist,rarities:R,casePrices:PRICES,xpNeed};
 })();
