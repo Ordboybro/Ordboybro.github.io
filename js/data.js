@@ -11,23 +11,23 @@ updateOnline();
 const rarities = {
 
 common:{
-color:"#bdbdbd"
+color:"#9ca3af"
 },
 
 rare:{
-color:"#3b82f6"
+color:"#60a5fa"
 },
 
 epic:{
-color:"#a855f7"
+color:"#a78bfa"
 },
 
 mythical:{
-color:"#ef4444"
+color:"#e879f9"
 },
 
 legendary:{
-color:"#ffd000"
+color:"#ff8a18"
 }
 
 };
