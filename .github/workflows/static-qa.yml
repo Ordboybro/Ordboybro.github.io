@@ -89,6 +89,8 @@ jobs:
         run: node tests/emoji-drops-economy-self-test.js
       - name: Economy final gate
         run: node tests/emoji-drops-economy-final-gate.js
+      - name: Weighted economy report
+        run: node tests/emoji-drops-economy-report.js
       - name: Economy source-of-truth audit
         run: node tests/emoji-drops-economy-source-audit.js
       - name: Runtime hardening
