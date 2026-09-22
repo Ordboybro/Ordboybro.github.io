@@ -84,3 +84,5 @@ Open `http://localhost:8000`.
 
 **ORDBOY**  
 GitHub: https://github.com/Ordboybro
+### Final QA gate
+This marker exists only to run the complete pull-request QA pipeline against the current production tree; no product feature is introduced by the QA branch.
