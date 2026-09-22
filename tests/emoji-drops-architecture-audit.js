@@ -6,5 +6,9 @@ for(const f of forbidden)if(app.includes(f))throw Error('Legacy/conflicting runt
 if((app.match(/emoji-drops-case-showcase-exact\.js/g)||[]).length!==1)throw Error('Exact case owner loaded more than once');
 if(!/emoji-drops-transaction-layer\.js/.test(app)||!/window\.__emojiDropsTransactions/.test(fs.readFileSync('js/emoji-drops-transaction-layer.js','utf8')))throw Error('Transaction boundary missing');
 if(!/open_case_server|upgrade_server|market_snapshot|buy_market_listing|cancel_market_listing/.test(fs.readFileSync('supabase/schema.sql','utf8')))throw Error('Server authority contract incomplete');
+const ownership=app.match(/Ownership contract[\\s\\S]*?\\*\\//)?.[0]||'';
+for(const marker of ['navigation-final','case-showcase-exact','transaction-layer','upgrade-final','market-v26','live-final'])if(!ownership.includes(marker))throw Error('Ownership matrix missing: '+marker);
+if((app.match(/emoji-drops-live-final\\.js/g)||[]).length!==1)throw Error('Live Drops owner loaded more than once');
+
 const scripts=[...index.matchAll(/<script[^>]+src=['"]([^'"]+)/gi)].map(x=>x[1].split('?')[0]);for(const x of scripts)if(!x.startsWith('http')&&!fs.existsSync(x.replace(/^\//,'')))throw Error('Missing script asset: '+x);
 console.log('Architecture audit OK: canonical owners, runtime manifest, legacy layer exclusion, transaction boundary, server RPC surface and script assets.');
