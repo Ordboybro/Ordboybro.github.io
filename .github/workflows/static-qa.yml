@@ -8,7 +8,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: emoji-drops-static-qa-${{ github.ref }}
+  group: emoji-drops-static-qa-${{ github.ref }}-${{ github.sha }}
   cancel-in-progress: true
 jobs:
   qa:
@@ -173,6 +173,7 @@ jobs:
       - name: Accessibility E2E
         run: node tests/emoji-drops-accessibility-e2e.js
       - name: Performance lifecycle diagnostic
+        timeout-minutes: 3
         run: node tests/emoji-drops-performance-diagnose.js
       - name: Performance budget E2E
         run: node tests/emoji-drops-performance-budget-e2e.js
