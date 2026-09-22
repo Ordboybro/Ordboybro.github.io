@@ -582,7 +582,6 @@ grant execute on function public.cancel_market_listing(uuid) to authenticated;
 
 -- Direct table access is intentionally denied for the economy tables; clients use the narrow RPC surface.
 revoke all on table public.profiles from anon,authenticated;
-grant select on table public.profiles to authenticated;
 revoke all on table public.case_items from anon,authenticated;
 revoke all on table public.market_listings from anon,authenticated;
 
