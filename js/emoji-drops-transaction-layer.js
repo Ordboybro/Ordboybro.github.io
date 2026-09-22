@@ -25,16 +25,17 @@ function refresh(){if(leaseOwned())set(LOCK,JSON.stringify({owner,expires:now()+
 function release(){if(lockTimer){clearInterval(lockTimer);lockTimer=0}if(leaseOwned())remove(LOCK)}
 function withLock(fn){const locks=typeof navigator!=='undefined'&&navigator?.locks?.request;if(locks)return navigator.locks.request('emoji-drops-state',async()=>fn());if(!acquire())return Promise.reject(new Error('transaction_locked'));return Promise.resolve().then(fn).finally(release)}
 async function resyncRemote(){
-  const auth=window.EmojiDropsAuth,client=auth?.client,uid=auth?.userId;
-  if(!client||!uid)throw new Error('REMOTE_RESYNC_UNAVAILABLE');
-  const q=await client.from('profiles').select('balance,inventory,stats,best_drop,nickname').eq('id',uid).single();
+  const auth=window.EmojiDropsAuth,uid=auth?.userId;
+  if(!auth?.rpc||!uid)throw new Error('REMOTE_RESYNC_UNAVAILABLE');
+  const q=await auth.rpc('profile_snapshot',{});
   if(q?.error)throw q.error;
-  const s=core()?.state?.();if(!s||!q?.data)throw new Error('REMOTE_RESYNC_EMPTY');
-  s.balance=Math.max(0,Number(q.data.balance)||0);
-  s.inventory=Array.isArray(q.data.inventory)?clone(q.data.inventory):[];
-  s.stats={...(s.stats||{}),...(q.data.stats&&typeof q.data.stats==='object'?clone(q.data.stats):{})};
-  s.best_drop=q.data.best_drop&&typeof q.data.best_drop==='object'?clone(q.data.best_drop):null;
-  if(typeof q.data.nickname==='string'&&q.data.nickname)s.nickname=q.data.nickname;
+  const data=q?.data;
+  const s=core()?.state?.();if(!s||!data)throw new Error('REMOTE_RESYNC_EMPTY');
+  s.balance=Math.max(0,Number(data.balance)||0);
+  s.inventory=Array.isArray(data.inventory)?clone(data.inventory):[];
+  s.stats={...(s.stats||{}),...(data.stats&&typeof data.stats==='object'?clone(data.stats):{})};
+  s.best_drop=data.best_drop&&typeof data.best_drop==='object'?clone(data.best_drop):null;
+  if(typeof data.nickname==='string'&&data.nickname)s.nickname=data.nickname;
   try{localStorage.setItem(KEY,JSON.stringify(s))}catch{}
   core()?.render?.();
   return true;
