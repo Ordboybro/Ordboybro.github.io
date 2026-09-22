@@ -1,6 +1,6 @@
 (()=>{'use strict';
 /* Emoji Drops — authoritative case showcase. One renderer, all cases, safe state transaction. Card activation is delegated to the single case-open bridge. */
-const R={common:{label:'COMMON',color:'#ffffff',w:55},rare:{label:'RARE',color:'#4d86ff',w:27},epic:{label:'EPIC',color:'#a855f7',w:12},mythical:{label:'MYTHICAL',color:'#ef4b4b',w:5},legendary:{label:'LEGENDARY',color:'#ff9d2e',w:1}};
+const R={common:{label:'COMMON',color:'#9ca3af',w:55},rare:{label:'RARE',color:'#60a5fa',w:27},epic:{label:'EPIC',color:'#a78bfa',w:12},mythical:{label:'MYTHICAL',color:'#e879f9',w:5},legendary:{label:'LEGENDARY',color:'#ff8a18',w:1}};
 const N={smile:'Smile',moves:'Moves',nature:'Nature',food:'Food',animals:'Animals',transport:'Transport',sport:'Sport',games:'Games'};
 const H={smile:'😀',moves:'🕺',nature:'🌿',food:'🍔',animals:'🐶',transport:'🚗',sport:'⚽',games:'🎮'};
 const STATE='emojiDropsStateV3';
