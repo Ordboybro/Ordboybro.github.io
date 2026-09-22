@@ -50,6 +50,7 @@ jobs:
           if 'emojiDropsFavoritesV2' not in app: raise SystemExit('Canonical favorites V2 contract missing')
           if 'function stage2FavoriteSort' in app: raise SystemExit('Obsolete duplicate Favorites owner still loaded')
           market=Path('js/emoji-drops-market-v26.js').read_text()
+          if 'version:31' not in market or 'destroy' not in market: raise SystemExit('Market lifecycle owner contract missing')
           txlayer=Path('js/emoji-drops-transaction-layer.js').read_text()
           for dead_marker in ['emojiDropsLocalMarketV1','function install(){return;','data-cancel-market','market-cancel']:
               if dead_marker in market or dead_marker in txlayer: raise SystemExit('Obsolete transaction/market compatibility marker still loaded: '+dead_marker)
