@@ -63,7 +63,7 @@ jobs:
           if not Path('assets/emoji-drops/smile.b64').exists(): raise SystemExit('Missing exact Smile modal artwork')
           for path,marker in [('js/emoji-drops-reference-v23-studio.js','observerDebounceMs:90'),('js/emoji-drops-final-ux-v4.js','observerDebounceMs:70'),('js/emoji-drops-case-authority-v2.js','observerDebounceMs:120'),('js/emoji-drops-market-authority-final.js','observerDebounceMs:100')]:
               if marker not in Path(path).read_text(): raise SystemExit('Observer budget contract missing: '+path)
-          if 'const version=307' not in app: raise SystemExit('Runtime version/cache bump missing')
+          if 'const version=308' not in app: raise SystemExit('Runtime version/cache bump missing')
           upgrade=Path('js/emoji-drops-upgrade-final.js').read_text()
           rpc_i=upgrade.find("await tx.run('upgrade'")
           wheel_i=upgrade.find('wheel.style.transform')
@@ -74,6 +74,7 @@ jobs:
           if 'live-final-11' not in app: raise SystemExit('Live Drops cache contract missing')
           if 'SUBSCRIBED' not in live or 'FALLBACK' not in live or '● LIVE' not in live: raise SystemExit('Live Drops Realtime status contract missing')
           if '--ed-bg:#070707' not in app or '--ed-surface:#101010' not in app or 'prefers-reduced-motion:reduce' not in app: raise SystemExit('Design-system/reduced-motion contract missing')
+          if 'profile_snapshot' not in Path('supabase/schema.sql').read_text() or 'profile_snapshot' not in Path('js/emoji-drops-core.js').read_text(): raise SystemExit('Server profile sync contract missing')
           if 'authoritative owner' not in app or 'case-showcase-exact' not in app or 'transaction-layer' not in app: raise SystemExit('Runtime ownership contract missing')
           exact=Path('js/emoji-drops-case-showcase-exact.js').read_text()
           for marker in ['version:12','aria-modal="true"','case-open','translateX','role="dialog"','₽','Case items','edx-result-actions','edx-claim','edx-sell','sell_item_server']:
