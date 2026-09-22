@@ -35,7 +35,7 @@ jobs:
           runtime=[Path(x).name for x in re.findall(r"['\"]([^'\"]+\.js)(?:\?[^'\"]*)?['\"]",m.group(1))]
           positions=[runtime.index(x) if x in runtime else -1 for x in order]
           if any(x<0 for x in positions) or positions!=sorted(positions): raise SystemExit('Runtime order failed: '+str(list(zip(order,positions))))
-          for v in ['schema-1','data-bridge-1','core-16','supabase-auth-4','hardening-9','txn-12','guards-8','final-6','release-1','product-5','product-plus-6','action-21','quality-final-1','p3-polish-v8','p4-3','v23-stability-1','exact-landscape-1','case-showcase-exact-22','authority-8','case-open-bridge-30','studio-34','case-button-bridge-5','authority-finalizer-6','market-v26-7','market-authority-final-2','smooth-ui-3','final-product-polish-7','modal-finalizer-10','upgrade-final-23','upgrade-interaction-guard-5','final-ux-8','final-ux-v7','live-final-9','p5-final-audit-1']:
+          for v in ['schema-1','data-bridge-1','core-16','supabase-auth-4','hardening-9','txn-12','guards-8','final-6','release-1','product-5','product-plus-6','action-21','quality-final-1','p3-polish-v8','p4-3','v23-stability-1','exact-landscape-1','case-showcase-exact-23','authority-8','case-open-bridge-30','studio-34','case-button-bridge-5','authority-finalizer-6','market-v26-7','market-authority-final-2','smooth-ui-3','final-product-polish-7','modal-finalizer-10','upgrade-final-23','upgrade-interaction-guard-5','final-ux-8','final-ux-v7','live-final-9','p5-final-audit-1']:
               if v not in a: raise SystemExit('Cache version missing: '+v)
           product=Path('js/emoji-drops-product-layer.js').read_text()
           app=Path('js/app-v2.js').read_text()
@@ -74,7 +74,7 @@ jobs:
           if '--ed-bg:#070707' not in app or '--ed-surface:#101010' not in app or 'prefers-reduced-motion:reduce' not in app: raise SystemExit('Design-system/reduced-motion contract missing')
           if 'authoritative owner' not in app or 'case-showcase-exact' not in app or 'transaction-layer' not in app: raise SystemExit('Runtime ownership contract missing')
           exact=Path('js/emoji-drops-case-showcase-exact.js').read_text()
-          for marker in ['version:6','aria-modal="true"','case-open','translateX','role="dialog"','₽','Case items','edx-result-actions','edx-claim','edx-sell','sell_item_server']:
+          for marker in ['version:7','aria-modal="true"','case-open','translateX','role="dialog"','₽','Case items','edx-result-actions','edx-claim','edx-sell','sell_item_server']:
               if marker not in exact: raise SystemExit('Exact showcase contract missing: '+marker)
           landscape=Path('js/emoji-drops-exact-landscape-polish.js').read_text()
           for marker in ['orientation:landscape','max-height:500px','position:sticky','.edx-open button']:
