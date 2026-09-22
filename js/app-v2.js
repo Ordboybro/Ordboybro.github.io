@@ -5,7 +5,8 @@ const files=['js/supabase-config.js?v=supabase-config-1','js/supabase-auth.js?v=
 /* Ownership contract — presentation modules may adapt/bridge, but each product system has one authoritative owner.
    navigation: navigation-final | cases: case-showcase-exact | case modal: case-showcase-exact
    transactions: transaction-layer | upgrade: upgrade-final | market: market-v26
-   live drops: live-final | favorites: core/product state | inventory: core/state | profile: profile surface
+   live drops: live-final | favorites: core/product state (emojiDropsFavoritesV2) | inventory: core/state | profile: profile surface
+   favorites storage contract: emojiDropsFavoritesV2
 */
 window.__emojiDropsRuntimeLoader={version,complete:false,failed:[],loaded:[],count:files.length};
 function write(src){document.write('<scr'+'ipt src="'+src+'"></scr'+'ipt>')}
