@@ -1,6 +1,6 @@
 (()=>{'use strict';
 /* Emoji Drops — final engineering hardening. No visual redesign. */
-const VERSION=8,KEY='emojiDropsStateV3',ERROR_KEY='emojiDropsDiagnosticsV2';
+const VERSION=10,KEY='emojiDropsStateV3',ERROR_KEY='emojiDropsDiagnosticsV2';
 const q=(s,r=document)=>r.querySelector(s),qa=(s,r=document)=>[...r.querySelectorAll(s)];
 const clone=x=>{try{return JSON.parse(JSON.stringify(x))}catch{return null}};
 const report={version:VERSION,bootAt:Date.now(),errors:[],a11y:[],perf:{longTasks:0,slowFrames:0},storage:'unknown',state:'unknown'};
