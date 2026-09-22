@@ -642,7 +642,7 @@ drop policy if exists "live_drops_read_authenticated" on public.live_drops;
 create policy "live_drops_read_authenticated" on public.live_drops for select to authenticated using (true);
 drop policy if exists "live_drops_read_anon" on public.live_drops;
 create policy "live_drops_read_anon" on public.live_drops for select to anon using (true);
-grant select on table public.live_drops to authenticated,anon;
+grant select (id,nickname,item,case_id,item_price,created_at) on public.live_drops to authenticated,anon;
 create index if not exists live_drops_created_idx on public.live_drops(created_at desc);
 create index if not exists live_drops_user_idx on public.live_drops(user_id);
 
