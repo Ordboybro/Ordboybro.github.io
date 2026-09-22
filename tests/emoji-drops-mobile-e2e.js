@@ -6,7 +6,7 @@ async function waitForServer(){for(let i=0;i<40;i++){try{await new Promise((reso
 const viewports=[{width:320,height:568},{width:340,height:740},{width:375,height:667},{width:390,height:844},{width:430,height:932},{width:568,height:320},{width:667,height:375},{width:844,height:390},{width:932,height:430}];
 async function waitActiveView(page,name,stage){
   try{
-    await waitActiveView(page,name,'nav-loop');
+    await page.waitForFunction(n=>document.querySelector(`#view-${CSS.escape(n)}`)?.classList.contains('active'),name,{timeout:5000});
   }catch(err){
     const state=await page.evaluate(()=>({
       edView:window.__edView||null,
