@@ -78,7 +78,7 @@ Open `http://localhost:8000`.
 
 ## 📈 Project status
 
-**Active hardening:** the current pass focuses on runtime ownership, lifecycle safety, responsive UX, accessibility, motion discipline and production QA. A fresh full QA run is required before calling the build production-ready. The production codebase has received a focused repair pass for the reported Favorites, iOS search zoom, tap flash, modal close, case-result animation, Upgrade interaction conflict and Profile UX issues. Full QA and production smoke verification must pass before this status is changed to production-ready.
+**Final hardening pass:** runtime ownership, lifecycle safety, responsive UX, accessibility, motion discipline, Supabase authority and regression contracts have been tightened. The repository contains the full production QA gate; its GitHub Actions result must still be observed from GitHub before claiming a verified green release. The production codebase has received a focused repair pass for the reported Favorites, iOS search zoom, tap flash, modal close, case-result animation, Upgrade interaction conflict and Profile UX issues. Full QA and production smoke verification must pass before this status is changed to production-ready.
 
 ## 👨‍💻 Author
 
