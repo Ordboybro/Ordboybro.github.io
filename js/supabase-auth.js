@@ -19,7 +19,7 @@ if(A.configured){
   rpc:async(name,args={})=>{try{return {data:await request(`/rest/v1/rpc/${encodeURIComponent(name)}`,{method:'POST',body:JSON.stringify(args)},read()?.access_token),error:null}}catch(error){return {data:null,error}}},
   from:(table)=>{const q={table,select:'*',order:null,limit:null};const run=async()=>{try{const params=new URLSearchParams({select:q.select});if(q.order)params.set('order',q.order);if(q.limit)params.set('limit',String(q.limit));return {data:await request(`/rest/v1/${encodeURIComponent(q.table)}?${params.toString()}`,{method:'GET'},read()?.access_token),error:null}}catch(error){return {data:null,error}}};return {select:(columns='*')=>{q.select=columns;return {order:(column,{ascending=true}={})=>{q.order=`${column}.${ascending?'asc':'desc'}`;return {limit:n=>{q.limit=n;return run()}}},limit:n=>{q.limit=n;return run()}}}}},
   channel:(name)=>{
-   let socket=null,joined=false,closed=false,ref=0,joinRef=null,heartbeat=0,retryTimer=0,handler=null,statusCb=null;
+   let socket=null,joined=false,closed=false,ref=0,joinRef=null,heartbeat=0,retryTimer=0,joinTimer=0,handler=null,statusCb=null;
    const topic=String(name||'emoji-drops-live-final').startsWith('realtime:')?String(name):'realtime:'+String(name||'emoji-drops-live-final');
    const api={
     on(event,filter,cb){if(event==='postgres_changes'&&typeof cb==='function')handler={event,filter:filter||{},cb};return api},
@@ -36,21 +36,21 @@ if(A.configured){
         if(closed)return;
         joinRef=String(++ref);
         socket.send(JSON.stringify({event:'phx_join',topic,payload:{config:{broadcast:{ack:false,self:false},presence:{enabled:false,key:''},postgres_changes:[{event:handler?.filter?.event||'INSERT',schema:handler?.filter?.schema||'public',table:handler?.filter?.table||'live_drops'}],private:false},access_token:token},ref:joinRef,join_ref:joinRef}));
-        heartbeat=window.setInterval(()=>{if(socket?.readyState===1)socket.send(JSON.stringify({event:'heartbeat',topic:'phoenix',payload:{},ref:String(++ref),join_ref:null}))},25000);
+        heartbeat=window.setInterval(()=>{if(socket?.readyState===1)socket.send(JSON.stringify({event:'heartbeat',topic:'phoenix',payload:{},ref:String(++ref),join_ref:null}))},25000);joinTimer=window.setTimeout(()=>{if(!joined&&!closed){statusCb?.('TIMED_OUT');try{socket?.close()}catch{}}},8000);
        };
        socket.onmessage=e=>{
         try{
          const m=JSON.parse(e.data);
-         if(m?.event==='postgres_changes'&&handler?.cb){const p=m.payload?.data||m.payload;handler.cb({eventType:p?.type||'INSERT',new:p?.record||{},old:p?.old_record||{},schema:p?.schema||'public',table:p?.table||'live_drops'})}
+         if(m?.event==='phx_reply'&&m?.ref===joinRef){if(m?.payload?.status==='ok'){joined=true;if(joinTimer){clearTimeout(joinTimer);joinTimer=0}statusCb?.('SUBSCRIBED')}else{statusCb?.('CHANNEL_ERROR');try{socket?.close()}catch{}}}else if(m?.event==='phx_error'||m?.event==='phx_close'){statusCb?.('CHANNEL_ERROR')}else if(m?.event==='postgres_changes'&&handler?.cb){const p=m.payload?.data||m.payload;handler.cb({eventType:p?.type||'INSERT',new:p?.record||{},old:p?.old_record||{},schema:p?.schema||'public',table:p?.table||'live_drops'})}
         }catch{}
        };
        socket.onerror=()=>{statusCb?.('CHANNEL_ERROR')};
-       socket.onclose=()=>{joined=false;if(heartbeat){clearInterval(heartbeat);heartbeat=0}if(closed){statusCb?.('CLOSED');return}statusCb?.('TIMED_OUT');if(!retryTimer)retryTimer=window.setTimeout(()=>{retryTimer=0;api.subscribe(statusCb)},3000)};
-       joined=true;statusCb?.('SUBSCRIBED');return 'SUBSCRIBED';
+       socket.onclose=()=>{joined=false;if(joinTimer){clearTimeout(joinTimer);joinTimer=0}if(heartbeat){clearInterval(heartbeat);heartbeat=0}if(closed){statusCb?.('CLOSED');return}statusCb?.('TIMED_OUT');if(!retryTimer)retryTimer=window.setTimeout(()=>{retryTimer=0;api.subscribe(statusCb)},3000)};
+       return 'CONNECTING';
       }catch{return 'error'}
     },
     unsubscribe:async()=>{statusCb?.('CLOSED');
-      closed=true;if(heartbeat){clearInterval(heartbeat);heartbeat=0}if(retryTimer){clearTimeout(retryTimer);retryTimer=0}
+      closed=true;if(joinTimer){clearTimeout(joinTimer);joinTimer=0}if(heartbeat){clearInterval(heartbeat);heartbeat=0}if(retryTimer){clearTimeout(retryTimer);retryTimer=0}
       try{if(socket?.readyState===1)socket.send(JSON.stringify({event:'phx_leave',topic,payload:{},ref:String(++ref),join_ref:joinRef}))}catch{}
       try{socket?.close()}catch{}
       socket=null;joined=false;
