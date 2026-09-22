@@ -1,13 +1,14 @@
 'use strict';
 const fs=require('fs');
 const read=p=>fs.readFileSync(p,'utf8');
-const app=read('js/app-v2.js'),auth=read('js/supabase-auth.js'),live=read('js/emoji-drops-live-final.js'),core=read('js/emoji-drops-core.js'),market=read('js/emoji-drops-market-v26.js'),schema=read('supabase/schema.sql'),index=read('index.html');
+const app=read('js/app-v2.js'),auth=read('js/supabase-auth.js'),live=read('js/emoji-drops-live-final.js'),core=read('js/emoji-drops-core.js'),market=read('js/emoji-drops-market-v26.js'),ux4=read('js/emoji-drops-final-ux-v4.js'),schema=read('supabase/schema.sql'),index=read('index.html');
 const fail=[];const exact=read('js/emoji-drops-case-showcase-exact.js');
 const need=(ok,msg)=>{if(!ok)fail.push(msg)};
 need(/const version=323;/.test(app),'runtime version must be 323');
 need(app.includes('supabase-auth-7')&&app.includes('core-21'),'runtime cache contract missing');
 need(app.includes('live-final-18'),'Live Drops cache contract missing');
 need(app.includes('final-ux-14'),'Profile UX cache contract missing');
+need(app.includes('final-ux-v15')&&ux4.includes('version:8')&&!ux4.includes('sortFavorites'),'Duplicate Favorites owner remains loaded');
 need(app.includes('market-v26-18')&&market.includes('version:31')&&market.includes('destroy'),'Market lifecycle owner/cache contract missing');
 need(!app.includes('case-button-bridge'),'dead case compatibility bridge still loaded');
 need(!fs.existsSync('js/emoji-drops-case-button-bridge.js'),'dead case compatibility bridge file still exists');
