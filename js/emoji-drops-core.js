@@ -1,7 +1,7 @@
 (()=>{'use strict';
 /* Emoji Drops — core v2. Economy, state, inventory, upgrade and market runtime. */
 const APP='emoji-drops-core-v2',KEY='emojiDropsStateV3',VERSION=3;
-const R={common:{label:'COMMON',color:'#fff',w:55},rare:{label:'RARE',color:'#3b82f6',w:27},epic:{label:'EPIC',color:'#a855f7',w:12},mythical:{label:'MYTHICAL',color:'#ef4444',w:5},legendary:{label:'LEGENDARY',color:'#ff8a00',w:1}};
+const R={common:{label:'COMMON',color:'#9ca3af',w:55},rare:{label:'RARE',color:'#60a5fa',w:27},epic:{label:'EPIC',color:'#a78bfa',w:12},mythical:{label:'MYTHICAL',color:'#e879f9',w:5},legendary:{label:'LEGENDARY',color:'#ff8a18',w:1}};
 const PRICES=window.casePrices||{smile:100,moves:80,nature:60,food:40,animals:20,transport:10,sport:250,games:500};
 const CASES=window.cases||{},N={smile:'Smile',moves:'Moves',nature:'Nature',food:'Food',animals:'Animals',transport:'Transport',sport:'Sport',games:'Games'},I={smile:'😀',moves:'🕺',nature:'🌿',food:'🍔',animals:'🐶',transport:'🚗',sport:'⚽',games:'🎮'};
 const safe=(fn,f)=>{try{return fn()}catch{return f}}, num=(v,d=0)=>Number.isFinite(Number(v))?Number(v):d, money=n=>`${Math.max(0,Math.round(num(n))).toLocaleString('ru-RU')} ₽`, esc=x=>String(x??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
