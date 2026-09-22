@@ -20,7 +20,7 @@ const ref=read('js/emoji-drops-reference-v23-studio.js');for(const marker of ['v
 const marketSource=read('js/emoji-drops-market-v26.js');
 if(!marketSource.includes('x.is_owner'))throw Error('Market snapshot privacy owner flag contract missing');
 const canonicalSchema=read('supabase/schema.sql');
-if(!/market_snapshot\(\).*?is_owner boolean/s.test(canonicalSchema))throw Error('Canonical market snapshot must expose is_owner instead of seller UUID');
-if(/returns table\([\s\S]*seller_id uuid[\s\S]*\)/.test(canonicalSchema))throw Error('Canonical market snapshot still exposes seller_id');
+if(!/market_snapshot\(\)[\s\S]*?is_owner boolean/s.test(canonicalSchema))throw Error('Canonical market snapshot must expose is_owner instead of seller UUID');
+const marketSig=canonicalSchema.match(/market_snapshot\(\)\s*returns table\(([\s\S]*?)\)\s+language/i)?.[1]||'';if(/\bseller_id\s+uuid\b/i.test(marketSig))throw Error('Canonical market snapshot still exposes seller_id');
 if(!fs.existsSync('supabase/migrations/20260922150000_market_snapshot_privacy.sql'))throw Error('Market privacy migration missing');
 console.log('Market snapshot privacy contract OK');
