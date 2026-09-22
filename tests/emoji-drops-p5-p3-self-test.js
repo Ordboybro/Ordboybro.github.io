@@ -1,3 +1,4 @@
+/* Final QA probe branch: production code is identical to main; this comment only forces a pull-request Actions run. */
 const fs=require('fs');
 const app=fs.readFileSync('js/app-v2.js','utf8');
 const p5=fs.readFileSync('js/emoji-drops-p5-final-audit.js','utf8');
