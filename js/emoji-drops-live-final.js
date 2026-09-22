@@ -3,7 +3,7 @@
 const ROOT='#view-cases',ID='edRealLiveDrops';
 const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const rub=v=>Math.round(Number(v)||0).toLocaleString('ru-RU')+' ₽';
-let timer=0,interval=0,rotateTimer=0,observer=0,channel=0,lastKey='',inFlight=false,booted=false,authReady=0,authChange=0,visibilityHandler=0,pagehideHandler=0,pageshowHandler=0,lastRows=[],rotationPaused=false;
+let timer=0,interval=0,rotateTimer=0,observer=0,channel=0,realtimeReady=false,lastKey='',inFlight=false,booted=false,authReady=0,authChange=0,visibilityHandler=0,pagehideHandler=0,pageshowHandler=0,lastRows=[],rotationPaused=false;
 function cfg(){return window.EMOJI_DROPS_SUPABASE||{}}
 function client(){return window.EmojiDropsAuth?.client||null}
 function css(){
@@ -40,13 +40,13 @@ async function refresh(){
  finally{inFlight=false}
 }
 function schedule(){clearTimeout(timer);timer=setTimeout(refresh,60)}
-function subscribe(){const c=client();if(!c?.channel||channel)return;try{channel=c.channel('emoji-drops-live-final').on('postgres_changes',{event:'INSERT',schema:'public',table:'live_drops'},()=>schedule()).subscribe()}catch{channel=0}}
+function subscribe(){const c=client();if(!c?.channel||channel)return;try{realtimeReady=false;channel=c.channel('emoji-drops-live-final').on('postgres_changes',{event:'INSERT',schema:'public',table:'live_drops'},()=>schedule()).subscribe(status=>{if(status==='SUBSCRIBED'){realtimeReady=true;if(interval){clearInterval(interval);interval=0}}else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'||status==='CLOSED'){realtimeReady=false;if(booted&&!document.hidden&&!interval)interval=window.setInterval(refresh,3000)}})}catch{channel=0;realtimeReady=false;if(booted&&!document.hidden&&!interval)interval=window.setInterval(refresh,3000)}}
 function stopLoops(unsubscribe=false){if(interval){clearInterval(interval);interval=0}if(rotateTimer){clearInterval(rotateTimer);rotateTimer=0}if(unsubscribe&&channel){try{channel.unsubscribe?.()}catch{}channel=0}}
-function startLoops(){if(!booted||document.hidden)return;if(!interval)interval=window.setInterval(refresh,3000);if(!rotateTimer&&!rotationPaused&&!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches)rotateTimer=window.setInterval(()=>{const list=document.querySelector('#edRealLiveDrops .ed-live-list');if(list&&lastRows.length>1&&!rotationPaused)list.scrollBy({left:190,behavior:'smooth'});},3000)}
+function startLoops(){if(!booted||document.hidden)return;if(!realtimeReady&&!interval)interval=window.setInterval(refresh,3000);if(!rotateTimer&&!rotationPaused&&!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches)rotateTimer=window.setInterval(()=>{const list=document.querySelector('#edRealLiveDrops .ed-live-list');if(list&&lastRows.length>1&&!rotationPaused)list.scrollBy({left:190,behavior:'smooth'});},3000)}
 function bindInteractionPause(){const root=document.getElementById(ID);const list=root?.querySelector('.ed-live-list');if(!list||list.dataset.pauseBound)return;list.dataset.pauseBound='1';const pause=()=>{rotationPaused=true;if(rotateTimer){clearInterval(rotateTimer);rotateTimer=0}};const resume=()=>{rotationPaused=false;startLoops()};list.addEventListener('pointerenter',pause,{passive:true});list.addEventListener('pointerleave',resume,{passive:true});list.addEventListener('touchstart',pause,{passive:true});list.addEventListener('touchend',resume,{passive:true});list.addEventListener('touchcancel',resume,{passive:true})}
 function boot(){
  if(booted)return;booted=true;css();schedule();subscribe();startLoops();bindInteractionPause();
- authReady=()=>{schedule();subscribe()};authChange=()=>{try{channel?.unsubscribe?.()}catch{}channel=0;schedule();subscribe()};window.addEventListener('emoji-drops-auth-ready',authReady,{passive:true});
+ authReady=()=>{schedule();subscribe()};authChange=()=>{try{channel?.unsubscribe?.()}catch{}channel=0;realtimeReady=false;if(interval){clearInterval(interval);interval=0}schedule();subscribe();startLoops()};window.addEventListener('emoji-drops-auth-ready',authReady,{passive:true});
  window.addEventListener('emoji-drops-auth-change',authChange,{passive:true});
  observer=new MutationObserver(function(m){if(!m.some(x=>x.addedNodes?.length))return;if(host()&&!document.getElementById(ID))schedule()});
  observer.observe(document.body,{childList:true,subtree:true});
@@ -58,5 +58,5 @@ function boot(){
  window.addEventListener('pageshow',pageshowHandler,{passive:true});
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
-window.EmojiDropsLiveFinal={refresh:refresh,version:5,destroy:function(){clearTimeout(timer);stopLoops();observer?.disconnect();try{channel?.unsubscribe?.()}catch{}channel=0;if(authReady)window.removeEventListener('emoji-drops-auth-ready',authReady);if(authChange)window.removeEventListener('emoji-drops-auth-change',authChange);if(visibilityHandler)document.removeEventListener('visibilitychange',visibilityHandler);if(pagehideHandler)window.removeEventListener('pagehide',pagehideHandler);if(pageshowHandler)window.removeEventListener('pageshow',pageshowHandler);authReady=0;authChange=0;visibilityHandler=0;pagehideHandler=0;pageshowHandler=0;booted=false}};
+window.EmojiDropsLiveFinal={refresh:refresh,version:6,destroy:function(){clearTimeout(timer);stopLoops();observer?.disconnect();try{channel?.unsubscribe?.()}catch{}channel=0;realtimeReady=false;if(authReady)window.removeEventListener('emoji-drops-auth-ready',authReady);if(authChange)window.removeEventListener('emoji-drops-auth-change',authChange);if(visibilityHandler)document.removeEventListener('visibilitychange',visibilityHandler);if(pagehideHandler)window.removeEventListener('pagehide',pagehideHandler);if(pageshowHandler)window.removeEventListener('pageshow',pageshowHandler);authReady=0;authChange=0;visibilityHandler=0;pagehideHandler=0;pageshowHandler=0;booted=false}};
 })();
