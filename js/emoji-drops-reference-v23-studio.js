@@ -1,5 +1,5 @@
 (()=>{'use strict';
-/* Emoji Drops — v24 visual authority. Screenshot-led premium shell; explicit case CTA only. */
+/* Emoji Drops — v24 visual authority. Screenshot-led premium shell; explicit case CTA only. Live Drops visual contract. */
 const ID='emoji-drops-reference-v24',ICON={smile:'😀',moves:'🕺',nature:'🌿',food:'🍔',animals:'🐶',transport:'🚗',sport:'⚽',games:'🎮'},LABEL={cases:'🎁 Кейсы',upgrade:'⚡ Upgrade',market:'🛒 Market'};
 const $=(s,r=document)=>r.querySelector(s),qsa=(s,r=document)=>[...r.querySelectorAll(s)];const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));const rub=v=>`${Math.max(0,Math.round(Number(v)||0)).toLocaleString('ru-RU')} ₽`;let q=0;
 function css(){if($('#'+ID+'-style'))return;const s=document.createElement('style');s.id=ID+'-style';s.textContent=`
