@@ -5,7 +5,7 @@ const app=read('js/app-v2.js'),auth=read('js/supabase-auth.js'),live=read('js/em
 const fail=[];const exact=read('js/emoji-drops-case-showcase-exact.js');
 const need=(ok,msg)=>{if(!ok)fail.push(msg)};
 need(/const version=323;/.test(app),'runtime version must be 323');
-need(app.includes('supabase-auth-7')&&app.includes('core-22'),'runtime cache contract missing');
+need(app.includes('supabase-auth-7')&&app.includes('core-23'),'runtime cache contract missing');
 need(app.includes('live-final-18'),'Live Drops cache contract missing');
 need(app.includes('final-ux-14'),'Profile UX cache contract missing');
 need(app.includes('final-ux-v15')&&ux4.includes('version:8')&&!ux4.includes('sortFavorites'),'Duplicate Favorites owner remains loaded');
@@ -19,7 +19,7 @@ need(core.includes("rpc('profile_snapshot',{})")&&core.includes('syncRemoteProfi
 need(!/Level \$\{S\.level\}|\$\{Math\.round\(S\.xp\)/.test(core),'profile still exposes local-only progression values');need(exact.includes('resultTimer')&&exact.includes('caseRun')&&exact.includes('data-result-locked'),'case result lifecycle lock missing');
 need(schema.includes('create or replace function public.profile_snapshot()'),'profile_snapshot RPC missing');
 need(schema.includes('create or replace function public.claim_daily_server()'),'server Daily RPC missing');
-need(core.includes("claim_daily_server")&&core.includes("tx.run('daily_claim'")&&core.includes("%7)+1"),'authenticated Daily must use the server transaction and weekly cycle');
+need(core.includes("claim_daily_server")&&core.includes("tx.run('daily_claim'")&&core.includes("?((streak-1)%7)+1:0"),'authenticated Daily must use the server transaction and weekly cycle');
 need(schema.includes('((streak-1)%7)+1'),'server Daily reward cycle must repeat every seven days');
 need(/profile_snapshot\(\).*?security definer set search_path=''/s.test(schema),'profile_snapshot is not locked to empty search_path');
 need(/stats=jsonb_set\(coalesce\(stats,'\{\}'::jsonb\),'{earned}'/.test(schema),'sell-all server stats are not updated atomically');
