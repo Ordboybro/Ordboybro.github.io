@@ -13,6 +13,7 @@ function css(){
  document.head.appendChild(s)
 }
 function host(){return document.querySelector(ROOT)}
+const RC={common:'#9ca3af',rare:'#60a5fa',epic:'#a78bfa',mythical:'#e879f9',legendary:'#ff8a18'};
 function paint(rows,configured,error){
  const root=host();if(!root)return;
  let section=document.getElementById(ID);
@@ -58,5 +59,5 @@ function boot(){
  window.addEventListener('pageshow',pageshowHandler,{passive:true});
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
-window.EmojiDropsLiveFinal={refresh:refresh,version:8,destroy:function(){clearTimeout(timer);stopLoops();observer?.disconnect();try{channel?.unsubscribe?.()}catch{}channel=0;realtimeReady=false;if(authReady)window.removeEventListener('emoji-drops-auth-ready',authReady);if(authChange)window.removeEventListener('emoji-drops-auth-change',authChange);if(visibilityHandler)document.removeEventListener('visibilitychange',visibilityHandler);if(pagehideHandler)window.removeEventListener('pagehide',pagehideHandler);if(pageshowHandler)window.removeEventListener('pageshow',pageshowHandler);authReady=0;authChange=0;visibilityHandler=0;pagehideHandler=0;pageshowHandler=0;booted=false}};
+window.EmojiDropsLiveFinal={refresh:refresh,version:9,destroy:function(){clearTimeout(timer);stopLoops();observer?.disconnect();try{channel?.unsubscribe?.()}catch{}channel=0;realtimeReady=false;if(authReady)window.removeEventListener('emoji-drops-auth-ready',authReady);if(authChange)window.removeEventListener('emoji-drops-auth-change',authChange);if(visibilityHandler)document.removeEventListener('visibilitychange',visibilityHandler);if(pagehideHandler)window.removeEventListener('pagehide',pagehideHandler);if(pageshowHandler)window.removeEventListener('pageshow',pageshowHandler);authReady=0;authChange=0;visibilityHandler=0;pagehideHandler=0;pageshowHandler=0;booted=false}};
 })();
