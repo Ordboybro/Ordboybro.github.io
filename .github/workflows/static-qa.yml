@@ -32,12 +32,12 @@ jobs:
           h=Path('index.html').read_text(); refs=re.findall(r"<script[^>]+src=['\"]([^'\"]+)",h,re.I)
           missing=[x for x in refs if not x.split('?',1)[0].startswith(('http://','https://','//','data:')) and not Path(x.split('?',1)[0].lstrip('/')).exists()]
           if missing: raise SystemExit('Missing assets: '+str(missing))
-          runtime_files=[x.split('?',1)[0].lstrip('/') for x in re.findall(r"['\"]([^'\"]+\.js)(?:\?[^'\"]*)?['\"]",m.group(1))] if m else []
-          missing_runtime=[x for x in runtime_files if not Path(x).exists()]
-          if missing_runtime: raise SystemExit('Missing runtime modules: '+str(missing_runtime))
           a=Path('js/app-v2.js').read_text(); order=['emoji-drops-schema-migration.js','emoji-drops-data-bridge.js','emoji-drops-hardening.js','emoji-drops-core.js','emoji-drops-transaction-layer.js','emoji-drops-runtime-guards.js','emoji-drops-final-hardening.js','emoji-drops-release-polish.js','emoji-drops-product-layer.js','emoji-drops-product-plus.js','emoji-drops-action-resilience.js','emoji-drops-quality-final.js','emoji-drops-p3-polish.js','emoji-drops-p4-final.js','emoji-drops-case-showcase-exact.js','emoji-drops-exact-landscape-polish.js','emoji-drops-case-authority-v2.js','emoji-drops-case-open-bridge.js','emoji-drops-reference-v23-studio.js']
           m=re.search(r"const files=\[(.*?)\];",a,re.S)
           if not m: raise SystemExit('Runtime files manifest missing')
+          runtime_files=[x.split('?',1)[0].lstrip('/') for x in re.findall(r"['\"]([^'\"]+\\.js)(?:\\?[^'\"]*)?['\"]",m.group(1))]
+          missing_runtime=[x for x in runtime_files if not Path(x).exists()]
+          if missing_runtime: raise SystemExit('Missing runtime modules: '+str(missing_runtime))
           runtime=[Path(x).name for x in re.findall(r"['\"]([^'\"]+\.js)(?:\?[^'\"]*)?['\"]",m.group(1))]
           positions=[runtime.index(x) if x in runtime else -1 for x in order]
           if any(x<0 for x in positions) or positions!=sorted(positions): raise SystemExit('Runtime order failed: '+str(list(zip(order,positions))))
