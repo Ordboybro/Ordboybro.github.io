@@ -47,7 +47,7 @@ jobs:
           txlayer=Path('js/emoji-drops-transaction-layer.js').read_text()
           for dead_marker in ['emojiDropsLocalMarketV1','function install(){return;','data-cancel-market','market-cancel']:
               if dead_marker in market or dead_marker in txlayer: raise SystemExit('Obsolete transaction/market compatibility marker still loaded: '+dead_marker)
-          for marker in ['version:11','PHASE','run(label,executor,apply)','leaseOwnershipVerified:true','faultAware:true']:
+          for marker in ['version:11','PHASE','run(label,executor,apply)','remoteOperation=options?.remote!==false','leaseOwnershipVerified:true','faultAware:true']:
               if marker not in txlayer: raise SystemExit('Transaction lifecycle contract missing: '+marker)
           for dead in ['js/emoji-drops-case-showcase.js','js/emoji-drops-case-showcase-final.js','js/emoji-drops-case-showcase-override.js','js/emoji-drops-case-authority.js']:
               if Path(dead).exists(): raise SystemExit('Legacy case file still present: '+dead)
