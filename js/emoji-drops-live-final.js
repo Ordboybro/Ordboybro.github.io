@@ -48,13 +48,13 @@ function startLoops(){if(!booted||document.hidden)return;if(!realtimeReady&&!int
 function bindInteractionPause(){const root=document.getElementById(ID);const list=root?.querySelector('.ed-live-list');if(!list||list.dataset.pauseBound)return;list.dataset.pauseBound='1';const pause=()=>{rotationPaused=true;if(rotateTimer){clearInterval(rotateTimer);rotateTimer=0}};const resume=()=>{rotationPaused=false;startLoops()};list.addEventListener('pointerenter',pause,{passive:true});list.addEventListener('pointerleave',resume,{passive:true});list.addEventListener('touchstart',pause,{passive:true});list.addEventListener('touchend',resume,{passive:true});list.addEventListener('touchcancel',resume,{passive:true})}
 function boot(){
  if(booted)return;booted=true;css();schedule();subscribe();fallbackTimer=window.setTimeout(()=>{if(booted&&!realtimeReady&&!document.hidden&&!interval)interval=window.setInterval(refresh,3000);if(booted&&!realtimeReady)paint(lastRows,true,false,'FALLBACK')},6500);bindInteractionPause();
- authReady=()=>{schedule();subscribe();startLoops()};authChange=()=>{try{channel?.unsubscribe?.()}catch{}channel=0;realtimeReady=false;if(interval){clearInterval(interval);interval=0}schedule();subscribe();startLoops()};window.addEventListener('emoji-drops-auth-ready',authReady,{passive:true});
+ authReady=()=>{schedule();subscribe()};authChange=()=>{try{channel?.unsubscribe?.()}catch{}channel=0;realtimeReady=false;if(interval){clearInterval(interval);interval=0}if(fallbackTimer){clearTimeout(fallbackTimer);fallbackTimer=0}schedule();subscribe();fallbackTimer=window.setTimeout(()=>{if(booted&&!realtimeReady&&!document.hidden&&!interval)interval=window.setInterval(refresh,3000);if(booted&&!realtimeReady)paint(lastRows,true,false,'FALLBACK')},6500)};window.addEventListener('emoji-drops-auth-ready',authReady,{passive:true});
  window.addEventListener('emoji-drops-auth-change',authChange,{passive:true});
  observer=new MutationObserver(function(m){if(!m.some(x=>x.addedNodes?.length))return;if(host()&&!document.getElementById(ID))schedule()});
  observer.observe(document.body,{childList:true,subtree:true});
  visibilityHandler=()=>{if(document.hidden)stopLoops(true);else{schedule();subscribe();startLoops()}};
  pagehideHandler=()=>stopLoops(true);
- pageshowHandler=startLoops;
+ pageshowHandler=()=>{schedule();subscribe();startLoops()};
  document.addEventListener('visibilitychange',visibilityHandler);
  window.addEventListener('pagehide',pagehideHandler,{passive:true});
  window.addEventListener('pageshow',pageshowHandler,{passive:true});
