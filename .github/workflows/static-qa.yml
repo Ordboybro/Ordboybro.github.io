@@ -63,6 +63,11 @@ jobs:
           for path,marker in [('js/emoji-drops-reference-v23-studio.js','observerDebounceMs:90'),('js/emoji-drops-final-ux-v4.js','observerDebounceMs:70'),('js/emoji-drops-case-authority-v2.js','observerDebounceMs:120'),('js/emoji-drops-market-authority-final.js','observerDebounceMs:100')]:
               if marker not in Path(path).read_text(): raise SystemExit('Observer budget contract missing: '+path)
           if 'const version=289' not in app: raise SystemExit('Runtime version/cache bump missing')
+          upgrade=Path('js/emoji-drops-upgrade-final.js').read_text()
+          rpc_i=upgrade.find("await tx.run('upgrade'")
+          wheel_i=upgrade.find('wheel.style.transform')
+          if rpc_i < 0 or wheel_i < 0 or wheel_i < rpc_i: raise SystemExit('Upgrade animation starts before authoritative RPC result')
+          if 'prefers-reduced-motion:reduce' not in app or '.edfp-wheel' not in app or '.edx-reel' not in app: raise SystemExit('Reduced-motion coverage missing for cinematic surfaces')
           live=Path('js/emoji-drops-live-final.js').read_text()
           if 'version:8' not in live: raise SystemExit('Live Drops owner version mismatch')
           if 'live-final-8' not in app: raise SystemExit('Live Drops cache contract missing')
