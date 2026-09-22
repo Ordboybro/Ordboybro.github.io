@@ -4,7 +4,7 @@ const read=p=>fs.readFileSync(p,'utf8');
 const app=read('js/app-v2.js'),auth=read('js/supabase-auth.js'),live=read('js/emoji-drops-live-final.js'),core=read('js/emoji-drops-core.js'),schema=read('supabase/schema.sql'),index=read('index.html');
 const fail=[];
 const need=(ok,msg)=>{if(!ok)fail.push(msg)};
-need(/const version=320;/.test(app),'runtime version must be 320');
+need(/const version=321;/.test(app),'runtime version must be 320');
 need(app.includes('supabase-auth-7'),'auth cache contract missing');
 need(app.includes('live-final-13'),'Live Drops cache contract missing');
 need(app.includes('final-ux-13'),'Profile UX cache contract missing');
@@ -18,7 +18,7 @@ need(!/Level \$\{S\.level\}|\$\{Math\.round\(S\.xp\)/.test(core),'profile still 
 need(schema.includes('create or replace function public.profile_snapshot()'),'profile_snapshot RPC missing');
 need(/profile_snapshot\(\).*?security definer set search_path=''/s.test(schema),'profile_snapshot is not locked to empty search_path');
 need(/stats=jsonb_set\(coalesce\(stats,'\{\}'::jsonb\),'{earned}'/.test(schema),'sell-all server stats are not updated atomically');
-need(live.includes('version:12'),'Live Drops owner version mismatch');
+need(live.includes('version:14'),'Live Drops owner version mismatch');
 need(!live.includes('}}@media'),'Live Drops CSS parser guard failed');
 need(live.includes('SUBSCRIBED')&&live.includes('CHANNEL_ERROR')&&live.includes('FALLBACK'),'Live Drops fallback lifecycle incomplete');
 need(app.includes('--ed-bg:#070707')&&app.includes('--ed-surface:#101010')&&app.includes('--ed-surface-2:#151515')&&app.includes('--ed-border:#292929'),'shared design tokens missing');
