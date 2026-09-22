@@ -613,6 +613,8 @@ exception when others then null;
 end $;
 
 -- Make the intended public API explicit; new functions are not executable by arbitrary roles.
+alter default privileges in schema public revoke select,insert,update,delete on tables from anon,authenticated;
+alter default privileges in schema public revoke usage,select on sequences from anon,authenticated;
 alter default privileges in schema public revoke execute on functions from public;
 alter default privileges in schema public revoke execute on functions from anon;
 alter default privileges in schema public revoke execute on functions from authenticated;
