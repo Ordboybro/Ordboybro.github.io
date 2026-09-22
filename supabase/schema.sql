@@ -32,7 +32,7 @@ begin
 end; $$;
 
 create or replace function public.profile_snapshot() returns jsonb
-language plpgsql security definer set search_path='' as $
+language plpgsql security definer set search_path='' as $profile$
 declare uid uuid:=auth.uid(); p public.profiles%rowtype;
 begin
   if uid is null then raise exception 'AUTH_REQUIRED'; end if;
@@ -46,9 +46,9 @@ begin
     'stats',coalesce(p.stats,'{}'::jsonb),
     'best_drop',p.best_drop
   );
-end; $;
+end; $profile$;
 
-create or replace function public.case_cost(p_case_id text) returns numeric language sql immutable as $
+create or replace function public.case_cost(p_case_id text) returns numeric language sql immutable as $casecost$
 select case lower(trim(p_case_id)) when 'smile' then 100 when 'moves' then 80 when 'nature' then 60 when 'food' then 40 when 'animals' then 20 when 'transport' then 20 when 'sport' then 250 when 'games' then 500 else null end $;
 
 create or replace function public.sell_all_server() returns jsonb language plpgsql security definer set search_path='' as $$
