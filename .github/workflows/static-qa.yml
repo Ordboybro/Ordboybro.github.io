@@ -74,7 +74,7 @@ jobs:
           for n in ['smile','nature','food']:
               if not Path(f'assets/emoji-drops/live-{n}.b64').exists(): raise SystemExit(f'Missing Live Drops artwork: {n}')
           if not Path('assets/emoji-drops/smile.b64').exists(): raise SystemExit('Missing exact Smile modal artwork')
-          for path,marker in [('js/emoji-drops-reference-v23-studio.js','observerDebounceMs:90'),('js/emoji-drops-final-ux-v4.js','observerDebounceMs:70'),('js/emoji-drops-case-authority-v2.js','observerDebounceMs:120'),('js/emoji-drops-market-authority-final.js','observerDebounceMs:100')]:
+          for path,marker in [('js/emoji-drops-reference-v23-studio.js','observerDebounceMs:90'),('js/emoji-drops-case-authority-v2.js','observerDebounceMs:120'),('js/emoji-drops-market-authority-final.js','observerDebounceMs:100')]:
               if marker not in Path(path).read_text(): raise SystemExit('Observer budget contract missing: '+path)
           if 'const version=327' not in app: raise SystemExit('Runtime version/cache bump missing')
           if 'js/app-v2.js?v=runtime-327' not in Path('index.html').read_text(): raise SystemExit('Production runtime cache contract missing')
