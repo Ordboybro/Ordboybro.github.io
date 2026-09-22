@@ -601,7 +601,7 @@ begin
   update public.profiles set balance=balance-l.listing_price,inventory=coalesce(inventory,'[]'::jsonb)||jsonb_build_array(item),stats=jsonb_set(coalesce(stats,'{}'::jsonb),'{spent}',to_jsonb(coalesce((stats->>'spent')::numeric,0)+l.listing_price),true),updated_at=now() where id=uid;
   update public.profiles set balance=balance+l.listing_price,stats=jsonb_set(coalesce(stats,'{}'::jsonb),'{earned}',to_jsonb(coalesce((stats->>'earned')::numeric,0)+l.listing_price),true),updated_at=now() where id=l.seller_id;
   update public.market_listings set status='sold',buyer_id=uid,sold_at=now() where id=l.id;
-  return jsonb_build_object('item',item,'balance',(select balance from public.profiles where id=uid),'listing_id',l.id);
+  return jsonb_build_object('item',item,'balance',(select balance from public.profiles where id=uid),'listing_id',l.id,'listing_price',l.listing_price);
 end; $$;
 revoke execute on function public.buy_market_listing(uuid) from public,anon;
 grant execute on function public.buy_market_listing(uuid) to authenticated;
