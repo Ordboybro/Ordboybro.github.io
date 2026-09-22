@@ -74,14 +74,14 @@ begin
   else
     streak:=1;
   end if;
-  reward:=case when streak>=7 then 500 else 50+streak*25 end;
+  reward:=case when ((streak-1)%7)+1=7 then 500 else 50+((((streak-1)%7)+1)*25) end;
   next_st:=jsonb_set(st,'{daily_streak}',to_jsonb(streak),true);
   next_st:=jsonb_set(next_st,'{daily_last_date}',to_jsonb(today_date),true);
   next_st:=jsonb_set(next_st,'{earned}',to_jsonb(coalesce((st->>'earned')::numeric,0)+reward),true);
   update public.profiles
     set balance=balance+reward,stats=next_st,updated_at=now()
     where id=uid;
-  return jsonb_build_object('claimed',true,'reward',reward,'streak',streak,'date',today_date,'balance',(select balance from public.profiles where id=uid));
+  return jsonb_build_object('claimed',true,'reward',reward,'streak',streak,'cycle_day',((streak-1)%7)+1,'date',today_date,'balance',(select balance from public.profiles where id=uid));
 end; $daily$;
 
 create or replace function public.case_cost(p_case_id text) returns numeric language sql immutable as $casecost$
