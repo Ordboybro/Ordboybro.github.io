@@ -13,4 +13,5 @@ for(const [caseId,cost] of Object.entries(prices)){
  const ev=Object.entries(weights).reduce((s,[r,w])=>s+w*by[r],0);
  report.push({caseId,cost,items:a.length,ev:Number(ev.toFixed(2)),evRatio:Number((ev/cost).toFixed(4)),rarityAverage:Object.fromEntries(Object.entries(by).map(([r,v])=>[r,Number(v.toFixed(2))]))});
 }
-console.log(JSON.stringify({weights,cases:report},null,2));
+const dailyRewards=[75,100,125,150,175,200,500],dailyWeekTotal=dailyRewards.reduce((a,b)=>a+b,0),dailyAvg=Number((dailyWeekTotal/7).toFixed(2));
+console.log(JSON.stringify({weights,cases:report,dailyRewards,dailyWeekTotal,dailyAvg,notes:['Daily is an authenticated server-side faucet; values are audited separately from case EV.','A new seven-day cycle repeats after day 7.']},null,2));
