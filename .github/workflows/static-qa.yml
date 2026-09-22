@@ -79,6 +79,9 @@ jobs:
           exact=Path('js/emoji-drops-case-showcase-exact.js').read_text()
           for marker in ['version:12','aria-modal="true"','case-open','translateX','role="dialog"','₽','Case items','edx-result-actions','edx-claim','edx-sell','sell_item_server']:
               if marker not in exact: raise SystemExit('Exact showcase contract missing: '+marker)
+          if "onpointerup=closeEvent" in exact or "ontouchend=closeEvent" in exact: raise SystemExit('Duplicate modal close touch handlers remain')
+          if "window.addEventListener('click',e=>{const closeButton" in exact: raise SystemExit('Global case modal click owner still duplicates native button owner')
+          if "remote:false" not in exact: raise SystemExit('Local case transaction must explicitly disable remote recovery')
           landscape=Path('js/emoji-drops-exact-landscape-polish.js').read_text()
           for marker in ['orientation:landscape','max-height:500px','position:sticky','.edx-open button']:
               if marker not in landscape: raise SystemExit('Exact landscape contract missing: '+marker)
