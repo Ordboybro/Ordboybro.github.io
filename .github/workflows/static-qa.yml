@@ -199,3 +199,40 @@ jobs:
         run: node tests/emoji-drops-production-smoke.js
       - name: Final P2/P3 contract smoke
         run: node tests/emoji-drops-p5-p3-self-test.js
+      - name: Release evidence manifest
+        if: always()
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, os
+          from datetime import datetime, timezone
+          payload = {
+              "repository": os.environ.get("GITHUB_REPOSITORY"),
+              "sha": os.environ.get("GITHUB_SHA"),
+              "ref": os.environ.get("GITHUB_REF"),
+              "workflow": os.environ.get("GITHUB_WORKFLOW"),
+              "run_id": os.environ.get("GITHUB_RUN_ID"),
+              "run_attempt": os.environ.get("GITHUB_RUN_ATTEMPT"),
+              "job": os.environ.get("GITHUB_JOB"),
+              "event": os.environ.get("GITHUB_EVENT_NAME"),
+              "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+              "required_gate": "all workflow steps must pass; this manifest is evidence for the exact tested SHA",
+          }
+          with open('/tmp/emoji-drops-release-manifest.json','w',encoding='utf-8') as fh:
+              json.dump(payload, fh, indent=2)
+          PY
+      - name: Upload release evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: emoji-drops-release-evidence-${{ github.run_id }}
+          path: /tmp/emoji-drops-release-manifest.json
+          retention-days: 14
+      - name: Final release gate
+        if: always()
+        run: |
+          if [ "${{ job.status }}" != "success" ]; then
+            echo "Release gate FAILED: one or more required QA steps did not pass."
+            exit 1
+          fi
+          echo "Release gate PASSED for SHA ${GITHUB_SHA}"
