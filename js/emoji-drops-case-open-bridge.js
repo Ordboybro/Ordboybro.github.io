@@ -1,6 +1,6 @@
 (()=>{'use strict';
 /* Emoji Drops — functional case-open bridge v23. Only the explicit Open button opens a case; scrolling or touching the card never opens it. */
-const ID='emoji-drops-case-open-bridge-v24';
+const ID='emoji-drops-case-open-bridge-v25';
 const KEYS=['smile','moves','nature','food','animals','transport','sport','games'];
 const NAMES={smile:'Smile',moves:'Moves',nature:'Nature',food:'Food',animals:'Animals',transport:'Transport',sport:'Sport',games:'Games'};
 const TOUCH_GUARD_MS=700;
@@ -15,7 +15,7 @@ function invoke(key){if(!ready(key))return false;try{window.EmojiDropsCaseShowca
 function delayedRetry(key,node){return retry(key,node)}
 function retry(key,node){let attempts=0;const run=()=>{if(!inActiveCases(node)||visible())return;if(invoke(key)||++attempts>=15)return;setTimeout(run,35)};run()}
 function activate(node,key,event){if(!inActiveCases(node)||visible())return false;if(event?.type==='click'){event.preventDefault();event.stopImmediatePropagation()}const touch=event?.pointerType==='touch'||event?.pointerType==='pen';if(touch){setTimeout(()=>{if(!visible())invoke(key)},60);return true}if(invoke(key))return true;retry(key,node);setTimeout(()=>{if(!visible())invoke(key)},120);return false}
-let suppressSyntheticClickUntil=0,lastTouchOpener=null;
+let suppressSyntheticClickUntil=0,lastTouchOpener=null,normalizeTimer=0;
 function skipSyntheticTouchClick(){return Date.now()<suppressSyntheticClickUntil}
 function bindOpener(opener,key){
  if(!opener||opener.dataset.edBridge===ID)return;
@@ -35,11 +35,12 @@ function bindOpener(opener,key){
  },true);
 }
 function normalize(){document.querySelectorAll('#view-cases.active .ed-case').forEach((card,index)=>{const opener=card.querySelector('[data-open]')||card.querySelector('.ed-btn');const key=keyFor(opener||card,index);if(!key)return;if(card.dataset.caseKey!==key)card.dataset.caseKey=key;bindOpener(opener,key)})}
+function scheduleNormalize(){if(normalizeTimer)return;normalizeTimer=setTimeout(()=>{normalizeTimer=0;normalize()},120)}
 function hook(){
   if(window.__emojiDropsCaseOpenBridge===ID)return;window.__emojiDropsCaseOpenBridge=ID;touchCss();normalize();
   // Card-level touch opening is intentionally disabled: only the explicit Open button is actionable.
   document.addEventListener('keydown',e=>{if((e.key!=='Enter'&&e.key!==' ')||visible())return;const opener=e.target?.closest?.('[data-open]');if(!opener||!inActiveCases(opener))return;const key=keyFor(opener,KEYS.indexOf(opener.closest('.ed-case')?.dataset?.caseKey));if(key){e.preventDefault();e.stopImmediatePropagation();activate(opener,key,null)}},true);
-  new MutationObserver(mutations=>{if(mutations.some(m=>m.addedNodes?.length||m.type==='attributes'))normalize()}).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['data-open']});
+  new MutationObserver(mutations=>{if(mutations.some(m=>m.addedNodes?.length||m.type==='attributes'))scheduleNormalize()}).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['data-open']});
   document.addEventListener('DOMContentLoaded',normalize,{once:true});window.addEventListener('pageshow',normalize);
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',hook,{once:true});else hook();
