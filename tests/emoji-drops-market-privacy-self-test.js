@@ -1,0 +1,12 @@
+'use strict';
+const fs=require('fs');
+const schema=fs.readFileSync('supabase/schema.sql','utf8');
+const market=fs.readFileSync('js/emoji-drops-market-v26.js','utf8');
+const migration=fs.readFileSync('supabase/migrations/20260922150000_market_snapshot_privacy.sql','utf8');
+const sig=schema.match(/market_snapshot\(\)\s*returns table\(([\s\S]*?)\)\s+language/i)?.[1]||'';
+if(!/\bis_owner\s+boolean\b/i.test(sig))throw new Error('Canonical market snapshot must expose is_owner');
+if(/\bseller_id\s+uuid\b/i.test(sig))throw new Error('Canonical market snapshot must not expose seller_id');
+if(!market.includes('own=!!x.is_owner'))throw new Error('Market UI must consume is_owner');
+if(!/is_owner boolean/i.test(migration))throw new Error('Privacy migration contract missing');
+if(!/auth\.uid\(\)\s+is not null\s+and auth\.uid\(\)=ml\.seller_id/i.test(migration))throw new Error('Owner flag must be server-derived');
+console.log('Market privacy self-test OK: public snapshot exposes no seller UUID and owner state is server-derived');
