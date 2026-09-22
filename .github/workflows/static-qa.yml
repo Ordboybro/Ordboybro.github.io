@@ -84,6 +84,8 @@ jobs:
               if marker not in landscape: raise SystemExit('Exact landscape contract missing: '+marker)
           PY
           node tests/emoji-drops-static-audit-v3.js
+      - name: Final release readiness gate
+        run: node tests/emoji-drops-release-readiness.js
       - name: Code quality and engineering audit
         run: node tests/emoji-drops-engineering-audit.js
       - name: Economy
