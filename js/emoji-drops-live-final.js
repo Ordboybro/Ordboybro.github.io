@@ -1,9 +1,9 @@
 (()=>{'use strict';
-/* Emoji Drops — Live Drops final owner. Real Supabase rows only; 3s refresh, realtime when available. */
+/* Emoji Drops — Live Drops final owner. Real Supabase rows only; Realtime with controlled polling fallback. */
 const ROOT='#view-cases',ID='edRealLiveDrops';
 const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const rub=v=>Math.round(Number(v)||0).toLocaleString('ru-RU')+' ₽';
-let timer=0,interval=0,rotateTimer=0,observer=0,channel=0,lastKey='',inFlight=false,booted=false,authReady=0,authChange=0,lastRows=[],rotationPaused=false;
+let timer=0,interval=0,rotateTimer=0,observer=0,channel=0,lastKey='',inFlight=false,booted=false,authReady=0,authChange=0,visibilityHandler=0,pagehideHandler=0,pageshowHandler=0,lastRows=[],rotationPaused=false;
 function cfg(){return window.EMOJI_DROPS_SUPABASE||{}}
 function client(){return window.EmojiDropsAuth?.client||null}
 function css(){
@@ -50,10 +50,13 @@ function boot(){
  window.addEventListener('emoji-drops-auth-change',authChange,{passive:true});
  observer=new MutationObserver(function(m){if(!m.some(x=>x.addedNodes?.length))return;if(host()&&!document.getElementById(ID))schedule()});
  observer.observe(document.body,{childList:true,subtree:true});
- document.addEventListener('visibilitychange',()=>{if(document.hidden)stopLoops(true);else{schedule();subscribe();startLoops()}});
- window.addEventListener('pagehide',()=>stopLoops(true),{passive:true});
- window.addEventListener('pageshow',startLoops,{passive:true});
+ visibilityHandler=()=>{if(document.hidden)stopLoops(true);else{schedule();subscribe();startLoops()}};
+ pagehideHandler=()=>stopLoops(true);
+ pageshowHandler=startLoops;
+ document.addEventListener('visibilitychange',visibilityHandler);
+ window.addEventListener('pagehide',pagehideHandler,{passive:true});
+ window.addEventListener('pageshow',pageshowHandler,{passive:true});
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
-window.EmojiDropsLiveFinal={refresh:refresh,version:4,destroy:function(){clearTimeout(timer);stopLoops();observer?.disconnect();try{channel?.unsubscribe?.()}catch{}channel=0;if(authReady)window.removeEventListener('emoji-drops-auth-ready',authReady);if(authChange)window.removeEventListener('emoji-drops-auth-change',authChange);authReady=0;authChange=0;booted=false}};
+window.EmojiDropsLiveFinal={refresh:refresh,version:5,destroy:function(){clearTimeout(timer);stopLoops();observer?.disconnect();try{channel?.unsubscribe?.()}catch{}channel=0;if(authReady)window.removeEventListener('emoji-drops-auth-ready',authReady);if(authChange)window.removeEventListener('emoji-drops-auth-change',authChange);if(visibilityHandler)document.removeEventListener('visibilitychange',visibilityHandler);if(pagehideHandler)window.removeEventListener('pagehide',pagehideHandler);if(pageshowHandler)window.removeEventListener('pageshow',pageshowHandler);authReady=0;authChange=0;visibilityHandler=0;pagehideHandler=0;pageshowHandler=0;booted=false}};
 })();
