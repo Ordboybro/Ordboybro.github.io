@@ -20,7 +20,8 @@ Emoji Drops is a static-first web application built with vanilla HTML, CSS and J
 - 🚀 Item upgrades with transaction-safe state mutation
 - 🛒 Market flows and balance/inventory consistency
 - 📱 Responsive portrait and landscape layouts
-- 💾 Client-side state persistence
+- 📅 Daily rewards with server-authoritative authenticated claims
+- 💾 Local cache with server synchronization for authenticated economy
 - 🛡️ Runtime hardening, accessibility, recovery and lifecycle QA
 
 ## 🧱 Runtime architecture
