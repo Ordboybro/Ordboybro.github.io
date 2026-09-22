@@ -35,7 +35,7 @@ jobs:
           runtime=[Path(x).name for x in re.findall(r"['\"]([^'\"]+\.js)(?:\?[^'\"]*)?['\"]",m.group(1))]
           positions=[runtime.index(x) if x in runtime else -1 for x in order]
           if any(x<0 for x in positions) or positions!=sorted(positions): raise SystemExit('Runtime order failed: '+str(list(zip(order,positions))))
-          for v in ['schema-1','data-bridge-1','core-16','supabase-auth-6','hardening-9','txn-12','guards-8','final-8','release-1','product-5','product-plus-6','action-21','quality-final-1','p3-polish-v8','p4-3','v23-stability-1','exact-landscape-1','case-showcase-exact-28','authority-8','case-open-bridge-32','studio-34','case-button-bridge-5','authority-finalizer-6','market-v26-8','market-authority-final-2','smooth-ui-3','final-product-polish-8','modal-finalizer-10','upgrade-final-24','upgrade-interaction-guard-5','final-ux-10','final-ux-v8','live-final-11','p5-final-audit-1']:
+          for v in ['schema-1','data-bridge-1','core-16','supabase-auth-6','hardening-9','txn-12','guards-8','final-8','release-1','product-5','product-plus-6','action-21','quality-final-1','p3-polish-v8','p4-3','v23-stability-1','exact-landscape-1','case-showcase-exact-29','authority-8','case-open-bridge-32','studio-34','case-button-bridge-5','authority-finalizer-6','market-v26-8','market-authority-final-2','smooth-ui-3','final-product-polish-8','modal-finalizer-10','upgrade-final-24','upgrade-interaction-guard-5','final-ux-10','final-ux-v8','live-final-11','p5-final-audit-1']:
               if v not in a: raise SystemExit('Cache version missing: '+v)
           product=Path('js/emoji-drops-product-layer.js').read_text()
           app=Path('js/app-v2.js').read_text()
@@ -63,7 +63,7 @@ jobs:
           if not Path('assets/emoji-drops/smile.b64').exists(): raise SystemExit('Missing exact Smile modal artwork')
           for path,marker in [('js/emoji-drops-reference-v23-studio.js','observerDebounceMs:90'),('js/emoji-drops-final-ux-v4.js','observerDebounceMs:70'),('js/emoji-drops-case-authority-v2.js','observerDebounceMs:120'),('js/emoji-drops-market-authority-final.js','observerDebounceMs:100')]:
               if marker not in Path(path).read_text(): raise SystemExit('Observer budget contract missing: '+path)
-          if 'const version=299' not in app: raise SystemExit('Runtime version/cache bump missing')
+          if 'const version=300' not in app: raise SystemExit('Runtime version/cache bump missing')
           upgrade=Path('js/emoji-drops-upgrade-final.js').read_text()
           rpc_i=upgrade.find("await tx.run('upgrade'")
           wheel_i=upgrade.find('wheel.style.transform')
