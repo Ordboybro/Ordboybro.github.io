@@ -8,7 +8,9 @@ if(!/emoji-drops-transaction-layer\.js/.test(app)||!/window\.__emojiDropsTransac
 if(!/open_case_server|upgrade_server|market_snapshot|buy_market_listing|cancel_market_listing/.test(fs.readFileSync('supabase/schema.sql','utf8')))throw Error('Server authority contract incomplete');
 const ownership=app.match(/Ownership contract[\s\S]*?\*\//)?.[0]||'';
 const ux4=fs.readFileSync('js/emoji-drops-final-ux-v4.js','utf8'),market=fs.readFileSync('js/emoji-drops-market-v26.js','utf8'),live=fs.readFileSync('js/emoji-drops-live-final.js','utf8');
+const hard=fs.readFileSync('js/emoji-drops-final-hardening.js','utf8');
 if(ux4.includes('sortFavorites'))throw Error('Favorites has a duplicate sorter outside the canonical owner');
+if(hard.includes('#edExact'))throw Error('Generic hardening still owns the exact case modal');
 if(!/version:31/.test(market)||!market.includes('destroy'))throw Error('Market lifecycle owner contract missing');
 if(!/version:16/.test(live)||!live.includes('destroyed')||!live.includes('generation'))throw Error('Live Drops lifecycle generation contract missing');
 if(!fs.readFileSync('supabase/schema.sql','utf8').includes('create or replace function public.claim_daily_server()'))throw Error('Daily server authority missing');
