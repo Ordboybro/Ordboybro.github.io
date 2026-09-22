@@ -25,7 +25,7 @@ Emoji Drops is a static-first web application built with vanilla HTML, CSS and J
 
 ## 🧱 Runtime architecture
 
-`js/app-v2.js` is the deterministic bootstrap/loader. The latest repair pass keeps the authoritative transaction/case/Upgrade owners intact and adds a final interaction layer for cross-module UX issues: touch feedback, iOS search zoom, modal close handling, favorites, case-result presentation and Profile presentation.
+`js/app-v2.js` is the deterministic bootstrap/loader. The production runtime uses a deterministic bootstrap with server-authoritative Case/Upgrade/Market transactions, a single Live Drops controller with controlled Realtime/polling fallback, explicit case-open interaction, shared visual tokens, reduced-motion handling and lifecycle cleanup. Existing UX surfaces are polished in place; no new user-facing feature set is being added.
 
 ## 🧪 Quality & CI
 
@@ -78,7 +78,7 @@ Open `http://localhost:8000`.
 
 ## 📈 Project status
 
-**QA verification pending for the latest UX repair commit.** The production codebase has received a focused repair pass for the reported Favorites, iOS search zoom, tap flash, modal close, case-result animation, Upgrade interaction conflict and Profile UX issues. Full QA and production smoke verification must pass before this status is changed to production-ready.
+**Active hardening:** the current pass focuses on runtime ownership, lifecycle safety, responsive UX, accessibility, motion discipline and production QA. A fresh full QA run is required before calling the build production-ready. The production codebase has received a focused repair pass for the reported Favorites, iOS search zoom, tap flash, modal close, case-result animation, Upgrade interaction conflict and Profile UX issues. Full QA and production smoke verification must pass before this status is changed to production-ready.
 
 ## 👨‍💻 Author
 
