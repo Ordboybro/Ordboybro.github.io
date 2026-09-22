@@ -71,7 +71,7 @@ jobs:
           if 'prefers-reduced-motion:reduce' not in app or '.edfp-wheel' not in app or '.edx-reel' not in app: raise SystemExit('Reduced-motion coverage missing for cinematic surfaces')
           live=Path('js/emoji-drops-live-final.js').read_text()
           if 'version:11' not in live: raise SystemExit('Live Drops owner version mismatch')
-          if 'live-final-11' not in app: raise SystemExit('Live Drops cache contract missing')
+          if 'live-final-12' not in app: raise SystemExit('Live Drops cache contract missing')
           if 'SUBSCRIBED' not in live or 'FALLBACK' not in live or '● LIVE' not in live: raise SystemExit('Live Drops Realtime status contract missing')
           if '--ed-bg:#070707' not in app or '--ed-surface:#101010' not in app or 'prefers-reduced-motion:reduce' not in app: raise SystemExit('Design-system/reduced-motion contract missing')
           if 'profile_snapshot' not in Path('supabase/schema.sql').read_text() or 'profile_snapshot' not in Path('js/emoji-drops-core.js').read_text(): raise SystemExit('Server profile sync contract missing')
