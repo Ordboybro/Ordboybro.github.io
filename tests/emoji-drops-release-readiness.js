@@ -8,7 +8,7 @@ need(/const version=323;/.test(app),'runtime version must be 323');
 need(app.includes('supabase-auth-7')&&app.includes('core-21'),'runtime cache contract missing');
 need(app.includes('live-final-18'),'Live Drops cache contract missing');
 need(app.includes('final-ux-14'),'Profile UX cache contract missing');
-need(app.includes('market-v26-17')&&market.includes('version:31')&&market.includes('destroy'),'Market lifecycle owner/cache contract missing');
+need(app.includes('market-v26-18')&&market.includes('version:31')&&market.includes('destroy'),'Market lifecycle owner/cache contract missing');
 need(!app.includes('case-button-bridge'),'dead case compatibility bridge still loaded');
 need(!fs.existsSync('js/emoji-drops-case-button-bridge.js'),'dead case compatibility bridge file still exists');
 need(auth.includes('refreshSession')&&auth.includes('scheduleRefresh'),'Supabase session auto-refresh missing');
