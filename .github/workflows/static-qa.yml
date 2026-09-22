@@ -42,6 +42,11 @@ jobs:
           for marker in ['ed-product-empty','setTimeout(run,90)','input.autocomplete=\'off\'']:
             if marker not in product: raise SystemExit('Product search contract missing: '+marker)
           if 'emojiDropsFavoritesV2' not in app: raise SystemExit('Canonical favorites V2 contract missing')
+          studio=Path('js/emoji-drops-reference-v23-studio.js').read_text()
+          if '250' in studio and "raw?raw+' ₽':'—'" not in studio: raise SystemExit('Fake studio balance fallback detected')
+          if "select('id,nickname,item,case_id,item_price,created_at')" in studio: raise SystemExit('Legacy Live Drops client fetch still loaded')
+          mkt=Path('js/emoji-drops-market-v26.js').read_text()
+          if "nickname||'Player'" in mkt: raise SystemExit('Fake seller fallback detected')
           market=Path('js/emoji-drops-market-v26.js').read_text()
           txlayer=Path('js/emoji-drops-transaction-layer.js').read_text()
           for dead_marker in ['emojiDropsLocalMarketV1','function install(){return;','data-cancel-market','market-cancel']:
