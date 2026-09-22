@@ -1,5 +1,5 @@
 (()=>{'use strict';
-/* Emoji Drops transaction layer v10. Web Locks primary, lease fallback with ownership verification, journal-first atomicity, recovery and fault injection. */
+/* Emoji Drops transaction layer v11. Web Locks primary, lease fallback with ownership verification, journal-first atomicity, recovery and fault injection. */
 const KEY='emojiDropsStateV3',JOURNAL='emojiDropsTxnV4',LOCK='emojiDropsLockV4',MAX_HISTORY=200,LOCK_MS=1800,COMMIT_GRACE_MS=1200;const PHASES=Object.freeze({PREPARING:'PREPARING',SUBMITTING:'SUBMITTING',COMMITTED:'COMMITTED',ANIMATING:'ANIMATING',REVEALED:'REVEALED',ROLLED_BACK:'ROLLED_BACK'});
 const core=()=>window.__emojiDropsCore&&typeof window.__emojiDropsCore.state==='function'?window.__emojiDropsCore:null;
 const clone=x=>{try{return JSON.parse(JSON.stringify(x))}catch{return null}};
