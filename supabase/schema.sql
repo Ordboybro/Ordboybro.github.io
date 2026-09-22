@@ -543,6 +543,7 @@ create or replace function public.market_snapshot() returns table(
 $$;
 revoke execute on function public.market_snapshot() from public,anon;
 grant execute on function public.market_snapshot() to authenticated;
+grant execute on function public.market_snapshot() to anon;
 
 create or replace function public.buy_market_listing(p_listing_id uuid) returns jsonb
 language plpgsql security definer set search_path='' as $$
@@ -600,7 +601,9 @@ alter table public.live_drops enable row level security;
 revoke all on table public.live_drops from anon,authenticated;
 drop policy if exists "live_drops_read_authenticated" on public.live_drops;
 create policy "live_drops_read_authenticated" on public.live_drops for select to authenticated using (true);
-grant select on table public.live_drops to authenticated;
+drop policy if exists "live_drops_read_anon" on public.live_drops;
+create policy "live_drops_read_anon" on public.live_drops for select to anon using (true);
+grant select on table public.live_drops to authenticated,anon;
 create index if not exists live_drops_created_idx on public.live_drops(created_at desc);
 create index if not exists live_drops_user_idx on public.live_drops(user_id);
 
