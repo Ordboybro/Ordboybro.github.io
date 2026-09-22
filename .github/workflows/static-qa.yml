@@ -42,6 +42,7 @@ jobs:
           for marker in ['ed-product-empty','setTimeout(run,90)','input.autocomplete=\'off\'']:
             if marker not in product: raise SystemExit('Product search contract missing: '+marker)
           if 'emojiDropsFavoritesV2' not in app: raise SystemExit('Canonical favorites V2 contract missing')
+          if 'function stage2FavoriteSort' in app: raise SystemExit('Obsolete duplicate Favorites owner still loaded')
           market=Path('js/emoji-drops-market-v26.js').read_text()
           txlayer=Path('js/emoji-drops-transaction-layer.js').read_text()
           for dead_marker in ['emojiDropsLocalMarketV1','function install(){return;','data-cancel-market','market-cancel']:
@@ -62,7 +63,7 @@ jobs:
           if not Path('assets/emoji-drops/smile.b64').exists(): raise SystemExit('Missing exact Smile modal artwork')
           for path,marker in [('js/emoji-drops-reference-v23-studio.js','observerDebounceMs:90'),('js/emoji-drops-final-ux-v4.js','observerDebounceMs:70'),('js/emoji-drops-case-authority-v2.js','observerDebounceMs:120'),('js/emoji-drops-market-authority-final.js','observerDebounceMs:100')]:
               if marker not in Path(path).read_text(): raise SystemExit('Observer budget contract missing: '+path)
-          if 'const version=297' not in app: raise SystemExit('Runtime version/cache bump missing')
+          if 'const version=298' not in app: raise SystemExit('Runtime version/cache bump missing')
           upgrade=Path('js/emoji-drops-upgrade-final.js').read_text()
           rpc_i=upgrade.find("await tx.run('upgrade'")
           wheel_i=upgrade.find('wheel.style.transform')
