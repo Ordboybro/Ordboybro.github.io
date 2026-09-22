@@ -22,12 +22,26 @@ function stateFallback(){try{const s=JSON.parse(localStorage.getItem(STATE)||'nu
 function renderBalance(s){document.querySelectorAll('#balance,[data-balance],[data-user-balance]').forEach(el=>{el.textContent=rub(s?.balance||0)})}
 async function transactionOpen(k,cost){
   const auth=window.EmojiDropsAuth;
-  if(!auth?.configured||!auth?.userId||typeof auth.rpc!=='function')throw new Error('AUTH_REQUIRED');
-  const r=await auth.rpc('open_case_server',{p_case_id:k,p_cost:cost});
-  if(r?.error)throw r.error;
-  const data=r?.data;
-  if(!data?.item||typeof data.item!=='object'||!data.item.id||!data.item.emoji||!data.item.rarity)throw new Error('INVALID_CASE_RESULT');
-  return data;
+  if(auth?.configured&&auth?.userId&&typeof auth.rpc==='function'){
+    const r=await auth.rpc('open_case_server',{p_case_id:k,p_cost:cost});
+    if(r?.error)throw r.error;
+    const data=r?.data;
+    if(!data?.item||typeof data.item!=='object'||!data.item.id||!data.item.emoji||!data.item.rarity)throw new Error('INVALID_CASE_RESULT');
+    return data;
+  }
+  const pool=items(k);
+  if(!pool.length)throw new Error('CASE_ITEMS_UNAVAILABLE');
+  const roll=Math.random()*100;
+  let rarityKey='common';
+  if(roll>=99)rarityKey='legendary';
+  else if(roll>=94)rarityKey='mythical';
+  else if(roll>=82)rarityKey='epic';
+  else if(roll>=55)rarityKey='rare';
+  const byRarity=pool.filter(x=>String(x?.rarity||'common')===rarityKey);
+  const source=byRarity.length?byRarity:pool;
+  const picked=source[Math.floor(Math.random()*source.length)];
+  const item={id:'demo-case-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8),emoji:String(picked.emoji||'🎁'),rarity:String(picked.rarity||'common'),price:num(picked.price),case_id:k,caseKey:k,obtainedAt:new Date().toISOString()};
+  return {item,balance:Math.max(0,num((window.__emojiDropsCore?.state?.()||{}).balance)-cost),cost,demo:true};
 }
 function animateWin(box,won,a){
   const reel=box.querySelector('.edx-reel'),track=box.querySelector('.edx-track');if(!reel||!track)return;
