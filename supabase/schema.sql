@@ -31,7 +31,24 @@ begin
  return jsonb_build_object('nickname',clean);
 end; $$;
 
-create or replace function public.case_cost(p_case_id text) returns numeric language sql immutable as $$
+create or replace function public.profile_snapshot() returns jsonb
+language plpgsql security definer set search_path='' as $
+declare uid uuid:=auth.uid(); p public.profiles%rowtype;
+begin
+  if uid is null then raise exception 'AUTH_REQUIRED'; end if;
+  select * into p from public.profiles where id=uid;
+  if p.id is null then raise exception 'PROFILE_NOT_FOUND'; end if;
+  return jsonb_build_object(
+    'id',p.id,
+    'nickname',p.nickname,
+    'balance',p.balance,
+    'inventory',coalesce(p.inventory,'[]'::jsonb),
+    'stats',coalesce(p.stats,'{}'::jsonb),
+    'best_drop',p.best_drop
+  );
+end; $;
+
+create or replace function public.case_cost(p_case_id text) returns numeric language sql immutable as $
 select case lower(trim(p_case_id)) when 'smile' then 100 when 'moves' then 80 when 'nature' then 60 when 'food' then 40 when 'animals' then 20 when 'transport' then 20 when 'sport' then 250 when 'games' then 500 else null end $$;
 
 create or replace function public.sell_all_server() returns jsonb language plpgsql security definer set search_path='' as $$
@@ -39,12 +56,13 @@ declare uid uuid:=auth.uid(); total numeric;
 begin
  if uid is null then raise exception 'AUTH_REQUIRED'; end if;
  with locked as (select inventory from public.profiles where id=uid for update) select coalesce(sum((x->>'price')::numeric),0) into total from locked,jsonb_array_elements(coalesce(locked.inventory,'[]'::jsonb)) x;
- update public.profiles set balance=balance+total,inventory='[]'::jsonb,updated_at=now() where id=uid;
+ update public.profiles set balance=balance+total,inventory='[]'::jsonb,stats=jsonb_set(coalesce(stats,'{}'::jsonb),'{earned}',to_jsonb(coalesce((stats->>'earned')::numeric,0)+total),true),updated_at=now() where id=uid;
  return jsonb_build_object('balance',(select balance from public.profiles where id=uid),'sold',total);
 end; $$;
 
 grant execute on function public.case_cost(text) to authenticated;
 grant execute on function public.set_nickname(text) to authenticated;
+grant execute on function public.profile_snapshot() to authenticated;
 grant execute on function public.sell_all_server() to authenticated;
 
 
@@ -71,6 +89,8 @@ revoke execute on function public.handle_new_user() from public,anon,authenticat
 grant execute on function public.handle_new_user() to service_role;
 revoke execute on function public.set_nickname(text) from public,anon;
 grant execute on function public.set_nickname(text) to authenticated;
+revoke execute on function public.profile_snapshot() from public,anon;
+grant execute on function public.profile_snapshot() to authenticated;
 revoke execute on function public.open_case_server(text,numeric) from public,anon;
 revoke execute on function public.sell_all_server() from public,anon;
 grant execute on function public.sell_all_server() to authenticated;
