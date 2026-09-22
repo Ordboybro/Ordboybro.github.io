@@ -1,6 +1,6 @@
 (()=>{'use strict';
 /* Emoji Drops — functional case-open bridge v23. Only the explicit Open button opens a case; scrolling or touching the card never opens it. */
-const ID='emoji-drops-case-open-bridge-v25';
+const ID='emoji-drops-case-open-bridge-v26';
 const KEYS=['smile','moves','nature','food','animals','transport','sport','games'];
 const NAMES={smile:'Smile',moves:'Moves',nature:'Nature',food:'Food',animals:'Animals',transport:'Transport',sport:'Sport',games:'Games'};
 const TOUCH_GUARD_MS=700;
@@ -29,6 +29,7 @@ function bindOpener(opener,key){
      setTimeout(()=>activate(opener,key,e),0);
    }
  },{capture:true});
+ opener.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&!visible()){e.preventDefault();e.stopImmediatePropagation();activate(opener,key,e)}},{capture:true});
  opener.addEventListener('click',e=>{
    if(skipSyntheticTouchClick()){e.preventDefault();e.stopImmediatePropagation();return}
    if(visible())return;activate(opener,key,e)
