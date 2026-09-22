@@ -62,7 +62,7 @@ jobs:
           if not Path('assets/emoji-drops/smile.b64').exists(): raise SystemExit('Missing exact Smile modal artwork')
           for path,marker in [('js/emoji-drops-reference-v23-studio.js','observerDebounceMs:90'),('js/emoji-drops-final-ux-v4.js','observerDebounceMs:70'),('js/emoji-drops-case-authority-v2.js','observerDebounceMs:120'),('js/emoji-drops-market-authority-final.js','observerDebounceMs:100')]:
               if marker not in Path(path).read_text(): raise SystemExit('Observer budget contract missing: '+path)
-          if 'const version=286' not in app: raise SystemExit('Runtime version/cache bump missing')
+          if 'const version=287' not in app: raise SystemExit('Runtime version/cache bump missing')
           exact=Path('js/emoji-drops-case-showcase-exact.js').read_text()
           for marker in ['version:6','aria-modal="true"','case-open','translateX','role="dialog"','₽','Case items','edx-result-actions','edx-claim','edx-sell','sell_item_server']:
               if marker not in exact: raise SystemExit('Exact showcase contract missing: '+marker)
