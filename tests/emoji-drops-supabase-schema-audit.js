@@ -23,7 +23,18 @@ const required=[
   'case_items_lookup_idx',
   'INVALID_TARGET',
   'SELF_PURCHASE_FORBIDDEN',
-  'for update'
+  'for update',
+  'AUTH_REQUIRED',
+  'INSUFFICIENT_FUNDS',
+  'ITEM_NOT_FOUND',
+  'INVALID_ITEM_PRICE',
+  'TARGET_NOT_IN_CATALOG',
+  'INVALID_UPGRADE',
+  'INVALID_CHANCE',
+  'ITEM_ALREADY_LISTED',
+  'INVALID_LISTING_PRICE',
+  'LISTING_UNAVAILABLE',
+  'NOT_LISTING_OWNER'
 ];
 for(const x of required)if(!schema.toLowerCase().includes(x.toLowerCase()))throw new Error('Supabase schema contract missing: '+x);
 
