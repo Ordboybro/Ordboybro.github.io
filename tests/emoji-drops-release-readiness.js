@@ -7,6 +7,7 @@ const need=(ok,msg)=>{if(!ok)fail.push(msg)};
 need(/const version=308;/.test(app),'runtime version must be 308');
 need(app.includes('supabase-auth-7'),'auth cache contract missing');
 need(app.includes('live-final-12'),'Live Drops cache contract missing');
+need(app.includes('final-ux-11'),'Favorites UX cache contract missing');
 need(!app.includes('case-button-bridge'),'dead case compatibility bridge still loaded');
 need(!fs.existsSync('js/emoji-drops-case-button-bridge.js'),'dead case compatibility bridge file still exists');
 need(auth.includes('refreshSession')&&auth.includes('scheduleRefresh'),'Supabase session auto-refresh missing');
