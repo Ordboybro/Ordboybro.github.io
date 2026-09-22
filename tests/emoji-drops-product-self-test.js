@@ -3,7 +3,7 @@ const loader=fs.readFileSync('js/app-v2.js','utf8');
 const product=fs.readFileSync('js/emoji-drops-product-layer.js','utf8');
 const core=fs.readFileSync('js/emoji-drops-core.js','utf8');
 const tx=fs.readFileSync('js/emoji-drops-transaction-layer.js','utf8');
-if(!/emoji-drops-product-layer\.js\?v=product-5/.test(loader))throw Error('Product loader marker missing: product-5');
+if(!/emoji-drops-product-layer\.js\?v=product-6/.test(loader))throw Error('Product loader marker missing: product-5');
 if(!/emoji-drops-transaction-layer\.js\?v=txn-12/.test(loader))throw Error('Product loader transaction marker missing: txn-8/txn-9');
 for(const marker of ['product-layer','Emoji Coin','emoji-coin','ed-product-tools','Поиск кейсов','Поиск предметов','Все редкости','По умолчанию','ed-product-achievements','First Drop','Collector','Veteran','Upgrader','High Roller','storage','PerformanceObserver'])if(!product.includes(marker))throw Error(`Product contract missing: ${marker}`);
 if(!/KEY='emojiDropsStateV3'/.test(product)||!/KEY='emojiDropsStateV3'/.test(core)||!/KEY='emojiDropsStateV3'/.test(tx))throw Error('Shared state key contract missing');
@@ -11,4 +11,4 @@ if(!/version[:=]11/.test(tx)||!/beforeHash/.test(tx)||!/afterHash/.test(tx)||!/C
 if(/setInterval\s*\(/.test(product))throw Error('Product layer must not use polling intervals');
 if(!/classList\.contains\('ed-coin'\)/.test(product))throw Error('Semantic currency transform must be idempotent');
 if(!/__emojiDropsMutationHub/.test(product))throw Error('Product layer shared mutation contract missing');
-console.log('Product self-test OK: semantic Emoji Coin, idempotent currency transform, shared mutation hub, catalog/inventory tools, progression, achievements, persistence/performance contracts, transaction v10/11 compatibility');
+console.log('Product self-test OK: semantic Emoji Coin, idempotent currency transform, shared mutation hub, catalog/inventory tools, progression, achievements, persistence/performance contracts, transaction v11 compatibility');
