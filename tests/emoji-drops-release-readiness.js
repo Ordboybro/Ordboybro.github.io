@@ -4,7 +4,7 @@ const read=p=>fs.readFileSync(p,'utf8');
 const app=read('js/app-v2.js'),auth=read('js/supabase-auth.js'),live=read('js/emoji-drops-live-final.js'),core=read('js/emoji-drops-core.js'),schema=read('supabase/schema.sql'),index=read('index.html');
 const fail=[];
 const need=(ok,msg)=>{if(!ok)fail.push(msg)};
-need(/const version=319;/.test(app),'runtime version must be 319');
+need(/const version=320;/.test(app),'runtime version must be 320');
 need(app.includes('supabase-auth-7'),'auth cache contract missing');
 need(app.includes('live-final-13'),'Live Drops cache contract missing');
 need(app.includes('final-ux-13'),'Profile UX cache contract missing');
