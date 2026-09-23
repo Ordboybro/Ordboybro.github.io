@@ -165,6 +165,8 @@ jobs:
         run: node tests/emoji-drops-market-race-contract.js
       - name: Live Drops realtime lifecycle contract
         run: node tests/emoji-drops-live-realtime-contract.js
+      - name: Market production migration audit
+        run: node tests/emoji-drops-market-migration-audit.js
       - name: Final hardening contract
         run: node -e "const fs=require('fs');const s=fs.readFileSync('js/emoji-drops-final-hardening.js','utf8');for(const x of ['aria-live','aria-modal','Escape','focus-trap','PerformanceObserver','storageHealth','stateHealth'])if(!s.includes(x))throw Error(x);console.log('Final hardening contract OK')"
       - name: Browser dependencies
