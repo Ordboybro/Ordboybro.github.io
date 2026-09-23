@@ -14,7 +14,7 @@ const frontend={};
 for(const c of cases){
   const start=front.search(new RegExp('(?:^|\\n)\\s*(?:"?'+c+'"?)\\s*:\\s*\\[','m'));
   if(start<0)throw Error('Frontend case missing: '+c);
-  const tail=front.slice(start); const nextCase=tail.search(/\\n\\s*,?\\s*(?:[\"']?[a-z]+[\"']?)\\s*:\\s*\\[/i); const end=nextCase>0?nextCase:tail.search(/\\n};/); const block=end>0?tail.slice(0,end):tail;
+  const tail=front.slice(start); const following=cases.filter(x=>x!==c).map(x=>{const i=tail.search(new RegExp('\\\\n\\\\s*(?:[\\"\\\\\']?'+x+'[\\"\\\\\']?)\\\\s*:\\\\s*\\\\[','i'));return i>0?i:Infinity}).filter(Number.isFinite); const end=following.length?Math.min(...following):tail.indexOf('\\n};'); const block=end>0?tail.slice(0,end):tail;
   const arr=[];const fr=/\{emoji:"([^"]*)",rarity:"(common|rare|epic|mythical|legendary)",price:"([0-9.]+)₽"\}/g;
   let x;while((x=fr.exec(block)))arr.push([x[1],x[2],Number(x[3])]);
   frontend[c]=arr;
