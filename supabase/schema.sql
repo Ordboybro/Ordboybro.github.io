@@ -647,6 +647,16 @@ grant select (id,nickname,item,case_id,item_price,created_at) on public.live_dro
 create index if not exists live_drops_created_idx on public.live_drops(created_at desc);
 create index if not exists live_drops_user_idx on public.live_drops(user_id);
 
+-- Realtime publication hardening: private economy tables are never published; Live Drops is the sole public stream.
+do $
+begin
+  if exists (select 1 from pg_publication where pubname='supabase_realtime') then
+    if exists (select 1 from pg_publication_tables where pubname='supabase_realtime' and schemaname='public' and tablename='profiles') then execute 'alter publication supabase_realtime drop table public.profiles'; end if;
+    if exists (select 1 from pg_publication_tables where pubname='supabase_realtime' and schemaname='public' and tablename='case_items') then execute 'alter publication supabase_realtime drop table public.case_items'; end if;
+    if exists (select 1 from pg_publication_tables where pubname='supabase_realtime' and schemaname='public' and tablename='market_listings') then execute 'alter publication supabase_realtime drop table public.market_listings'; end if;
+  end if;
+end $;
+
 -- Realtime is optional in local Supabase projects; add the table only when the publication exists.
 do $ begin
   if exists (select 1 from pg_publication where pubname='supabase_realtime')
