@@ -121,6 +121,44 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
 @media(prefers-reduced-motion:reduce){
   .case-card,.case-art,.live-drop,.primary,.secondary,.profile-btn,.upgrade-target{transition:none!important;animation:none!important}
 }
+</style><style id="emoji-drops-phase2-polish">
+/* Phase 2: premium surface polish + mobile stability. Existing UI only; no new controls. */
+:root{--ed-ease-premium:cubic-bezier(.22,1,.36,1)}
+header{isolation:isolate}
+header .logo{transition:transform .22s var(--ed-ease-premium),text-shadow .22s var(--ed-ease-premium)}
+header .logo:hover{transform:translateY(-1px);text-shadow:0 0 30px #ff8a1830}
+.top-pill,.profile-top{min-height:48px}
+.top-pill{display:flex;align-items:center;justify-content:center}
+.primary,.secondary,.profile-btn,.profile-top,.close,.amount,.upgrade-mult,.reel-fast{min-height:48px;-webkit-tap-highlight-color:transparent}
+.case-card,.inventory-item,.upgrade-target,.preview-item,.stat,.best,.setting,.panel{backface-visibility:hidden}
+.case-card{content-visibility:auto;contain-intrinsic-size:245px}
+.live-drop{will-change:transform}
+.panel{overscroll-behavior:contain}
+.modal{overscroll-behavior:contain}
+.case-reel-track{transform:translateZ(0)}
+@media(max-width:700px){
+  .cases{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .case-card{min-width:0!important}
+  .case-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+  .live-container{touch-action:pan-x;overscroll-behavior-x:contain}
+  .panel{border-radius:20px!important}
+  .panel-head{padding-top:max(16px,env(safe-area-inset-top));}
+}
+@media(max-width:340px){
+  .cases{grid-template-columns:1fr!important;max-width:300px;margin-inline:auto}
+  .case-card{min-height:205px!important;height:205px!important}
+  .case-art{height:72px!important;font-size:52px!important}
+  .case-name{font-size:17px!important}
+}
+@media(orientation:landscape) and (max-height:520px){
+  .case-card{min-height:190px!important;height:190px!important}
+  .case-art{height:70px!important;font-size:48px!important}
+  .panel{max-height:96dvh!important}
+}
+@media(prefers-reduced-motion:reduce){
+  header .logo,.case-card,.case-art,.live-drop,.primary,.secondary,.profile-btn,.profile-top,.close,.amount,.upgrade-mult,.reel-fast{transition:none!important}
+  .live-drop,.reel-marker,.win-card .emoji,.win-card::before,.profile-center::after{animation:none!important}
+}
 </style></head><body>
 <header><div class="logo">Emoji <span>Drops</span></div><div class="top-right"><div class="balance-menu"><div class="top-pill">💰 <span id="balance">1000</span>₽</div><div class="reward-pop"><button id="rewardHeader" class="reward-btn">Получить 100₽</button></div></div><button id="profileBtn" class="profile-top">👤 <span id="nickname">Гость</span></button></div></header>
 <main><section id="cases" class="cases"></section><section class="live-section"><div class="live-title"><span>●</span> LIVE DROPS</div><div id="liveContainer" class="live-container"></div></section></main>
