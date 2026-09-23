@@ -15,7 +15,7 @@ if(!/version:31/.test(market)||!market.includes('destroy'))throw Error('Market l
 if(!/version:20/.test(live)||!live.includes('destroyed')||!live.includes('generation'))throw Error('Live Drops lifecycle generation contract missing');
 if(!fs.readFileSync('supabase/schema.sql','utf8').includes('create or replace function public.claim_daily_server()'))throw Error('Daily server authority missing');
 for(const marker of ['navigation-final','case-showcase-exact','transaction-layer','upgrade-final','market-v26','live-final'])if(!ownership.includes(marker))throw Error('Ownership matrix missing: '+marker);
-if((app.match(/emoji-drops-live-final\.js/g)||[]).length!==1)throw Error('Live Drops owner loaded more than once');
+if((app.match(/['\"]js\\/emoji-drops-live-final\.js(?:\?[^'\"]*)?['\"]/g)||[]).length!==1)throw Error('Live Drops owner loaded more than once');
 if(!app.includes('installPointerLighting();'))throw Error('Premium pointer lighting is defined but not installed');
 if(!app.includes('--ed-surface-raised:')||!app.includes('--ed-radius-sm:')||!app.includes('--ed-radius-lg:')||!app.includes('--ed-shadow-lg:')||!app.includes('--ed-motion-fast:')||!app.includes('--ed-motion-slow:'))throw Error('Unified design tokens missing');
 const core=fs.readFileSync('js/emoji-drops-core.js','utf8'),exact=fs.readFileSync('js/emoji-drops-case-showcase-exact.js','utf8'),fav=fs.readFileSync('js/emoji-drops-final-ux.js','utf8'),nav=fs.readFileSync('js/emoji-drops-navigation-final.js','utf8'),smooth=fs.readFileSync('js/emoji-drops-smooth-ui.js','utf8');
