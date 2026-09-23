@@ -4,12 +4,9 @@
 -- but a production database can contain an older/custom overload not covered by
 -- a fixed DROP FUNCTION list. Remove every non-canonical overload by identity.
 --
--- Canonical contracts:
---   buy_market_listing(uuid)
---   cancel_market_listing(uuid)
---
--- The canonical functions themselves are preserved and remain granted only to
--- authenticated clients. This migration is intentionally idempotent.
+-- Important: pg_get_function_identity_arguments() returns the identity argument
+-- TYPES (for example "uuid"), not parameter names. Never compare it to
+-- "p_listing_id uuid".
 
 do $$
 declare
@@ -23,7 +20,7 @@ begin
       join pg_namespace n on n.oid=p.pronamespace
      where n.nspname='public'
        and p.proname in ('buy_market_listing','cancel_market_listing')
-       and pg_get_function_identity_arguments(p.oid) <> 'p_listing_id uuid'
+       and pg_get_function_identity_arguments(p.oid) <> 'uuid'
   loop
     execute format(
       'drop function if exists %I.%I(%s)',
