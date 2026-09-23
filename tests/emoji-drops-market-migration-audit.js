@@ -23,7 +23,8 @@ if(/create or replace function public\.create_market_listing\(p_item_id text, p_
 if(/market_snapshot\(\).*?seller_id uuid/is.test(migration))
   throw Error('Production migration must not expose seller_id in market_snapshot');
 if(!/security definer set search_path=''/i.test(migration))
-  throw Error('Production market RPCs must use SECURITY DEFINER with empty search_path');\nif(/(?:^|\n)do \$(?:\n|$)|(?:\n)end \$;/m.test(migration))
+  throw Error('Production market RPCs must use SECURITY DEFINER with empty search_path');
+if(/(?:^|\n)do \$(?:\n|$)|(?:\n)end \$;/m.test(migration))
   throw Error('Production market migration contains malformed bare dollar-quote delimiters');
 
 const schemaSig=schema.match(/market_snapshot\(\)\s*returns table\(([\s\S]*?)\)\s+language/i)?.[1]||'';
