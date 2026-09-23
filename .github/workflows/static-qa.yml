@@ -193,6 +193,8 @@ jobs:
       - name: Recovery and multi-tab E2E
         run: node tests/emoji-drops-recovery-e2e.js
       - name: Live Supabase anonymous security matrix
+        id: live_supabase_security
+        continue-on-error: true
         run: node tests/emoji-drops-supabase-anon-security-e2e.js
       - name: Security audit
         if: always()
@@ -251,6 +253,10 @@ jobs:
         run: |
           if [ "${{ job.status }}" != "success" ]; then
             echo "Release gate FAILED: one or more required QA steps did not pass."
+            exit 1
+          fi
+          if [ "${{ steps.live_supabase_security.outcome }}" = "failure" ]; then
+            echo "Release gate FAILED: live Supabase security matrix failed (production migration/security blocker)."
             exit 1
           fi
           echo "Release gate PASSED for SHA ${GITHUB_SHA}"
