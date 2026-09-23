@@ -1,5 +1,5 @@
 const fs=require('fs');const app=fs.readFileSync('js/app-v2.js','utf8');const index=fs.readFileSync('index.html','utf8');const files=fs.readdirSync('js');
-if(!/const version=331;/.test(app)||!index.includes('js/app-v2.js?v=runtime-331'))throw Error('Runtime owner/cache version drift');
+if(!/const version=332;/.test(app)||!index.includes('js/app-v2.js?v=runtime-331'))throw Error('Runtime owner/cache version drift');
 const requiredOwners=[['cases','js/emoji-drops-case-showcase-exact.js'],['upgrade','js/emoji-drops-upgrade-final.js'],['market','js/emoji-drops-market-v26.js'],['live','js/emoji-drops-live-final.js'],['transaction','js/emoji-drops-transaction-layer.js']];
 for(const [name,file] of requiredOwners){if(!files.includes(file))throw Error(`Missing canonical ${name} owner: ${file}`);if(!app.includes(file))throw Error(`Canonical ${name} owner not loaded by runtime manifest`)}
 const forbidden=['emoji-drops-final-ux-v4.js','emoji-drops-upgrade-interaction-guard.js','emoji-drops-case-showcase.js','emoji-drops-case-showcase-final.js','emoji-drops-case-showcase-override.js','emoji-drops-case-authority.js','emoji-drops-ui-polish-v2.js','emoji-drops-main-reference-v2.js','emoji-drops-layout-v3.js','emoji-drops-reference-v5.js','emoji-drops-reference-interaction-fix.js','emoji-drops-reference-v8-luxe.js','emoji-drops-reference-v9-hitfix.js','emoji-drops-reference-v10-stability.js','emoji-drops-reference-v11-modal-reset.js','emoji-drops-reference-v13-fixed-action.js','emoji-drops-reference-v15-case-precedence.js','emoji-drops-reference-v18-modal-cleanup.js','emoji-drops-reference-v20-studio.js'];
@@ -16,6 +16,16 @@ if(!/version:19/.test(live)||!live.includes('destroyed')||!live.includes('genera
 if(!fs.readFileSync('supabase/schema.sql','utf8').includes('create or replace function public.claim_daily_server()'))throw Error('Daily server authority missing');
 for(const marker of ['navigation-final','case-showcase-exact','transaction-layer','upgrade-final','market-v26','live-final'])if(!ownership.includes(marker))throw Error('Ownership matrix missing: '+marker);
 if((app.match(/emoji-drops-live-final\\.js/g)||[]).length!==1)throw Error('Live Drops owner loaded more than once');
+if(!app.includes('installPointerLighting();'))throw Error('Premium pointer lighting is defined but not installed');
+if(!app.includes('--ed-surface-raised:')||!app.includes('--ed-radius-sm:')||!app.includes('--ed-radius-lg:')||!app.includes('--ed-shadow-lg:')||!app.includes('--ed-motion-fast:')||!app.includes('--ed-motion-slow:'))throw Error('Unified design tokens missing');
+const core=fs.readFileSync('js/emoji-drops-core.js','utf8'),exact=fs.readFileSync('js/emoji-drops-case-showcase-exact.js','utf8'),fav=fs.readFileSync('js/emoji-drops-final-ux.js','utf8');
+if(core.includes('className=\'ed-ripple\'')||core.includes('.ed-ripple')||core.includes('pointerdown',core.indexOf('document.addEventListener'))&&core.includes('ed-ripple'))throw Error('Legacy white click/ripple effect still loaded');
+if(!core.includes('edBalanceUp')||!core.includes('edBalanceDown')||!core.includes('function renderBalance()'))throw Error('Authoritative balance feedback missing');
+if(!exact.includes('#edBalance'))throw Error('Exact case balance surface is not synchronized');
+if(exact.includes('edxLegendaryPulse')||/edx-case\\{[^}]*animation:edxCaseFloat[^;]*infinite/.test(exact))throw Error('Cinematic case visuals still loop indefinitely');
+if(!fav.includes('card.animate([{transform:`translate3d'))throw Error('Favorites do not use FLIP-style positional animation');
+if(fav.includes("e.target.closest?.('#edExact,.edx-close')")===false)throw Error('Generic modal owner does not defer exact case modal');
+if(live.includes("select:'id,nickname,item,case_id,item_price,created_at'"))throw Error('Live Drops realtime still exposes row id');
 
 const scripts=[...index.matchAll(/<script[^>]+src=['"]([^'"]+)/gi)].map(x=>x[1].split('?')[0]);for(const x of scripts)if(!x.startsWith('http')&&!fs.existsSync(x.replace(/^\//,'')))throw Error('Missing script asset: '+x);
 console.log('Architecture audit OK: canonical owners, runtime manifest, legacy layer exclusion, transaction boundary, server RPC surface and script assets.');
