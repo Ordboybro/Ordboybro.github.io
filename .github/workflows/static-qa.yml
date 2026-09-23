@@ -1,4 +1,5 @@
 name: EmojiDrops static QA
+# Release contract synchronized with runtime v334 / Live Drops v20.
 on:
   push:
     branches: [main]
