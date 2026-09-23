@@ -58,7 +58,7 @@ async function transactionOpen(k,cost){
 function animateWin(box,won,a){
   const reel=box.querySelector('.edx-reel'),track=box.querySelector('.edx-track');if(!reel||!track)return;
   const sequence=[],winIndex=14;for(let i=0;i<21;i++)sequence.push(i===winIndex?won:a[i%Math.max(1,a.length)]);
-  track.innerHTML=sequence.map((x,i)=>\`<div class="edx-reel-card\${i===winIndex?' focus':''}">\${esc(x.emoji)}</div>\`).join('');
+  track.innerHTML=sequence.map((x,i)=>`<div class="edx-reel-card${i===winIndex?' focus':''}">${esc(x.emoji)}</div>`).join('');
   reel.classList.add('spinning');reel.classList.remove('settled');track.style.transition='none';track.style.transform='translate3d(0,0,0)';
   if(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches){reel.classList.remove('spinning');reel.classList.add('settled');return;}
   requestAnimationFrame(()=>{
@@ -68,15 +68,15 @@ function animateWin(box,won,a){
       const animation=track.animate(
         [
           {transform:'translate3d(0,0,0)',offset:0},
-          {transform:\`translate3d(\${end*0.12}px,0,0)\`,offset:.13},
-          {transform:\`translate3d(\${end*0.72}px,0,0)\`,offset:.46},
-          {transform:\`translate3d(\${end}px,0,0)\`,offset:1}
+          {transform:`translate3d(${end*0.12}px,0,0)`,offset:.13},
+          {transform:`translate3d(${end*0.72}px,0,0)`,offset:.46},
+          {transform:`translate3d(${end}px,0,0)`,offset:1}
         ],
         {duration:2650,fill:'forwards',easing:'linear'}
       );
       animation.finished.then(()=>{
         if(!track.isConnected)return;
-        track.style.transform=\`translate3d(\${end}px,0,0)\`;
+        track.style.transform=`translate3d(${end}px,0,0)`;
         animation.cancel();
         reel.classList.remove('spinning');reel.classList.add('settled');
         setTimeout(()=>reel.classList.remove('settled'),360);
@@ -84,7 +84,7 @@ function animateWin(box,won,a){
       return;
     }
     track.style.transition='transform 2650ms cubic-bezier(.08,.82,.12,1)';
-    track.style.transform=\`translate3d(\${end}px,0,0)\`;
+    track.style.transform=`translate3d(${end}px,0,0)`;
     setTimeout(()=>{reel.classList.remove('spinning');reel.classList.add('settled');setTimeout(()=>reel.classList.remove('settled'),360)},2680);
   });
 }
