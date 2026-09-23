@@ -26,7 +26,7 @@ const css=`
   .edx-odds{gap:4px;margin-bottom:8px}.edx-odd{padding:5px 2px;font-size:7px;border-radius:8px}.edx-odd b{font-size:11px;margin-top:1px}
   .edx-reel{height:70px;margin-bottom:8px;border-radius:12px}.edx-reel-card{flex-basis:58px;height:54px;font-size:27px;border-radius:9px}.edx-track{gap:5px;padding:0 7px}
   .edx-open{position:sticky;bottom:0;z-index:15;padding:7px 0 9px;background:linear-gradient(180deg,transparent,#0a0a0a 22% 100%);backdrop-filter:blur(8px)}
-  .edx-open button{height:48px;min-height:48px!important;font-size:16px;border-radius:13px}
+  .edx-open button{height:48px;min-height:48px!important;font-size:16px;border-radius:13px}.ed-case>.ed-btn{height:48px;min-height:48px!important}
   .edx-items{padding:10px}.edx-items-title{font-size:14px}.edx-hint{font-size:9px;margin:3px 0 7px}.edx-grid{gap:5px}.edx-item{min-height:72px;padding:6px;border-radius:10px}.edx-item .emoji{font-size:25px}.edx-item .rar,.edx-item .chance,.edx-item .cost{font-size:8px}
 }
 `;
