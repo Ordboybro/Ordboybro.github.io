@@ -48,19 +48,44 @@ This file is the persistent checkpoint for the user's request to finish **exactl
 8. **Market**
    - The current CI workflow already contains dedicated Market privacy, race/concurrency and production-migration audit gates. This pass keeps that scope intact rather than inventing another Market implementation.
 
-## Explicit stop point
+## Second half — implemented / verified in this pass
 
-**STOP HERE.** The second half has not been started as a new implementation pass.
+9. **Security + Supabase production pass**
+   - Schema audit enforces RLS, canonical RPC identities, `SECURITY DEFINER SET search_path=''`, ownership checks and locked Market mutations.
+   - Anonymous live matrix verifies direct economy-table denial, mutation RPC denial, constrained Market snapshot and narrow Live Drops payload.
+   - Current Supabase guidance was rechecked: private Realtime channels/RLS are recommended for protected topics; public Live Drops remains intentionally limited to non-private fields.
 
-Remaining blocks to do next:
+10. **Performance**
+   - 100 normalized modal/navigation lifecycle cycles are covered by the performance budget E2E.
+   - Observer/listener/timeout/interval/audio/DOM/resource budgets are checked before and after the cycle.
 
-- Security + Supabase final production pass
-- Performance + 100-cycle torture test
-- Mobile-first final matrix / Safari / keyboard / safe-area / orientation
-- Accessibility final gate
-- Favorites persistence/reorder final verification
-- Profile dashboard final verification
-- Live Drops final lifecycle/security pass
-- Full QA matrix, visual regression, production smoke and final green release gate
+11. **Mobile + Safari**
+   - Mobile matrix now exactly covers 320x568, 360x800, 375x812, 390x844, 412x915, 430x932, 844x390 and 915x412.
+   - WebKit 390x844 runs the physical touch case → modal → close flow.
+   - Case-open controls use a 52px mobile height to preserve a >=48px physical hit target after layout transforms.
+   - Profile item actions were normalized to 48px touch targets.
 
-The branch must not be described as fully released until the remaining half and the final CI/release gate are green.
+12. **Accessibility**
+   - Existing axe/keyboard/focus-trap/Escape/focus-restore/reduced-motion gate passes.
+   - WCAG 2.2 target-size/focus/reduced-motion guidance was cross-checked against the implementation.
+
+13. **Favorites**
+   - `emojiDropsFavoritesV2` remains the single storage owner with FLIP reorder animation and storage-event synchronization.
+
+14. **Profile**
+   - Profile dashboard uses server `profile_snapshot` synchronization and the final UX layer; no local-only balance is treated as authoritative.
+
+15. **Live Drops**
+   - Real Supabase rows only, narrow payload, Realtime INSERT lifecycle, fallback polling, reconnect/auth/visibility/pagehide/pageshow cleanup and observer teardown.
+
+16. **Market**
+   - Real listings only, explicit owner state, sell/buy/cancel lifecycle, server-side atomicity and race contracts; duplicate active item listings are blocked by the database constraint.
+
+17. **Release QA**
+   - Browser E2E, Upgrade E2E, accessibility, performance, mobile, recovery, anonymous Supabase security, architecture, visual regression and production smoke have all passed on the latest full run before the release-gate-only workflow fix.
+   - The release gate itself was corrected to evaluate prior-step outcomes with `success()` rather than self-referential `job.status`.
+   - A final rerun on the latest SHA is required before merge.
+
+## Release status
+
+The implementation work for the remaining half is complete. **Do not merge until the latest SHA receives a full green CI run including the final release gate.**
