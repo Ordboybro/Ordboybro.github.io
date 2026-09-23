@@ -30,6 +30,8 @@ if(exact.includes('edxLegendaryPulse')||/edx-case\\{[^}]*animation:edxCaseFloat[
 if(!fav.includes('card.animate([{transform:`translate3d'))throw Error('Favorites do not use FLIP-style positional animation');
 if(fav.includes("e.target.closest?.('#edExact,.edx-close')")===false)throw Error('Generic modal owner does not defer exact case modal');
 if(live.includes("select:'id,nickname,item,case_id,item_price,created_at'"))throw Error('Live Drops realtime still exposes row id');
+if(live.includes("select('id,nickname,item,case_id,item_price,created_at')"))throw Error('Live Drops REST query still exposes row id');
+if(!live.includes("select('nickname,item,case_id,item_price,created_at')"))throw Error('Live Drops minimized payload contract missing');
 
 const scripts=[...index.matchAll(/<script[^>]+src=['"]([^'"]+)/gi)].map(x=>x[1].split('?')[0]);for(const x of scripts)if(!x.startsWith('http')&&!fs.existsSync(x.replace(/^\//,'')))throw Error('Missing script asset: '+x);
 console.log('Architecture audit OK: canonical owners, runtime manifest, legacy layer exclusion, transaction boundary, server RPC surface and script assets.');
