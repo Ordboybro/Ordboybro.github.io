@@ -73,9 +73,27 @@ if(/(?:service_role|service-role|SUPABASE_SERVICE_ROLE_KEY)\s*[:=]/i.test(browse
 }
 if(!/grant select \(nickname,item,case_id,item_price,created_at\) on public\.live_drops to authenticated,anon/i.test(schema))throw new Error('Live Drops public column grant is missing or exposes private fields');
 
-console.log('Supabase schema audit OK');
-
 const marketSig=schema.match(/market_snapshot\(\)\s*returns table\(([\s\S]*?)\)\s+language/i)?.[1]||'';
 if(!/\bis_owner\s+boolean\b/i.test(marketSig))throw new Error('market_snapshot must expose is_owner instead of seller_id');
 if(/\bseller_id\s+uuid\b/i.test(marketSig))throw new Error('market_snapshot must not expose seller_id');
-if(!fs.existsSync('supabase/migrations/20260922150000_market_snapshot_privacy.sql'))throw new Error('market snapshot privacy migration missing');
+
+const privacyMigration='supabase/migrations/20260922150000_market_snapshot_privacy.sql';
+if(!fs.existsSync(privacyMigration))throw new Error('market snapshot privacy migration missing');
+
+const marketRpcMigration='supabase/migrations/20260923170000_canonical_market_rpc_identity.sql';
+if(!fs.existsSync(marketRpcMigration))throw new Error('canonical market RPC identity migration missing');
+const marketRpc=fs.readFileSync(marketRpcMigration,'utf8');
+for(const marker of [
+  "p.proname in ('buy_market_listing','cancel_market_listing')",
+  "pg_get_function_identity_arguments(p.oid)",
+  "pg_get_function_identity_arguments(p.oid) <> 'p_listing_id uuid'",
+  "notify pgrst, 'reload schema'",
+  'grant execute on function public.buy_market_listing(uuid) to authenticated',
+  'grant execute on function public.cancel_market_listing(uuid) to authenticated'
+]){
+  if(!marketRpc.includes(marker))throw new Error('Canonical market RPC migration contract missing: '+marker);
+}
+if(/drop function if exists public\.buy_market_listing\((text|varchar|json|jsonb|integer|bigint|numeric|uuid,text|uuid,numeric)\)/i.test(marketRpc) &&
+   !/pg_get_function_identity_arguments\(p\.oid\)/i.test(marketRpc))throw new Error('Market RPC overload cleanup is not dynamic');
+
+console.log('Supabase schema audit OK');
