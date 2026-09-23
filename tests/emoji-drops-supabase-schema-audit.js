@@ -79,3 +79,6 @@ const marketSig=schema.match(/market_snapshot\(\)\s*returns table\(([\s\S]*?)\)\
 if(!/\bis_owner\s+boolean\b/i.test(marketSig))throw new Error('market_snapshot must expose is_owner instead of seller_id');
 if(/\bseller_id\s+uuid\b/i.test(marketSig))throw new Error('market_snapshot must not expose seller_id');
 if(!fs.existsSync('supabase/migrations/20260922150000_market_snapshot_privacy.sql'))throw new Error('market snapshot privacy migration missing');
+
+if(!fs.existsSync('supabase/migrations/20260923100000_realtime_publication_hardening.sql'))throw new Error('Realtime publication hardening migration missing');
+if(!/alter publication supabase_realtime drop table public\.profiles/i.test(schema)||!/alter publication supabase_realtime drop table public\.market_listings/i.test(schema)||!/alter publication supabase_realtime drop table public\.case_items/i.test(schema))throw new Error('Realtime private-table removal contract missing');
