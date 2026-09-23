@@ -1,7 +1,10 @@
 'use strict';
 const fs=require('fs');
+const crypto=require('crypto');
 const migration=fs.readFileSync('supabase/market-live-migration.sql','utf8');
+const migrationChain=fs.readFileSync('supabase/migrations/20260923153500_market_live_canonical.sql','utf8');
 const schema=fs.readFileSync('supabase/schema.sql','utf8');
+if(crypto.createHash('sha256').update(migration).digest('hex')!==crypto.createHash('sha256').update(migrationChain).digest('hex')) throw Error('Canonical Market migration source and migration-chain copy drifted');
 
 for(const marker of [
   'item jsonb',
