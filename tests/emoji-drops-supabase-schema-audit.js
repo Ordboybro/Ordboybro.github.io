@@ -86,14 +86,13 @@ const marketRpc=fs.readFileSync(marketRpcMigration,'utf8');
 for(const marker of [
   "p.proname in ('buy_market_listing','cancel_market_listing')",
   "pg_get_function_identity_arguments(p.oid)",
-  "pg_get_function_identity_arguments(p.oid) <> 'p_listing_id uuid'",
+  "pg_get_function_identity_arguments(p.oid) <> 'uuid'",
   "notify pgrst, 'reload schema'",
   'grant execute on function public.buy_market_listing(uuid) to authenticated',
   'grant execute on function public.cancel_market_listing(uuid) to authenticated'
 ]){
   if(!marketRpc.includes(marker))throw new Error('Canonical market RPC migration contract missing: '+marker);
 }
-if(/drop function if exists public\.buy_market_listing\((text|varchar|json|jsonb|integer|bigint|numeric|uuid,text|uuid,numeric)\)/i.test(marketRpc) &&
-   !/pg_get_function_identity_arguments\(p\.oid\)/i.test(marketRpc))throw new Error('Market RPC overload cleanup is not dynamic');
+if(!/pg_get_function_identity_arguments\(p\.oid\) <> 'uuid'/i.test(marketRpc))throw new Error('Canonical market RPC migration must preserve exactly the uuid identity and remove all other overloads');
 
 console.log('Supabase schema audit OK');
