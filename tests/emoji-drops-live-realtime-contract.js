@@ -18,7 +18,7 @@ for(const marker of [
   "window.addEventListener('pageshow'",
   "window.addEventListener('emoji-drops-auth-change'",
   "observer?.disconnect()",
-  "version:19"
+  "version:20"
 ])if(!live.includes(marker))throw Error('Live Drops lifecycle/security contract missing: '+marker);
 
 if(/select\([^)]*\bid\b/i.test(live))throw Error('Live Drops client payload must not request row IDs');
