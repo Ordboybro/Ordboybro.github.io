@@ -1,5 +1,5 @@
 (()=>{'use strict';
-/* Emoji Drops Smooth UI — final motion/visibility layer. No business logic; presentation only. */
+/* Emoji Drops Smooth UI — finite motion/visibility layer. No looping attention effects; presentation only. */
 function css(){if(document.getElementById('ed-smooth-ui'))return;const s=document.createElement('style');s.id='ed-smooth-ui';s.textContent=`
 :root{--ed-ease:cubic-bezier(.22,.8,.22,1);--ed-fast:180ms;--ed-med:280ms;--ed-slow:420ms}html{scroll-behavior:smooth}body{transition:background-color .35s ease}.ed-main{transition:opacity .22s ease,transform .28s var(--ed-ease)}
 button,a,input,.ed-case,.v24-live-card,.v24-listing,.v24-item,.v24-inv-card,.v24-target,.v24-mult,.v24-slot,.v26-card,.v26-inv-card{transition:transform var(--ed-med) var(--ed-ease),opacity var(--ed-fast) ease,border-color var(--ed-med) ease,background-color var(--ed-med) ease,box-shadow var(--ed-med) ease,filter var(--ed-med) ease}
@@ -7,12 +7,12 @@ button{position:relative;overflow:hidden;cursor:pointer;touch-action:manipulatio
 button:not(:disabled)::after{content:'';position:absolute;inset:0;background:linear-gradient(110deg,transparent 25%,#fff3 50%,transparent 75%);transform:translateX(-130%);transition:transform .65s ease;pointer-events:none}button:not(:disabled):hover::after{transform:translateX(130%)}
 .ed-case{animation:edCardIn .48s var(--ed-ease) both}.ed-case:nth-child(2){animation-delay:35ms}.ed-case:nth-child(3){animation-delay:70ms}.ed-case:nth-child(4){animation-delay:105ms}.ed-case:nth-child(5){animation-delay:140ms}.ed-case:nth-child(6){animation-delay:175ms}.ed-case:nth-child(7){animation-delay:210ms}.ed-case:nth-child(8){animation-delay:245ms}@keyframes edCardIn{from{opacity:0;transform:translateY(12px) scale(.985)}to{opacity:1;transform:none}}
 .v24-live,.v24-market,.v24-upgrade{animation:edPanelIn .4s var(--ed-ease) both}@keyframes edPanelIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}.v24-live-card,.v24-listing,.v26-card{animation:edItemIn .35s var(--ed-ease) both}@keyframes edItemIn{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
-.v24-chest{animation:edChestFloat 3s ease-in-out infinite}@keyframes edChestFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}.v24-case-art:after{animation:edGlow 2.8s ease-in-out infinite}@keyframes edGlow{50%{opacity:.62;transform:scale(1.08)}}
-.v24-open:not(:disabled),.v24-upgrade-btn:not(:disabled){animation:edButtonGlow 2.4s ease-in-out infinite}@keyframes edButtonGlow{50%{box-shadow:0 14px 45px #ff922955,0 0 0 1px #ffd06b33}}
-.v24-reel{isolation:isolate}.v24-marker{animation:edMarkerPulse 1.15s ease-in-out infinite}@keyframes edMarkerPulse{50%{filter:brightness(1.35);box-shadow:0 0 27px #ff9229}}
+.v24-chest{transform:translateZ(0)}.v24-case-art:after{opacity:.5}
+.v24-open:not(:disabled),.v24-upgrade-btn:not(:disabled){box-shadow:0 12px 34px #ff922933,0 0 0 1px #ffd06b22}
+.v24-reel{isolation:isolate}.v24-marker{filter:brightness(1.08);box-shadow:0 0 18px #ff922944}
 #edV24Reward.show .v24-reward{animation:edRewardIn .5s var(--ed-ease) both}@keyframes edRewardIn{0%{opacity:0;transform:translateY(22px) scale(.92)}65%{transform:translateY(-3px) scale(1.01)}100%{opacity:1;transform:none}}#edV24Reward.show .v24-reward-emoji{animation:edPrizeIn .7s .12s var(--ed-ease) both}@keyframes edPrizeIn{from{opacity:0;transform:scale(.55) rotate(-8deg);filter:blur(8px)}to{opacity:1;transform:none;filter:none}}#edV24Reward.show .v24-reward-rarity{animation:edTextIn .4s .24s ease both}@keyframes edTextIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 .v24-reward-actions button{animation:edActionIn .4s .3s var(--ed-ease) both}.v24-reward-actions button+button{animation-delay:.36s}@keyframes edActionIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-.v24-mult.active,.v24-inv-card.selected,.v24-target.selected{animation:edSelected .8s ease-in-out infinite}@keyframes edSelected{50%{box-shadow:0 0 0 3px #ff922914,0 0 25px #ff92291c}}
+.v24-mult.active,.v24-inv-card.selected,.v24-target.selected{box-shadow:0 0 0 3px #ff922914,0 0 20px #ff92291c}
 .v24-slot{transition:transform .25s var(--ed-ease),border-color .25s ease,box-shadow .25s ease}.v24-slot:has(b){animation:edSlotPop .3s var(--ed-ease)}@keyframes edSlotPop{from{transform:scale(.97);opacity:.7}to{transform:none;opacity:1}}
 .ed-head-btn:hover,.ed-balance:hover{transform:translateY(-2px)}
 .ed-nav button{position:relative;overflow:hidden}
