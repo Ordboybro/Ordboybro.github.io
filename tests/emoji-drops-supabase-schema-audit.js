@@ -94,5 +94,6 @@ for(const marker of [
   if(!marketRpc.includes(marker))throw new Error('Canonical market RPC migration contract missing: '+marker);
 }
 if(!/pg_get_function_identity_arguments\(p\.oid\) <> 'uuid'/i.test(marketRpc))throw new Error('Canonical market RPC migration must preserve exactly the uuid identity and remove all other overloads');
+if(!/for\s+r\s+in\s+select[\s\S]*p\.proname in \('buy_market_listing','cancel_market_listing'\)[\s\S]*execute format\([\s\S]*drop function/i.test(marketRpc))throw new Error('Canonical market RPC migration must dynamically remove unknown legacy overloads');
 
 console.log('Supabase schema audit OK');
