@@ -17,8 +17,8 @@ const required=[
 ];
 for(const marker of required)if(!schema.includes(marker))throw new Error('Market race/atomicity contract missing: '+marker);
 
-const buy=schema.match(/create or replace function public\.buy_market_listing\(uuid\)[\s\S]*?end; \$\$/i)?.[0]||'';
-const cancel=schema.match(/create or replace function public\.cancel_market_listing\(uuid\)[\s\S]*?end; \$\$/i)?.[0]||'';
+const buy=schema.match(/create or replace function public\.buy_market_listing\([^)]*\)[\s\S]*?end; \$\$/i)?.[0]||'';
+const cancel=schema.match(/create or replace function public\.cancel_market_listing\([^)]*\)[\s\S]*?end; \$\$/i)?.[0]||'';
 if(!buy||!cancel)throw new Error('Canonical market RPC definitions missing');
 if(!/where id=p_listing_id for update/i.test(buy))throw new Error('Buy must lock listing before mutation');
 if(!/where id=p_listing_id for update/i.test(cancel))throw new Error('Cancel must lock listing before mutation');
