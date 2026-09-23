@@ -1,6 +1,7 @@
 'use strict';
 const fs=require('fs');
-const live=fs.readFileSync('js/emoji-drops-live-final.js','utf8');\nconst auth=fs.readFileSync('js/supabase-auth.js','utf8');
+const live=fs.readFileSync('js/emoji-drops-live-final.js','utf8');
+const auth=fs.readFileSync('js/supabase-auth.js','utf8');
 const schema=fs.readFileSync('supabase/schema.sql','utf8');
 
 for(const marker of [
