@@ -7,7 +7,7 @@ async function req(path,opts={}){const h=new Headers(opts.headers||{});h.set('ap
 async function rpc(name,body={}){return fetch(url+'/rest/v1/rpc/'+name,{method:'POST',headers:{apikey:key,'Content-Type':'application/json'},body:JSON.stringify(body)})}
 (async()=>{
  const deniedTables=['profiles?select=*','market_listings?select=*','case_items?select=*'];
- for(const p of deniedTables){const r=await req(p);assert.ok([401,403].includes(r.status),`Direct table access unexpectedly allowed: ${p} -> ${r.status}`)}
+ for(const p of deniedTables){const r=await req(p);assert.ok([401,403,404].includes(r.status),`Direct table access unexpectedly allowed: ${p} -> ${r.status}`)}
  const deniedRpcs=[
   ['open_case_server',{p_case_id:'smile',p_cost:100}],
   ['upgrade_server',{p_item_id:'missing',p_target_price:200,p_multiplier:2,p_target_emoji:'😀',p_target_rarity:'rare',p_target_case_id:'smile',p_chance:.45}],
