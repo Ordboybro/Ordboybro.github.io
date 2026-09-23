@@ -658,7 +658,8 @@ begin
 end $;
 
 -- Realtime is optional in local Supabase projects; add the table only when the publication exists.
-do $ begin
+do $
+begin
   if exists (select 1 from pg_publication where pubname='supabase_realtime')
      and not exists (select 1 from pg_publication_tables where pubname='supabase_realtime' and schemaname='public' and tablename='live_drops') then
     execute 'alter publication supabase_realtime add table public.live_drops';
