@@ -19,7 +19,7 @@ async function waitActiveView(page,name,stage){
 }
 async function touchCard(page){
   const card=page.locator('#view-cases.active .ed-case').first();
-  await card.waitFor({state:'attached',timeout:5000});
+  try{await card.waitFor({state:'attached',timeout:5000});}catch(err){const state=await page.evaluate(()=>({edView:window.__edView||null,active:[...document.querySelectorAll('[id^="view-"].active')].map(x=>({id:x.id,html:x.innerHTML.slice(0,900)})),caseCount:document.querySelectorAll('#view-cases .ed-case').length,activeCaseCount:document.querySelectorAll('#view-cases.active .ed-case').length,navTrace:window.__edNavTrace||[]}));throw Error(`Case card unavailable before physical touch: ${JSON.stringify(state)}; original=${err.message}`)}
   const style=await card.evaluate(el=>{const s=getComputedStyle(el),r=el.getBoundingClientRect();return{width:r.width,height:r.height,display:s.display,visibility:s.visibility,pointerEvents:s.pointerEvents}});
   if(style.width<1||style.height<1||style.display==='none'||style.visibility==='hidden'||style.pointerEvents==='none')throw Error(`Case card is not physically laid out: ${JSON.stringify(style)}`);
   await card.evaluate(el=>el.scrollIntoView({block:'center',inline:'nearest'}));
