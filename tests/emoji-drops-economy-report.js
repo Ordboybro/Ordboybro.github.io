@@ -5,6 +5,8 @@ const prices={smile:100,moves:80,nature:60,food:40,animals:20,transport:20,sport
 const weights={common:.55,rare:.27,epic:.12,mythical:.05,legendary:.01};
 const rows=[...schema.matchAll(/\('([^']+)',\d+,'([^']*)','(common|rare|epic|mythical|legendary)',([0-9.]+)\)/g)].map(m=>({caseId:m[1],rarity:m[3],price:Number(m[4])}));
 if(rows.length<300)throw new Error('Canonical catalog unexpectedly small: '+rows.length);
+if(!rows.every(x=>Number.isFinite(x.price)&&x.price>=0))throw new Error('Canonical catalog contains an invalid item price');
+if(Math.abs(Object.values(weights).reduce((a,b)=>a+b,0)-1)>1e-9)throw new Error('Server rarity probabilities must sum to 1');
 const report=[];
 for(const [caseId,cost] of Object.entries(prices)){
   const a=rows.filter(x=>x.caseId===caseId);
