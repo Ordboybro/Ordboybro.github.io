@@ -58,7 +58,7 @@ alter table public.market_listings alter column item set not null;
 -- Remove every legacy overload of the Market RPCs before recreating the canonical signatures.
 -- PostgREST returns PGRST203 when overloaded RPCs share argument names/types that make
 -- JSON RPC resolution ambiguous. Keep exactly one public identity per mutation.
-do $
+do $drop_legacy_market_rpc_overloads$
 declare r record;
 begin
   for r in select n.nspname,p.proname,pg_get_function_identity_arguments(p.oid) args
@@ -72,7 +72,7 @@ begin
       execute format('drop function if exists public.%I(%s)',r.proname,r.args);
     end if;
   end loop;
-end $;
+end $drop_legacy_market_rpc_overloads$;
 
 alter table public.market_listings enable row level security;
 revoke all on table public.market_listings from anon,authenticated;
