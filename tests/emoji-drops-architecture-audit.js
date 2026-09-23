@@ -18,7 +18,9 @@ for(const marker of ['navigation-final','case-showcase-exact','transaction-layer
 if((app.match(/emoji-drops-live-final\\.js/g)||[]).length!==1)throw Error('Live Drops owner loaded more than once');
 if(!app.includes('installPointerLighting();'))throw Error('Premium pointer lighting is defined but not installed');
 if(!app.includes('--ed-surface-raised:')||!app.includes('--ed-radius-sm:')||!app.includes('--ed-radius-lg:')||!app.includes('--ed-shadow-lg:')||!app.includes('--ed-motion-fast:')||!app.includes('--ed-motion-slow:'))throw Error('Unified design tokens missing');
-const core=fs.readFileSync('js/emoji-drops-core.js','utf8'),exact=fs.readFileSync('js/emoji-drops-case-showcase-exact.js','utf8'),fav=fs.readFileSync('js/emoji-drops-final-ux.js','utf8');
+const core=fs.readFileSync('js/emoji-drops-core.js','utf8'),exact=fs.readFileSync('js/emoji-drops-case-showcase-exact.js','utf8'),fav=fs.readFileSync('js/emoji-drops-final-ux.js','utf8'),nav=fs.readFileSync('js/emoji-drops-navigation-final.js','utf8');
+if(/document\.addEventListener\\(['"]pointer(?:down|up)['"][\\s\\S]*?data-view/.test(core)||/document\.addEventListener\\(['"]click['"][\\s\\S]*?dataset\.view/.test(core))throw Error('Core runtime is competing with navigation-final for data-view events');
+if(!/document\.addEventListener\\(['"]pointerdown['"]/.test(nav)||!/document\.addEventListener\\(['"]pointerup['"]/.test(nav)||!/document\.addEventListener\\(['"]click['"]/.test(nav))throw Error('Navigation-final does not own the complete data-view event lifecycle');
 if(core.includes('className=\'ed-ripple\'')||core.includes('.ed-ripple')||core.includes('pointerdown',core.indexOf('document.addEventListener'))&&core.includes('ed-ripple'))throw Error('Legacy white click/ripple effect still loaded');
 if(!core.includes('edBalanceUp')||!core.includes('edBalanceDown')||!core.includes('function renderBalance()'))throw Error('Authoritative balance feedback missing');
 if(!exact.includes('#edBalance'))throw Error('Exact case balance surface is not synchronized');
