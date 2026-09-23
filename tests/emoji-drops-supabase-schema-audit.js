@@ -81,6 +81,7 @@ const privacyMigration='supabase/migrations/20260922150000_market_snapshot_priva
 if(!fs.existsSync(privacyMigration))throw new Error('market snapshot privacy migration missing');
 
 const marketRpcMigration='supabase/migrations/20260923170000_canonical_market_rpc_identity.sql';
+const finalRpcMigration='supabase/migrations/20260923190000_final_rpc_identity_hardening.sql';
 if(!fs.existsSync(marketRpcMigration))throw new Error('canonical market RPC identity migration missing');
 const marketRpc=fs.readFileSync(marketRpcMigration,'utf8');
 for(const marker of [
@@ -94,6 +95,9 @@ for(const marker of [
   if(!marketRpc.includes(marker))throw new Error('Canonical market RPC migration contract missing: '+marker);
 }
 if(!/pg_get_function_identity_arguments\(p\.oid\) <> 'uuid'/i.test(marketRpc))throw new Error('Canonical market RPC migration must preserve exactly the uuid identity and remove all other overloads');
+if(!fs.existsSync(finalRpcMigration))throw new Error('Final RPC identity hardening migration missing');
+const finalRpc=fs.readFileSync(finalRpcMigration,'utf8');
+for(const marker of ["p.proname='open_case_server'","p.proname='upgrade_server'","p.proname='create_market_listing'","p.proname='buy_market_listing'","p.proname='cancel_market_listing'","pg_get_function_identity_arguments(p.oid)","execute format(","drop function if exists","notify pgrst, 'reload schema'"]){if(!finalRpc.includes(marker))throw new Error('Final RPC identity hardening marker missing: '+marker)}
 if(!/for\s+r\s+in\s+select[\s\S]*p\.proname in \('buy_market_listing','cancel_market_listing'\)[\s\S]*execute format\([\s\S]*drop function/i.test(marketRpc))throw new Error('Canonical market RPC migration must dynamically remove unknown legacy overloads');
 
 console.log('Supabase schema audit OK');
