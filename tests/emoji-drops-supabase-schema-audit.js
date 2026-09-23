@@ -75,6 +75,9 @@ if(!/grant select \(id,nickname,item,case_id,item_price,created_at\) on public\.
 
 console.log('Supabase schema audit OK');
 
+const marketBlock=schema.slice(schema.indexOf('create or replace function public.create_market_listing'),schema.indexOf('-- Direct table access is intentionally denied'));
+for(const marker of ['select inventory into inv from public.profiles where id=uid for update','select * into l from public.market_listings where id=p_listing_id for update','perform 1 from public.profiles where id in (uid,l.seller_id) order by id for update','update public.profiles set balance=balance-l.listing_price','update public.profiles set balance=balance+l.listing_price','status=' + "'sold'",'create unique index if not exists market_listings_active_item_unique_idx'])if(!marketBlock.includes(marker))throw new Error('Market atomicity/ownership contract missing: '+marker);
+
 const marketSig=schema.match(/market_snapshot\(\)\s*returns table\(([\s\S]*?)\)\s+language/i)?.[1]||'';
 if(!/\bis_owner\s+boolean\b/i.test(marketSig))throw new Error('market_snapshot must expose is_owner instead of seller_id');
 if(/\bseller_id\s+uuid\b/i.test(marketSig))throw new Error('market_snapshot must not expose seller_id');
