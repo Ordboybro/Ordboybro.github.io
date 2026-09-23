@@ -12,7 +12,7 @@ const market=fs.readFileSync('js/emoji-drops-market-v26.js','utf8'),live=fs.read
 const hard=fs.readFileSync('js/emoji-drops-final-hardening.js','utf8');
 if(hard.includes('#edExact'))throw Error('Generic hardening still owns the exact case modal');
 if(!/version:31/.test(market)||!market.includes('destroy'))throw Error('Market lifecycle owner contract missing');
-if(!/version:19/.test(live)||!live.includes('destroyed')||!live.includes('generation'))throw Error('Live Drops lifecycle generation contract missing');
+if(!/version:20/.test(live)||!live.includes('destroyed')||!live.includes('generation'))throw Error('Live Drops lifecycle generation contract missing');
 if(!fs.readFileSync('supabase/schema.sql','utf8').includes('create or replace function public.claim_daily_server()'))throw Error('Daily server authority missing');
 for(const marker of ['navigation-final','case-showcase-exact','transaction-layer','upgrade-final','market-v26','live-final'])if(!ownership.includes(marker))throw Error('Ownership matrix missing: '+marker);
 if((app.match(/emoji-drops-live-final\\.js/g)||[]).length!==1)throw Error('Live Drops owner loaded more than once');
