@@ -40,6 +40,9 @@ function scheduleNormalize(){if(normalizeTimer)return;normalizeTimer=setTimeout(
 function hook(){
   if(window.__emojiDropsCaseOpenBridge===ID)return;window.__emojiDropsCaseOpenBridge=ID;touchCss();normalize();
   // Card-level touch opening is intentionally disabled: only the explicit Open button is actionable.
+  // Delegate the physical opener activation at document capture so a later DOM replacement
+  // or another document-level touch listener cannot strand the button's own pointerup handler.
+  document.addEventListener('pointerup',e=>{if(e.pointerType!=='touch'&&e.pointerType!=='pen')return;const opener=e.target?.closest?.('[data-open],.ed-case>.ed-btn');if(!opener||!inActiveCases(opener)||visible())return;const key=keyFor(opener,KEYS.indexOf(opener.closest('.ed-case')?.dataset?.caseKey));if(!key)return;suppressSyntheticClickUntil=Date.now()+TOUCH_GUARD_MS;touchOpenGuard();setTimeout(()=>{if(!visible())activate(opener,key,e)},0)},true);
   document.addEventListener('keydown',e=>{if((e.key!=='Enter'&&e.key!==' ')||visible())return;const opener=e.target?.closest?.('[data-open]');if(!opener||!inActiveCases(opener))return;const key=keyFor(opener,KEYS.indexOf(opener.closest('.ed-case')?.dataset?.caseKey));if(key){e.preventDefault();e.stopImmediatePropagation();activate(opener,key,null)}},true);
   new MutationObserver(mutations=>{if(mutations.some(m=>m.addedNodes?.length||m.type==='attributes'))scheduleNormalize()}).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['data-open']});
   document.addEventListener('DOMContentLoaded',normalize,{once:true});document.addEventListener('emoji-drops-cases-rendered',normalize,{passive:true});window.addEventListener('pageshow',normalize);
