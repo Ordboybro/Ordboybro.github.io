@@ -1,6 +1,6 @@
 (()=>{'use strict';
 /* Emoji Drops action resilience v17: deterministic actions, touch navigation guard, transaction-safe upgrade recovery and keyboard focus safety. Case-modal activation is UI state, not a state transaction, so it is never retried after the modal is opened. Upgrade recovery never mutates state directly; the transaction layer remains authoritative. No polling. */
-const KEY='emojiDropsStateV3',MARK='emojiDropsActionResilienceV8',VERSION=18,RETRY_DELAY=720,TOUCH_CLICK_GUARD_MS=7000;
+const KEY='emojiDropsStateV3',MARK='emojiDropsActionResilienceV8',VERSION=18,RETRY_DELAY=720,TOUCH_CLICK_GUARD_MS=700;
 /* Emoji Drops action resilience v7 compatibility marker retained intentionally; active implementation is v17. */
 /* Emoji Drops action resilience v7 compatibility marker retained intentionally; active implementation is v18. */
 /* legacy marker: emojiDropsActionResilienceV7 */
