@@ -18,7 +18,7 @@ create table if not exists public.market_listings (
 -- Upgrade legacy market rows if this migration was previously deployed.
 alter table public.market_listings add column if not exists item jsonb;
 alter table public.market_listings add column if not exists cancelled_at timestamptz;
-do $$
+do $market_item_upgrade$ 
 begin
   if to_regclass('public.market_listings') is not null
      and exists(select 1 from information_schema.columns where table_schema='public' and table_name='market_listings' and column_name='item_id')
@@ -36,23 +36,23 @@ begin
       where item is null and item_id is not null
     $sql$;
   end if;
-end $$;
+end $live_realtime_publication$;
 -- Legacy columns remain nullable for backward compatibility with an already-created table.
-do $$
+do $market_legacy_nullable$ 
 begin
   foreach col in array array['item_id','emoji','rarity','item_price'] loop
     if exists(select 1 from information_schema.columns where table_schema='public' and table_name='market_listings' and column_name=col) then
       execute format('alter table public.market_listings alter column %I drop not null',col);
     end if;
   end loop;
-end $$;
+end $live_realtime_publication$;
 
-do $$
+do $market_item_integrity$ 
 begin
   if exists(select 1 from public.market_listings where item is null) then
     raise exception 'MARKET_MIGRATION_INCOMPLETE: every listing must have canonical item JSON';
   end if;
-end $$;
+end $live_realtime_publication$;
 alter table public.market_listings alter column item set not null;
 
 -- Remove every legacy overload of the Market RPCs before recreating the canonical signatures.
@@ -188,7 +188,7 @@ grant select (nickname,item,case_id,item_price,created_at) on public.live_drops 
 create index if not exists live_drops_created_idx on public.live_drops(created_at desc);
 create index if not exists live_drops_user_idx on public.live_drops(user_id);
 
-do $$
+do $live_realtime_publication$ 
 begin
   if exists(select 1 from pg_publication where pubname='supabase_realtime')
      and not exists(select 1 from pg_publication_tables where pubname='supabase_realtime' and schemaname='public' and tablename='live_drops')
@@ -196,6 +196,6 @@ begin
     execute 'alter publication supabase_realtime add table public.live_drops';
   end if;
 exception when others then null;
-end $$;
+end $live_realtime_publication$;
 
 -- The canonical Case/Upgrade RPCs remain owned by supabase/schema.sql.
