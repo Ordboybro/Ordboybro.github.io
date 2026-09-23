@@ -19,7 +19,7 @@ function paint(rows,configured,error,status){
  let section=document.getElementById(ID);
  if(!section){section=document.createElement('section');section.id=ID;const cases=root.querySelector('.ed-cases');if(cases)root.insertBefore(section,cases);else root.appendChild(section)}else{const cases=root.querySelector('.ed-cases');if(cases&&section.nextElementSibling!==cases)root.insertBefore(section,cases)}
  const clean=Array.isArray(rows)?rows.slice(0,20):[];lastRows=clean;
- const key=JSON.stringify(clean.map(x=>[x.id,x.created_at,x.item_price]));
+ const key=JSON.stringify(clean.map(x=>[x.created_at,x.nickname,x.case_id,x.item_price,x.item?.emoji,x.item?.rarity]));
  const paintState=JSON.stringify([key,Boolean(configured),Boolean(error),status]);
  if(paintState===lastPaintState&&section.childElementCount)return;
  lastKey=key;lastPaintState=paintState;
@@ -35,7 +35,7 @@ async function refresh(){
  if(!ok){paint([],false,false,'OFFLINE');return}
  inFlight=true;
  try{
-   const q=c.from('live_drops').select('id,nickname,item,case_id,item_price,created_at').order('created_at',{ascending:false}).limit(20);
+   const q=c.from('live_drops').select('nickname,item,case_id,item_price,created_at').order('created_at',{ascending:false}).limit(20);
    const r=await q;if(r?.error)throw r.error;
    paint(Array.isArray(r?.data)?r.data:[],true,false,realtimeReady?'SUBSCRIBED':(interval?'FALLBACK':'CONNECTING'))
  }catch(e){paint(lastRows,true,true,realtimeReady?'SUBSCRIBED':(interval?'FALLBACK':'CONNECTING'))}
