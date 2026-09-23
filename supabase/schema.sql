@@ -648,24 +648,25 @@ create index if not exists live_drops_created_idx on public.live_drops(created_a
 create index if not exists live_drops_user_idx on public.live_drops(user_id);
 
 -- Realtime publication hardening: private economy tables are never published; Live Drops is the sole public stream.
-do $
+do $$
 begin
   if exists (select 1 from pg_publication where pubname='supabase_realtime') then
     if exists (select 1 from pg_publication_tables where pubname='supabase_realtime' and schemaname='public' and tablename='profiles') then execute 'alter publication supabase_realtime drop table public.profiles'; end if;
     if exists (select 1 from pg_publication_tables where pubname='supabase_realtime' and schemaname='public' and tablename='case_items') then execute 'alter publication supabase_realtime drop table public.case_items'; end if;
     if exists (select 1 from pg_publication_tables where pubname='supabase_realtime' and schemaname='public' and tablename='market_listings') then execute 'alter publication supabase_realtime drop table public.market_listings'; end if;
   end if;
-end $;
+end $$;
 
 -- Realtime is optional in local Supabase projects; add the table only when the publication exists.
-do $
+-- Realtime is optional in local Supabase projects; add the table only when the publication exists.
+do $$
 begin
   if exists (select 1 from pg_publication where pubname='supabase_realtime')
      and not exists (select 1 from pg_publication_tables where pubname='supabase_realtime' and schemaname='public' and tablename='live_drops') then
     execute 'alter publication supabase_realtime add table public.live_drops';
   end if;
 exception when others then null;
-end $;
+end $$;
 
 -- Make the intended public API explicit; new functions are not executable by arbitrary roles.
 alter default privileges in schema public revoke select,insert,update,delete on tables from anon,authenticated;
