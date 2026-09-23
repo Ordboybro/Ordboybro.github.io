@@ -11,7 +11,7 @@ const files=['js/supabase-config.js?v=supabase-config-1','js/supabase-auth.js?v=
 window.__emojiDropsRuntimeLoader={version,complete:false,failed:[],loaded:[],count:files.length};
 function write(src){document.write('<scr'+'ipt src="'+src+'"></scr'+'ipt>')}
 function installPremiumMotion(){if(document.getElementById('emoji-drops-premium-motion'))return;const s=document.createElement('style');s.id='emoji-drops-premium-motion';s.textContent=`
-:root{--ed-ease:var(--ed-ease-standard,cubic-bezier(.22,1,.36,1));--ed-gold:var(--ed-accent,#ff8a18);--ed-gold-hi:var(--ed-accent-hi,#ffb04a);--ed-motion-fast:var(--ed-motion-fast,.14s);--ed-motion-normal:var(--ed-motion-normal,.22s);--ed-motion-slow:var(--ed-motion-slow,.28s)}
+:root{--ed-ease:var(--ed-ease-standard,cubic-bezier(.22,1,.36,1));--ed-gold:var(--ed-accent,#ff8a18);--ed-gold-hi:var(--ed-accent-hi,#ffb04a)}
 body{-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
 header{box-shadow:0 1px 0 rgba(255,255,255,.025),0 10px 35px rgba(0,0,0,.14);transition:background .35s var(--ed-ease),border-color .35s var(--ed-ease),box-shadow .35s var(--ed-ease)}
 header::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:1px;background:linear-gradient(90deg,transparent,rgba(255,138,24,.34),transparent);pointer-events:none}
