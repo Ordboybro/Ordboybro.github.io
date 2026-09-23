@@ -251,7 +251,7 @@ jobs:
       - name: Final release gate
         if: always()
         run: |
-          if [ "${{ job.status }}" != "success" ]; then
+          if [ "${{ success() }}" != "true" ]; then
             echo "Release gate FAILED: one or more required QA steps did not pass."
             exit 1
           fi
