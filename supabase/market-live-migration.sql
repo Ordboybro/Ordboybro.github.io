@@ -37,7 +37,17 @@ begin
     $sql$;
   end if;
 end $$;
-do $$
+-- Legacy columns remain nullable for backward compatibility with an already-created table.
+do $
+begin
+  foreach col in array array['item_id','emoji','rarity','item_price'] loop
+    if exists(select 1 from information_schema.columns where table_schema='public' and table_name='market_listings' and column_name=col) then
+      execute format('alter table public.market_listings alter column %I drop not null',col);
+    end if;
+  end loop;
+end $;
+
+do $
 begin
   if exists(select 1 from public.market_listings where item is null) then
     raise exception 'MARKET_MIGRATION_INCOMPLETE: every listing must have canonical item JSON';
