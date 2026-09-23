@@ -26,6 +26,9 @@ if(!nav.includes("e.pointerType==='touch'"))throw Error('Navigation-final touch 
 if(core.includes('className=\'ed-ripple\'')||core.includes('.ed-ripple')||core.includes('pointerdown',core.indexOf('document.addEventListener'))&&core.includes('ed-ripple'))throw Error('Legacy white click/ripple effect still loaded');
 if(!core.includes('edBalanceUp')||!core.includes('edBalanceDown')||!core.includes('function renderBalance()'))throw Error('Authoritative balance feedback missing');
 if(!exact.includes('#edBalance'))throw Error('Exact case balance surface is not synchronized');
+if(!exact.includes('result-kicker')||!exact.includes('Added to Inventory')||!exact.includes('class="edx-claim">Continue'))throw Error('Case result hierarchy contract missing');
+if(!exact.includes('setTimeout(showResult,2750)'))throw Error('Case result reveal timing contract missing');
+if(!live.includes('edLiveIn')||!live.includes('translate3d(18px,0,0)'))throw Error('Live Drops entrance motion contract missing');
 if(exact.includes('edxLegendaryPulse')||/edx-case\\{[^}]*animation:edxCaseFloat[^;]*infinite/.test(exact))throw Error('Cinematic case visuals still loop indefinitely');
 if(!fav.includes('card.animate([{transform:`translate3d'))throw Error('Favorites do not use FLIP-style positional animation');
 if(fav.includes("e.target.closest?.('#edExact,.edx-close')")===false)throw Error('Generic modal owner does not defer exact case modal');
