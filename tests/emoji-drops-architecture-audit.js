@@ -20,3 +20,5 @@ if((app.match(/emoji-drops-live-final\\.js/g)||[]).length!==1)throw Error('Live 
 
 const scripts=[...index.matchAll(/<script[^>]+src=['"]([^'"]+)/gi)].map(x=>x[1].split('?')[0]);for(const x of scripts)if(!x.startsWith('http')&&!fs.existsSync(x.replace(/^\//,'')))throw Error('Missing script asset: '+x);
 console.log('Architecture audit OK: canonical owners, runtime manifest, legacy layer exclusion, transaction boundary, server RPC surface and script assets.');
+const coreSource=fs.readFileSync('js/emoji-drops-core.js','utf8');
+if(!coreSource.includes("const active=document.querySelector('.ed-view.active')?.id||''"))throw Error('Core rerender must preserve the active view');
