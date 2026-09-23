@@ -12,6 +12,8 @@ for(const marker of [
   'create or replace function public.create_market_listing(p_item_id text,p_price numeric)',
   'create or replace function public.buy_market_listing(p_listing_id uuid)',
   'create or replace function public.cancel_market_listing(p_listing_id uuid)',
+  'Remove every legacy overload of the Market RPCs',
+  "p.proname in ('create_market_listing','buy_market_listing','cancel_market_listing')",
   "revoke execute on function public.buy_market_listing(uuid) from public,anon",
   "grant execute on function public.buy_market_listing(uuid) to authenticated",
   "grant select (nickname,item,case_id,item_price,created_at) on public.live_drops to authenticated,anon",
