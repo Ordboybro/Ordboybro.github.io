@@ -12,6 +12,7 @@ for(const marker of [
   "CHANNEL_ERROR",
   "TIMED_OUT",
   "ch.unsubscribe?.()",
+  "removeChannel?.(ch)",
   "document.addEventListener('visibilitychange'",
   "window.addEventListener('pagehide'",
   "window.addEventListener('pageshow'",
