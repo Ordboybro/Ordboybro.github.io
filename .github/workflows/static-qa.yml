@@ -195,10 +195,13 @@ jobs:
       - name: Live Supabase anonymous security matrix
         run: node tests/emoji-drops-supabase-anon-security-e2e.js
       - name: Security audit
+        if: always()
         run: node tests/emoji-drops-security-audit.js
       - name: P2-P4 architecture audit
+        if: always()
         run: node tests/emoji-drops-architecture-audit.js
       - name: P2-P4 visual regression smoke
+        if: always()
         run: node tests/emoji-drops-visual-regression-smoke.js
       - name: Upload visual QA artifacts
         if: always()
@@ -209,8 +212,10 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
       - name: Production smoke
+        if: always()
         run: node tests/emoji-drops-production-smoke.js
       - name: Final P2/P3 contract smoke
+        if: always()
         run: node tests/emoji-drops-p5-p3-self-test.js
       - name: Release evidence manifest
         if: always()
