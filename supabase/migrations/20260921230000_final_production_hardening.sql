@@ -31,7 +31,7 @@ alter table public.market_listings
   add constraint market_listings_listing_price_reasonable
   check (listing_price > 0 and listing_price <= 100000000);
 
--- Re-assert the narrow RPC surface after default-privilege hardening.
+-- Remove legacy RPC overloads so PostgREST cannot resolve ambiguous public candidates.\ndrop function if exists public.buy_market_listing(text);\ndrop function if exists public.buy_market_listing();\ndrop function if exists public.cancel_market_listing(text);\ndrop function if exists public.cancel_market_listing();\ndrop function if exists public.create_market_listing(text);\ndrop function if exists public.sell_item_server();\ndrop function if exists public.market_snapshot(text);\n\n-- Re-assert the narrow RPC surface after default-privilege hardening.
 revoke execute on function public.create_market_listing(text,numeric) from public,anon;
 grant execute on function public.create_market_listing(text,numeric) to authenticated;
 revoke execute on function public.market_snapshot() from public,anon;
