@@ -15,7 +15,14 @@ function invoke(key){if(!ready(key))return false;try{window.EmojiDropsCaseShowca
 function delayedRetry(key,node){return retry(key,node)}
 function retry(key,node){let attempts=0;const run=()=>{if(!inActiveCases(node)||visible())return;if(invoke(key)||++attempts>=15)return;setTimeout(run,35)};run()}
 function activate(node,key,event){if(!inActiveCases(node)||visible())return false;if(event?.type==='click'){event.preventDefault();event.stopImmediatePropagation()}const touch=event?.pointerType==='touch'||event?.pointerType==='pen';if(touch){setTimeout(()=>{if(!visible())invoke(key)},60);return true}if(invoke(key))return true;retry(key,node);setTimeout(()=>{if(!visible())invoke(key)},120);return false}
-let suppressSyntheticClickUntil=0,lastTouchOpener=null,normalizeTimer=0;
+let suppressSyntheticClickUntil=0,lastTouchOpener=null,lastTouchActivation=0,normalizeTimer=0;
+function activatePhysicalTouch(opener,key,event){
+  if(!opener||lastTouchActivation&&Date.now()-lastTouchActivation<120)return;
+  lastTouchActivation=Date.now();
+  suppressSyntheticClickUntil=Date.now()+TOUCH_GUARD_MS;
+  touchOpenGuard();
+  setTimeout(()=>{if(!visible())activate(opener,key,event)},0);
+}
 function skipSyntheticTouchClick(){return Date.now()<suppressSyntheticClickUntil}
 function bindOpener(opener,key){
  if(!opener||opener.dataset.edBridge===ID)return;
@@ -25,8 +32,7 @@ function bindOpener(opener,key){
  },{capture:true,passive:true});
  opener.addEventListener('pointerup',e=>{
    if((e.pointerType==='touch'||e.pointerType==='pen')&&lastTouchOpener===opener){
-     lastTouchOpener=null;suppressSyntheticClickUntil=Date.now()+TOUCH_GUARD_MS;touchOpenGuard();
-     setTimeout(()=>activate(opener,key,e),0);
+     lastTouchOpener=null;activatePhysicalTouch(opener,key,e);
    }
  },{capture:true});
  opener.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&!visible()){e.preventDefault();e.stopImmediatePropagation();activate(opener,key,e)}},{capture:true});
@@ -42,7 +48,8 @@ function hook(){
   // Card-level touch opening is intentionally disabled: only the explicit Open button is actionable.
   // Delegate the physical opener activation at document capture so a later DOM replacement
   // or another document-level touch listener cannot strand the button's own pointerup handler.
-  document.addEventListener('pointerup',e=>{if(e.pointerType!=='touch'&&e.pointerType!=='pen')return;const opener=e.target?.closest?.('[data-open],.ed-case>.ed-btn');if(!opener||!inActiveCases(opener)||visible())return;const key=keyFor(opener,KEYS.indexOf(opener.closest('.ed-case')?.dataset?.caseKey));if(!key)return;suppressSyntheticClickUntil=Date.now()+TOUCH_GUARD_MS;touchOpenGuard();setTimeout(()=>{if(!visible())activate(opener,key,e)},0)},true);
+  document.addEventListener('pointerup',e=>{if(e.pointerType!=='touch'&&e.pointerType!=='pen')return;const opener=e.target?.closest?.('[data-open],.ed-case>.ed-btn');if(!opener||!inActiveCases(opener)||visible())return;const key=keyFor(opener,KEYS.indexOf(opener.closest('.ed-case')?.dataset?.caseKey));if(!key)return;activatePhysicalTouch(opener,key,e)},true);
+  document.addEventListener('touchend',e=>{const opener=e.target?.closest?.('[data-open],.ed-case>.ed-btn');if(!opener||!inActiveCases(opener)||visible())return;const key=keyFor(opener,KEYS.indexOf(opener.closest('.ed-case')?.dataset?.caseKey));if(!key)return;activatePhysicalTouch(opener,key,e)},true);
   document.addEventListener('keydown',e=>{if((e.key!=='Enter'&&e.key!==' ')||visible())return;const opener=e.target?.closest?.('[data-open]');if(!opener||!inActiveCases(opener))return;const key=keyFor(opener,KEYS.indexOf(opener.closest('.ed-case')?.dataset?.caseKey));if(key){e.preventDefault();e.stopImmediatePropagation();activate(opener,key,null)}},true);
   new MutationObserver(mutations=>{if(mutations.some(m=>m.addedNodes?.length||m.type==='attributes'))scheduleNormalize()}).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['data-open']});
   document.addEventListener('DOMContentLoaded',normalize,{once:true});document.addEventListener('emoji-drops-cases-rendered',normalize,{passive:true});window.addEventListener('pageshow',normalize);
