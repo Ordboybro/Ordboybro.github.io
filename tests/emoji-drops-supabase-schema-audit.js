@@ -71,7 +71,7 @@ for(const block of schema.split(/(?=create or replace function public\.)/i)){
 if(/(?:service_role|service-role|SUPABASE_SERVICE_ROLE_KEY)\s*[:=]/i.test(browser)||/['"]sk-[A-Za-z0-9_-]{20,}['"]/i.test(browser)){
   throw new Error('Secret/service key exposed to browser');
 }
-if(!/grant select (nickname,item,case_id,item_price,created_at) on public\.live_drops to authenticated,anon/i.test(schema))throw new Error('Live Drops public column grant is missing or exposes private fields');
+if(!/grant select \(nickname,item,case_id,item_price,created_at\) on public\.live_drops to authenticated,anon/i.test(schema))throw new Error('Live Drops public column grant is missing or exposes private fields');
 
 console.log('Supabase schema audit OK');
 
