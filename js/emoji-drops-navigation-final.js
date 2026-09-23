@@ -8,7 +8,7 @@ function force(v){if(!activate(v))return;lastView=v;generation++;const token=gen
 let lastTouch=0,lastView='',generation=0;
 function commit(v){lastView=v;generation++;const token=generation;activate(v);schedule(v,token,0);schedule(v,token,140)}
 function handle(e){const b=e.target?.closest?.('[data-view]'),v=b?.getAttribute('data-view');if(!b||!V.includes(v))return;const now=Date.now();if(e.type==='pointerdown'&&e.pointerType==='touch'){e.preventDefault();lastTouch=now;commit(v);return}if(e.type==='click'){if(now-lastTouch<650&&lastView===v)return;commit(v)}}
-function install(){document.addEventListener('pointerdown',handle,{capture:true,passive:false});document.addEventListener('click',handle,{capture:true})}
+function install(){if(!document.getElementById('emoji-drops-navigation-touch-guard')){const s=document.createElement('style');s.id='emoji-drops-navigation-touch-guard';s.textContent='@media (orientation:landscape) and (max-height:500px){.ed-case>.ed-btn{min-height:48px!important}}';document.head.appendChild(s)}document.addEventListener('pointerdown',handle,{capture:true,passive:false});document.addEventListener('click',handle,{capture:true})}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
 window.__emojiDropsNavigationFinal={version:6,ready:true,force,ensure,activate};
 })();
