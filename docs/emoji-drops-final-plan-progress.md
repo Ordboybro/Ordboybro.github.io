@@ -1,6 +1,6 @@
 # Emoji Drops — final plan progress
 
-Updated: 2026-09-24 — second-half hardening pass
+Updated: 2026-09-24 — final release verification pass
 Branch: `final/emoji-drops-11-10-implementation-2026-09-23`
 PR: #35
 
@@ -90,7 +90,7 @@ This file is the persistent checkpoint for the user's request to finish **the re
 
 ## Release status
 
-The implementation work from the supplied final plan has been applied in code, schema, migrations and QA contracts. **The release gate is still open: GitHub is failing the workflow before a job is created (`jobs=[]`), so the current head has not been fully executed.** Do not merge until a valid full run is green.
+The implementation work from the supplied final plan has been applied in code, schema, migrations and QA contracts. **The release gate is still open: the workflow trigger path has been diagnosed and a valid pull-request run has now executed the QA job; the remaining gate is to bring the current final matrix green.** Do not merge until a valid full run is green.
 
 ### Final hardening findings from the second-half review
 
