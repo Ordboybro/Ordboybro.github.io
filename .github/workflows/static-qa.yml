@@ -33,7 +33,7 @@ jobs:
           h=Path('index.html').read_text(); refs=re.findall(r"<script[^>]+src=['\"]([^'\"]+)",h,re.I)
           missing=[x for x in refs if not x.split('?',1)[0].startswith(('http://','https://','//','data:')) and not Path(x.split('?',1)[0].lstrip('/')).exists()]
           if missing: raise SystemExit('Missing assets: '+str(missing))
-          a=Path('js/app-v2.js').read_text(); order=['emoji-drops-schema-migration.js','emoji-drops-data-bridge.js','emoji-drops-hardening.js','emoji-drops-core.js','emoji-drops-transaction-layer.js','emoji-drops-runtime-guards.js','emoji-drops-final-hardening.js','emoji-drops-release-polish.js','emoji-drops-product-layer.js','emoji-drops-quality-final.js','emoji-drops-p4-final.js','emoji-drops-case-showcase-exact.js','emoji-drops-reference-v23-studio.js','emoji-drops-market-v26.js','emoji-drops-final-product-polish.js','emoji-drops-upgrade-final.js','emoji-drops-final-ux.js','emoji-drops-live-final.js','emoji-drops-p5-final-audit.js']
+          a=Path('js/app-v2.js').read_text(); order=['emoji-drops-schema-migration.js','emoji-drops-hardening.js','emoji-drops-core.js','emoji-drops-transaction-layer.js','emoji-drops-runtime-guards.js','emoji-drops-final-hardening.js','emoji-drops-release-polish.js','emoji-drops-product-layer.js','emoji-drops-quality-final.js','emoji-drops-p4-final.js','emoji-drops-case-showcase-exact.js','emoji-drops-reference-v23-studio.js','emoji-drops-market-v26.js','emoji-drops-final-product-polish.js','emoji-drops-upgrade-final.js','emoji-drops-final-ux.js','emoji-drops-live-final.js','emoji-drops-p5-final-audit.js']
           m=re.search(r"const files=\[(.*?)\];",a,re.S)
           if not m: raise SystemExit('Runtime files manifest missing')
           runtime_files=[x.split('?',1)[0].lstrip('/') for x in re.findall(r"['\"]([^'\"]+\.js)(?:\?[^'\"]*)?['\"]",m.group(1))]
@@ -42,7 +42,7 @@ jobs:
           runtime=[Path(x).name for x in re.findall(r"['\"]([^'\"]+\.js)(?:\?[^'\"]*)?['\"]",m.group(1))]
           selected=[x for x in runtime if x in order]
           if selected!=order: raise SystemExit('Runtime order failed: '+str(selected))
-          for v in ['schema-1','data-bridge-1','core-25','supabase-auth-8','hardening-9','txn-13','guards-8','final-11','release-1','product-6','quality-final-1','p4-3','case-showcase-exact-40','studio-37','market-v26-21','final-product-polish-8','upgrade-final-29','final-ux-15','live-final-20','p5-final-audit-2']:
+          for v in ['schema-1','core-25','supabase-auth-8','hardening-9','txn-13','guards-8','final-11','release-1','product-6','quality-final-1','p4-3','case-showcase-exact-40','studio-37','market-v26-21','final-product-polish-8','upgrade-final-29','final-ux-15','live-final-20','p5-final-audit-2']:
               if v not in a: raise SystemExit('Cache version missing: '+v)
           product=Path('js/emoji-drops-product-layer.js').read_text()
           app=Path('js/app-v2.js').read_text()
