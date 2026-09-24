@@ -525,9 +525,11 @@ begin
   if public.case_cost(case_key) is null then raise exception 'INVALID_CASE'; end if;
   if char_length(nonce)<8 or char_length(nonce)>128 then raise exception 'INVALID_CLIENT_NONCE'; end if;
   if not exists(select 1 from public.case_items where case_id=case_key) then raise exception 'CASE_ITEMS_UNAVAILABLE'; end if;
+  -- Lock order contract: fairness round -> profile. This matches open_case_server
+  -- and prevents commit/open deadlocks under concurrent taps or retries.
+  delete from public.case_fairness_rounds where user_id=uid and consumed_at is null;
   perform 1 from public.profiles where id=uid for update;
   if not found then raise exception 'PROFILE_NOT_FOUND'; end if;
-  delete from public.case_fairness_rounds where user_id=uid and consumed_at is null;
   seed:=encode(public.gen_random_bytes(32),'hex');
   commitment:=encode(digest(seed||':'||nonce||':'||case_key,'sha256'),'hex');
   insert into public.case_fairness_rounds(user_id,case_id,client_nonce,server_seed,commitment)
