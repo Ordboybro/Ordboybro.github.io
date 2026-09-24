@@ -15,7 +15,7 @@ function invoke(key){if(!ready(key))return false;try{window.EmojiDropsCaseShowca
 function delayedRetry(key,node){return retry(key,node)}
 function retry(key,node){let attempts=0;const run=()=>{if(!inActiveCases(node)||visible())return;if(invoke(key)||++attempts>=15)return;setTimeout(run,35)};run()}
 function activate(node,key,event){if(!inActiveCases(node)||visible())return false;if(event?.type==='click'){event.preventDefault();event.stopImmediatePropagation()}const touch=event?.pointerType==='touch'||event?.pointerType==='pen';if(touch){setTimeout(()=>{if(!visible())invoke(key)},60);return true}if(invoke(key))return true;retry(key,node);setTimeout(()=>{if(!visible())invoke(key)},120);return false}
-let suppressSyntheticClickUntil=0,lastTouchOpener=null,lastTouchActivation=0,normalizeTimer=0;
+let suppressSyntheticClickUntil=0,lastTouchActivation=0,normalizeTimer=0;
 function activatePhysicalTouch(opener,key,event){
   if(!opener||lastTouchActivation&&Date.now()-lastTouchActivation<120)return;
   lastTouchActivation=Date.now();
@@ -28,13 +28,10 @@ function bindOpener(opener,key){
  if(!opener||opener.dataset.edBridge===ID)return;
  opener.dataset.edBridge=ID;opener.setAttribute('data-open',key);
  opener.addEventListener('pointerdown',e=>{
-   if(e.pointerType==='touch'||e.pointerType==='pen'){lastTouchOpener=opener}
- },{capture:true,passive:true});
- opener.addEventListener('pointerup',e=>{
-   if((e.pointerType==='touch'||e.pointerType==='pen')&&lastTouchOpener===opener){
-     lastTouchOpener=null;activatePhysicalTouch(opener,key,e);
+   if((e.pointerType==='touch'||e.pointerType==='pen')&&!visible()){
+     e.preventDefault();e.stopImmediatePropagation();activatePhysicalTouch(opener,key,e);
    }
- },{capture:true});
+ },{capture:true,passive:false});
  opener.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&!visible()){e.preventDefault();e.stopImmediatePropagation();activate(opener,key,e)}},{capture:true});
  opener.addEventListener('click',e=>{
    if(skipSyntheticTouchClick()){e.preventDefault();e.stopImmediatePropagation();return}
@@ -46,10 +43,7 @@ function scheduleNormalize(){if(normalizeTimer)return;normalizeTimer=setTimeout(
 function hook(){
   if(window.__emojiDropsCaseOpenBridge===ID)return;window.__emojiDropsCaseOpenBridge=ID;touchCss();normalize();
   // Card-level touch opening is intentionally disabled: only the explicit Open button is actionable.
-  // Delegate the physical opener activation at document capture so a later DOM replacement
-  // or another document-level touch listener cannot strand the button's own pointerup handler.
-  document.addEventListener('pointerup',e=>{if(e.pointerType!=='touch'&&e.pointerType!=='pen')return;const opener=e.target?.closest?.('[data-open],.ed-case>.ed-btn');if(!opener||!inActiveCases(opener)||visible())return;const key=keyFor(opener,KEYS.indexOf(opener.closest('.ed-case')?.dataset?.caseKey));if(!key)return;activatePhysicalTouch(opener,key,e)},true);
-  document.addEventListener('touchend',e=>{const opener=e.target?.closest?.('[data-open],.ed-case>.ed-btn');if(!opener||!inActiveCases(opener)||visible())return;const key=keyFor(opener,KEYS.indexOf(opener.closest('.ed-case')?.dataset?.caseKey));if(!key)return;activatePhysicalTouch(opener,key,e)},true);
+  // The opener commits touch activation on pointerdown, with one synthetic-click guard.
   document.addEventListener('keydown',e=>{if((e.key!=='Enter'&&e.key!==' ')||visible())return;const opener=e.target?.closest?.('[data-open]');if(!opener||!inActiveCases(opener))return;const key=keyFor(opener,KEYS.indexOf(opener.closest('.ed-case')?.dataset?.caseKey));if(key){e.preventDefault();e.stopImmediatePropagation();activate(opener,key,null)}},true);
   new MutationObserver(mutations=>{if(mutations.some(m=>m.addedNodes?.length||m.type==='attributes'))scheduleNormalize()}).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['data-open']});
   document.addEventListener('DOMContentLoaded',normalize,{once:true});document.addEventListener('emoji-drops-cases-rendered',normalize,{passive:true});window.addEventListener('pageshow',normalize);
