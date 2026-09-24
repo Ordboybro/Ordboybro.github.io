@@ -32,13 +32,43 @@ function itemChance(a,x){const rr=rarity(x),count=Math.max(1,a.filter(y=>y.rarit
 function render(k){css();const m=ensure(),box=m.firstElementChild,a=items(k),p=price(k),hero=H[k]||'🎁',name=N[k]||k;const odds=Object.values(R).map(v=>`<div class="edx-odd" style="--c:${v.color}">${v.label}<b>${v.w}%</b></div>`).join('');const reel=reelCards(a),mid=Math.floor(reel.length/2);const reelHtml=reel.map((x,i)=>`<div class="edx-reel-card${i===mid?' focus':''}">${esc(x.emoji)}</div>`).join('');const grid=a.map(x=>{const rr=rarity(x);return `<div class="edx-item" style="--c:${rr.color}"><div class="emoji">${esc(x.emoji)}</div><div class="rar">${rr.label}</div><div class="chance">${itemChance(a,x)}</div><div class="cost">${rub(x.price)}</div></div>`}).join('');box.dataset.caseKey=k;box.innerHTML=`<div class="edx-head"><div class="edx-logo" id="edExactTitle">✨ Emoji <em>Drops</em> ✨</div><button class="edx-close" type="button" aria-label="Close">×</button></div><div class="edx-main"><div class="edx-art"><div class="edx-case" aria-hidden="true"><i class="edx-b edx-tl"></i><i class="edx-b edx-tr"></i><i class="edx-b edx-bl"></i><i class="edx-b edx-br"></i><div class="edx-face">${esc(hero)}</div><div class="edx-lock"></div></div></div><div class="edx-name"><span class="e">${esc(hero)}</span><span class="t">${esc(name)}</span></div><div class="edx-price" aria-label="Price ${rub(p)}">${rub(p)}</div><div class="edx-odds" aria-label="Drop chances by rarity">${odds}</div><div class="edx-reel" aria-label="Item roulette"><div class="edx-track">${reelHtml}</div><div class="edx-marker"></div></div><div class="edx-open"><button type="button">Open case</button></div><div class="edx-result" aria-live="polite"></div><section class="edx-items"><div class="edx-items-title">Case items · ${a.length}</div><div class="edx-hint">Scroll down to see every item, chance and price</div><div class="edx-grid">${grid}</div></section></div>`;const closeButton=box.querySelector('.edx-close');if(closeButton)closeButton.onclick=()=>{if(!closeButton.disabled)hardClose()};const openButton=box.querySelector('.edx-open button');if(openButton)openButton.onclick=()=>{if(!openButton.disabled)openCase(k,box)} }
 function stateFallback(){try{const s=JSON.parse(localStorage.getItem(STATE)||'null');return s&&typeof s==='object'?s:null}catch{return null}}
 function renderBalance(s){document.querySelectorAll('#balance,#edBalance,[data-balance],[data-user-balance]').forEach(el=>{const value=num(s?.balance||0).toLocaleString('ru-RU');el.textContent=el.id==='balance'?value:(value+' ₽')})}
+function fairnessHex(buffer){
+  return [...new Uint8Array(buffer)].map(x=>x.toString(16).padStart(2,'0')).join('');
+}
+async function verifyFairnessReceipt(receipt,caseKey){
+  if(!receipt||typeof receipt!=='object')throw new Error('FAIRNESS_RECEIPT_MISSING');
+  const seed=String(receipt.server_seed||'');
+  const nonce=String(receipt.client_nonce||'');
+  const commitment=String(receipt.commitment||'').toLowerCase();
+  const roundId=String(receipt.round_id||'');
+  const serverCase=String(receipt.case_id||'').toLowerCase();
+  if(!seed||!nonce||!commitment||!roundId||serverCase!==String(caseKey).toLowerCase())throw new Error('FAIRNESS_RECEIPT_INVALID');
+  if(!window.crypto?.subtle||typeof TextEncoder!=='function')throw new Error('FAIRNESS_VERIFY_UNAVAILABLE');
+  const digest=await window.crypto.subtle.digest('SHA-256',new TextEncoder().encode(seed+':'+nonce+':'+serverCase));
+  if(fairnessHex(digest).toLowerCase()!==commitment)throw new Error('FAIRNESS_COMMITMENT_MISMATCH');
+  window.__emojiDropsFairness={roundId,caseId:serverCase,commitment,verifiedAt:Date.now(),algorithm:String(receipt.algorithm||'sha256-csprng-v1')};
+  return true;
+}
+function clientNonce(){
+  try{if(typeof crypto?.randomUUID==='function')return crypto.randomUUID()}catch{}
+  const bytes=new Uint8Array(18);try{crypto?.getRandomValues?.(bytes)}catch{}
+  const raw=[...bytes].map(x=>x.toString(16).padStart(2,'0')).join('');
+  return (raw||Math.random().toString(36).slice(2))+Date.now().toString(36);
+}
 async function transactionOpen(k,cost){
   const auth=window.EmojiDropsAuth;
   if(auth?.configured&&auth?.userId&&typeof auth.rpc==='function'){
-    const r=await auth.rpc('open_case_server',{p_case_id:k,p_cost:cost});
+    const nonce=clientNonce();
+    const committed=await auth.rpc('case_fairness_commit',{p_case_id:k,p_client_nonce:nonce});
+    if(committed?.error)throw committed.error;
+    const round=committed?.data;
+    if(!round?.round_id||!round?.commitment)throw new Error('FAIRNESS_COMMIT_FAILED');
+    const r=await auth.rpc('open_case_server',{p_case_id:k,p_cost:cost,p_round_id:round.round_id});
     if(r?.error)throw r.error;
     const data=r?.data;
     if(!data?.item||typeof data.item!=='object'||!data.item.id||!data.item.emoji||!data.item.rarity)throw new Error('INVALID_CASE_RESULT');
+    if(!data.fairness||String(data.fairness.round_id)!==String(round.round_id))throw new Error('FAIRNESS_RESULT_MISMATCH');
+    await verifyFairnessReceipt(data.fairness,k);
     return data;
   }
   const pool=items(k);
