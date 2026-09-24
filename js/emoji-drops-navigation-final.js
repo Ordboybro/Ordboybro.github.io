@@ -22,7 +22,6 @@ function handlePointerDown(e){
   if((e.pointerType!=='touch'&&e.pointerType!=='pen'))return;
   const b=e.target?.closest?.('[data-view]'),v=b?.getAttribute('data-view');
   if(!b||!V.includes(v))return;
-  e.preventDefault();e.stopPropagation();
   commit(v,'pointer');
 }
 function handleClick(e){
