@@ -38,7 +38,7 @@ const required=[
   'case_fairness_active_user_idx',
   'create or replace function public.fair_uniform(p_seed text,p_nonce text,p_case_id text,p_label text)',
   'revoke execute on function public.fair_uniform(text,text,text,text) from public,anon,authenticated',
-  'create or replace function public.case_fairness_commit(text,text)',
+  'create or replace function public.case_fairness_commit(p_case_id text,p_client_nonce text)',
   'grant execute on function public.case_fairness_commit(text,text) to authenticated',
   'drop function if exists public.open_case_server(text,numeric)',
   "p_round_id uuid",
