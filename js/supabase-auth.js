@@ -2,14 +2,14 @@
 /* Emoji Drops — browser-safe Supabase REST bridge. No third-party script loading. */
 if(window.EmojiDropsAuth?.__v3)return;
 const cfg=window.EMOJI_DROPS_SUPABASE||{};
-const A=window.EmojiDropsAuth={configured:Boolean(cfg.url&&cfg.anonKey),client:null,userId:null,__v3:true};
+const A=window.EmojiDropsAuth={configured:Boolean(cfg.url&&cfg.publishableKey),client:null,userId:null,__v3:true};
 let refreshTimer=0,refreshInFlight=0;
 const read=()=>{try{return JSON.parse(localStorage.getItem('emojiDropsSupabaseSession')||'null')}catch{return null}};
 const write=s=>{try{if(s)localStorage.setItem('emojiDropsSupabaseSession',JSON.stringify(s));else localStorage.removeItem('emojiDropsSupabaseSession')}catch{}};
 const clearRefresh=()=>{if(refreshTimer){clearTimeout(refreshTimer);refreshTimer=0}};
 const scheduleRefresh=()=>{clearRefresh();const s=read(),exp=Number(s?.expires_at||0);if(!s?.refresh_token||!exp)return;const ms=Math.max(15000,Math.min(50*60*1000,(exp*1000-Date.now())-60000));refreshTimer=setTimeout(()=>{refreshSession().catch(()=>{})},ms)};
 async function refreshSession(){if(refreshInFlight)return refreshInFlight;const s=read();if(!s?.refresh_token||!A.configured)return null;refreshInFlight=(async()=>{try{const data=await request('/auth/v1/token?grant_type=refresh_token',{method:'POST',body:JSON.stringify({refresh_token:s.refresh_token})});if(!data?.access_token||!data?.user)throw new Error('AUTH_REFRESH_INVALID');write(data);A.userId=data.user.id;window.dispatchEvent(new CustomEvent('emoji-drops-auth-change',{detail:{session:data,refreshed:true}}));scheduleRefresh();return data}catch(error){clearRefresh();write(null);A.userId=null;window.dispatchEvent(new CustomEvent('emoji-drops-auth-change',{detail:{session:null,refreshFailed:true,error:String(error?.message||error)}}));throw error}finally{refreshInFlight=0}})();return refreshInFlight}
-function headers(token){return {'apikey':cfg.anonKey,'Authorization':`Bearer ${token||cfg.anonKey}`,'Content-Type':'application/json','Accept':'application/json'}}
+function headers(token){return {'apikey':cfg.publishableKey,'Authorization':`Bearer ${token||cfg.publishableKey}`,'Content-Type':'application/json','Accept':'application/json'}}
 async function request(path,opts={},token=null){const r=await fetch(`${String(cfg.url||'').replace(/\/$/,'')}${path}`,{...opts,headers:{...headers(token),...(opts.headers||{})}});let data=null;try{data=await r.json()}catch{}if(!r.ok)throw new Error(String(data?.msg||data?.message||data?.error_description||data?.error||`Supabase ${r.status}`));return data}
 if(A.configured){
  const session=read();A.userId=session?.user?.id||null;
@@ -29,11 +29,11 @@ if(A.configured){
     on(event,filter,cb){if(event==='postgres_changes'&&typeof cb==='function')handler={event,filter:filter||{},cb};return api},
     subscribe:async(cb)=>{statusCb=typeof cb==='function'?cb:null;
       if(closed){statusCb?.('CLOSED');return 'CLOSED';}
-      const token=read()?.access_token||cfg.anonKey;
+      const token=read()?.access_token||cfg.publishableKey;
       let base=String(cfg.url||'').replace(/^https?:/,'').replace(/^\/\//,'');
       const host=base.split('/')[0];
       if(!host||typeof WebSocket==='undefined'){statusCb?.('CHANNEL_ERROR');return 'CHANNEL_ERROR';}
-      const url='wss://'+host+'/realtime/v1/websocket?apikey='+encodeURIComponent(cfg.anonKey)+'&vsn=1.0.0';
+      const url='wss://'+host+'/realtime/v1/websocket?apikey='+encodeURIComponent(cfg.publishableKey)+'&vsn=1.0.0';
       try{
        socket=new WebSocket(url);
        socket.onopen=()=>{
@@ -45,7 +45,7 @@ if(A.configured){
        socket.onmessage=e=>{
         try{
          const m=JSON.parse(e.data);
-         if(m?.event==='phx_reply'&&m?.ref===joinRef){if(m?.payload?.status==='ok'){joined=true;if(joinTimer){clearTimeout(joinTimer);joinTimer=0}statusCb?.('SUBSCRIBED')}else{statusCb?.('CHANNEL_ERROR');try{socket?.close()}catch{}}}else if(m?.event==='phx_error'||m?.event==='phx_close'){statusCb?.('CHANNEL_ERROR')}else if(m?.event==='postgres_changes'&&handler?.cb){const p=m.payload?.data||m.payload;handler.cb({eventType:p?.type||'INSERT',new:p?.record||{},old:p?.old_record||{},schema:p?.schema||'public',table:p?.table||'live_drops'})}
+         if(m?.event==='phx_reply'&&m?.ref===joinRef){if(m?.payload?.status==='ok'){joined=true;if(joinTimer){clearTimeout(joinTimer);joinTimer=0}statusCb?.('SUBSCRIBED')}else{statusCb?.('CHANNEL_ERROR');try{socket?.close()}catch{}}}else if(m?.event==='phx_error'||m?.event==='phx_close'){statusCb?.('CHANNEL_ERROR')}else if(m?.event==='postgres_changes'&&handler?.cb){const p=m.payload?.data||m.payload;const publicRow=r=>{const x=r&&typeof r==='object'?r:{},i=x.item&&typeof x.item==='object'?x.item:{};return {nickname:x.nickname,item:{emoji:i.emoji,rarity:i.rarity,price:i.price},case_id:x.case_id,item_price:x.item_price,created_at:x.created_at}};handler.cb({eventType:p?.type||'INSERT',new:publicRow(p?.record),old:publicRow(p?.old_record),schema:p?.schema||'public',table:p?.table||'live_drops'})}
         }catch{}
        };
        socket.onerror=()=>{statusCb?.('CHANNEL_ERROR')};

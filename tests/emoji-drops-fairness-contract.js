@@ -1,0 +1,42 @@
+'use strict';
+const fs=require('fs');
+const schema=fs.readFileSync('supabase/schema.sql','utf8');
+const exact=fs.readFileSync('js/emoji-drops-case-showcase-exact.js','utf8');
+
+const need=(ok,msg)=>{if(!ok)throw new Error(msg)};
+need(/create table if not exists public\.case_fairness_rounds/i.test(schema),'Fairness round table missing');
+need(/alter table public\.case_fairness_rounds enable row level security/i.test(schema),'Fairness round RLS missing');
+need(/revoke all on table public\.case_fairness_rounds from public,anon,authenticated/i.test(schema),'Fairness round table must not be directly selectable');
+need(/case_fairness_active_user_idx[\s\S]*?where consumed_at is null/i.test(schema),'Exactly one active fairness round per user is not constrained');
+need(/create or replace function public\.fair_uniform\(p_seed text,p_nonce text,p_case_id text,p_label text\)[\s\S]*?security definer set search_path=''/i.test(schema),'Fair uniform verifier function must be SECURITY DEFINER with empty search_path');
+need(/revoke execute on function public\.fair_uniform\(text,text,text,text\) from public,anon,authenticated/i.test(schema),'Fair uniform helper must not be publicly executable');
+need(/create or replace function public\.case_fairness_commit\(p_case_id text,p_client_nonce text\)[\s\S]*?seed text;[\s\S]*?commitment text;/i.test(schema),'Commit RPC must generate server seed + commitment');
+need(/grant execute on function public\.case_fairness_commit\(text,text\) to authenticated/i.test(schema),'Commit RPC must be authenticated-only');
+need(/create or replace function public\.open_case_server\(p_case_id text,p_cost numeric,p_round_id uuid\)/i.test(schema),'Open RPC must consume the committed round id');
+need(/perform 1 from public\.profiles where id=uid for update;[\s\S]*select \* into fair_round from public\.case_fairness_rounds[\s\S]*?for update/i.test(schema),'Open RPC must lock profile before the committed fairness round');
+const normalizedSchema=schema.replace(/\s+/g,' ');need(normalizedSchema.includes("expected_commitment:=encode(public.digest(fair_round.server_seed||':'||fair_round.client_nonce||':'||fair_round.case_id,'sha256'),'hex')"),'Open RPC must re-check the commitment');
+need(/fair_uniform\(fair_round\.server_seed,fair_round\.client_nonce,fair_round\.case_id,'rarity'\)/i.test(schema),'Authoritative rarity roll must be committed');
+need(/fair_uniform\(fair_round\.server_seed,fair_round\.client_nonce,fair_round\.case_id,'item'\)/i.test(schema),'Authoritative item roll must be committed');
+need(/'server_seed',fair_round\.server_seed/.test(schema),'Fairness receipt must reveal the seed only after the authoritative result');
+const commitStart=schema.indexOf('create or replace function public.case_fairness_commit');
+const commitEnd=schema.indexOf('revoke execute on function public.case_fairness_commit');
+const commitBlock=schema.slice(commitStart,commitEnd);
+need(!/return jsonb_build_object[\\s\\S]*server_seed/.test(commitBlock),'Commit RPC must not reveal server seed before the outcome');
+need(/'round_id',fair_round\.id/.test(schema),'Case receipt must return the locked fairness round id');
+const openStart=schema.indexOf('create or replace function public.open_case_server');
+const openEnd=schema.indexOf('-- Canonical Upgrade RPC');
+need(!schema.slice(openStart,openEnd).includes('round.id'),'Open RPC contains invalid round.id reference');need(/item_index.*chosen\.item_index/.test(schema),'Authoritative catalog index must be included in the case receipt');
+need(!/open_case_server\([^)]*p_round_id uuid/.test(schema.replace(/create or replace function public\.open_case_server\(p_case_id text,p_cost numeric,p_round_id uuid\)/,'')),'Unexpected duplicate open_case_server definition');
+need(!/open_case_server\([^)]*\)\s+returns/i.test(exact.split('function transactionOpen')[1]?.slice(0,7000)||''),'Client must call the canonical commit/open RPC contract, not an old direct two-argument path');
+need(/case_fairness_commit/.test(exact),'Client must request a fairness commitment before opening');
+need(/p_round_id:round\.round_id/.test(exact),'Client must send the committed round id to the open RPC');
+need(/verifyFairnessReceipt/.test(exact)&&/SHA-256/.test(exact)&&/FAIRNESS_OUTCOME_MISMATCH/.test(exact)&&/expectedCatalogIndex/.test(exact)&&/findIndex\(x=>x===expected\)/.test(exact),'Client must verify the commitment and canonical catalog index before animating');
+console.log('Fairness contract OK: authenticated commit, locked single-use round, empty-search-path verifier, committed case outcome, revealed receipt, and client-side commitment verification.');
+
+
+need(/public\.gen_random_bytes/.test(schema),'Authoritative RNG must schema-qualify pgcrypto random bytes under empty search_path');
+need(/public\.digest/.test(schema),'Fairness verifier must schema-qualify pgcrypto digest under empty search_path');
+const commitFn=schema.slice(schema.indexOf('create or replace function public.case_fairness_commit'),schema.indexOf('revoke execute on function public.case_fairness_commit'));
+const openFn=schema.slice(schema.indexOf('create or replace function public.open_case_server'),schema.indexOf('create or replace function public.upgrade_server'));
+need(commitFn.indexOf('perform 1 from public.profiles where id=uid for update')<commitFn.indexOf('delete from public.case_fairness_rounds'),'Commit must lock profile before replacing an active fairness round');
+need(openFn.indexOf('perform 1 from public.profiles where id=uid for update')<openFn.indexOf('select * into fair_round'),'Open must use the same profile-first lock order as commit');

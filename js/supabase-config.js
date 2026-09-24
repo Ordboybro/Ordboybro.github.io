@@ -4,5 +4,5 @@
  */
 window.EMOJI_DROPS_SUPABASE=Object.freeze({
   url:'https://ikodftqyzfeeoophwlvy.supabase.co',
-  anonKey:'sb_publishable_9Zouq9ZlMFl8dEupnd75PA_RwHdCajK'
+  publishableKey:'sb_publishable_9Zouq9ZlMFl8dEupnd75PA_RwHdCajK'
 });

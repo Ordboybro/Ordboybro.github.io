@@ -81,3 +81,9 @@ const cases = {
     {emoji:"🎮",rarity:"common",price:"8₽"},{emoji:"🕹️",rarity:"common",price:"9₽"},{emoji:"🃏",rarity:"common",price:"10₽"},{emoji:"🀄",rarity:"common",price:"11₽"},{emoji:"🎴",rarity:"common",price:"12₽"},{emoji:"🎲",rarity:"rare",price:"20₽"},{emoji:"♟️",rarity:"rare",price:"22₽"},{emoji:"🎯",rarity:"rare",price:"24₽"},{emoji:"🧩",rarity:"rare",price:"25₽"},{emoji:"🧸",rarity:"rare",price:"26₽"},{emoji:"🎪",rarity:"rare",price:"28₽"},{emoji:"🎰",rarity:"rare",price:"30₽"},{emoji:"🎱",rarity:"rare",price:"32₽"},{emoji:"🎳",rarity:"rare",price:"36₽"},{emoji:"👾",rarity:"epic",price:"50₽"},{emoji:"💻",rarity:"epic",price:"55₽"},{emoji:"🖥️",rarity:"epic",price:"58₽"},{emoji:"🎮",rarity:"epic",price:"62₽"},{emoji:"🕹️",rarity:"epic",price:"65₽"},{emoji:"🧙‍♂️",rarity:"mythical",price:"90₽"},{emoji:"🧙‍♀️",rarity:"mythical",price:"95₽"},{emoji:"🦸‍♂️",rarity:"mythical",price:"100₽"},{emoji:"🦸‍♀️",rarity:"mythical",price:"105₽"},{emoji:"🦹‍♂️",rarity:"mythical",price:"110₽"},{emoji:"🦹‍♀️",rarity:"mythical",price:"115₽"},{emoji:"🧝‍♂️",rarity:"mythical",price:"125₽"},{emoji:"🧝‍♀️",rarity:"mythical",price:"130₽"},{emoji:"🧛‍♂️",rarity:"mythical",price:"135₽"},{emoji:"🧛‍♀️",rarity:"mythical",price:"140₽"},{emoji:"🧜‍♂️",rarity:"mythical",price:"145₽"},{emoji:"🧜‍♀️",rarity:"mythical",price:"150₽"},{emoji:"🧞‍♂️",rarity:"legendary",price:"250₽"},{emoji:"🧞‍♀️",rarity:"legendary",price:"300₽"},{emoji:"🏆",rarity:"legendary",price:"350₽"},{emoji:"👑",rarity:"legendary",price:"500₽"}
   ]
 };
+
+
+/* Canonical runtime data export. */
+window.cases=cases;
+window.casePrices=casePrices;
+window.rarities=rarities;

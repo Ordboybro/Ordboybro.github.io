@@ -1,6 +1,21 @@
 -- Emoji Drops — server-authoritative economy v8.
 -- Canonical case prices and authoritative random outcomes stay on the server.
 create extension if not exists pgcrypto;
+-- Cryptographically strong uniform roll for server-authoritative outcomes.
+-- The result remains server-side; this is not a provably-fair reveal protocol by itself.
+create or replace function public.secure_uniform_roll() returns numeric
+language sql volatile security definer set search_path='' as $$
+  with r as (select public.gen_random_bytes(4) as b)
+  select (
+    pg_catalog.get_byte(b,0)::numeric*16777216 +
+    pg_catalog.get_byte(b,1)::numeric*65536 +
+    pg_catalog.get_byte(b,2)::numeric*256 +
+    pg_catalog.get_byte(b,3)::numeric
+  ) / 4294967296
+  from r;
+$$;
+revoke execute on function public.secure_uniform_roll() from public,anon,authenticated;
+
 
 create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
@@ -131,10 +146,10 @@ revoke execute on function public.profile_snapshot() from public,anon;
 grant execute on function public.profile_snapshot() to authenticated;
 revoke execute on function public.claim_daily_server() from public,anon;
 grant execute on function public.claim_daily_server() to authenticated;
-revoke execute on function public.open_case_server(text,numeric) from public,anon;
+revoke execute on function public.open_case_server(text,numeric,uuid) from public,anon;
+grant execute on function public.open_case_server(text,numeric,uuid) to authenticated;
 revoke execute on function public.sell_all_server() from public,anon;
 grant execute on function public.sell_all_server() to authenticated;
-revoke execute on function public.upgrade_server(text,numeric,numeric) from public,anon,authenticated;
 drop function if exists public.upgrade_server(text,numeric,numeric);
 
 -- Canonical case catalogue and server-side resolution (self-contained schema).
@@ -461,37 +476,142 @@ insert into public.case_items(case_id,item_index,emoji,rarity,item_price) values
 ('games',34,'👑','legendary',500)
 on conflict (case_id,item_index) do update set emoji=excluded.emoji,rarity=excluded.rarity,item_price=excluded.item_price;
 
-create or replace function public.open_case_server(p_case_id text, p_cost numeric default null) returns jsonb
+-- Provably-fair case round: a commitment is exposed before the result and the seed is released only after consumption.
+create table if not exists public.case_fairness_rounds (
+  id uuid primary key default public.gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  case_id text not null,
+  client_nonce text not null,
+  server_seed text not null,
+  commitment text not null,
+  created_at timestamptz not null default now(),
+  consumed_at timestamptz,
+  result jsonb
+);
+alter table public.case_fairness_rounds enable row level security;
+revoke all on table public.case_fairness_rounds from public,anon,authenticated;
+create unique index if not exists case_fairness_active_user_idx
+  on public.case_fairness_rounds(user_id) where consumed_at is null;
+create index if not exists case_fairness_user_created_idx
+  on public.case_fairness_rounds(user_id,created_at desc);
+
+create or replace function public.fair_uniform(p_seed text,p_nonce text,p_case_id text,p_label text) returns numeric
+language sql immutable security definer set search_path='' as $fairuniform$
+  with d as (
+    select digest(coalesce(p_seed,'')||':'||coalesce(p_nonce,'')||':'||lower(trim(coalesce(p_case_id,'')))||':'||coalesce(p_label,''),'sha256') as b
+  )
+  select (
+    get_byte(b,0)::numeric*72057594037927936 +
+    get_byte(b,1)::numeric*281474976710656 +
+    get_byte(b,2)::numeric*1099511627776 +
+    get_byte(b,3)::numeric*4294967296 +
+    get_byte(b,4)::numeric*16777216 +
+    get_byte(b,5)::numeric*65536 +
+    get_byte(b,6)::numeric*256 +
+    get_byte(b,7)::numeric
+  ) / 18446744073709551616 from d
+$fairuniform$;
+revoke execute on function public.fair_uniform(text,text,text,text) from public,anon,authenticated;
+
+create or replace function public.case_fairness_commit(p_case_id text,p_client_nonce text) returns jsonb
+language plpgsql security definer set search_path='' as $faircommit$
+declare
+  uid uuid:=auth.uid();
+  case_key text:=lower(trim(coalesce(p_case_id,'')));
+  nonce text:=trim(coalesce(p_client_nonce,''));
+  seed text;
+  commitment text;
+  round_id uuid;
+begin
+  if uid is null then raise exception 'AUTH_REQUIRED'; end if;
+  if public.case_cost(case_key) is null then raise exception 'INVALID_CASE'; end if;
+  if char_length(nonce)<8 or char_length(nonce)>128 then raise exception 'INVALID_CLIENT_NONCE'; end if;
+  if not exists(select 1 from public.case_items where case_id=case_key) then raise exception 'CASE_ITEMS_UNAVAILABLE'; end if;
+  -- Canonical mutation order: profile -> fairness round.
+  -- Both commit and open use the same order to prevent concurrent commit/open deadlocks.
+  perform 1 from public.profiles where id=uid for update;
+  if not found then raise exception 'PROFILE_NOT_FOUND'; end if;
+  delete from public.case_fairness_rounds where user_id=uid and consumed_at is null;
+  seed:=encode(public.gen_random_bytes(32),'hex');
+  commitment:=encode(digest(seed||':'||nonce||':'||case_key,'sha256'),'hex');
+  insert into public.case_fairness_rounds(user_id,case_id,client_nonce,server_seed,commitment)
+    values(uid,case_key,nonce,seed,commitment)
+    returning id into round_id;
+  return jsonb_build_object('round_id',round_id,'case_id',case_key,'client_nonce',nonce,'commitment',commitment,'algorithm','sha256-csprng-v1');
+end; $faircommit$;
+revoke execute on function public.case_fairness_commit(text,text) from public,anon;
+grant execute on function public.case_fairness_commit(text,text) to authenticated;
+
+drop function if exists public.open_case_server(text,numeric);
+create or replace function public.open_case_server(p_case_id text,p_cost numeric,p_round_id uuid) returns jsonb
 language plpgsql security definer set search_path='' as $$
 declare
-  uid uuid:=auth.uid(); bal numeric; inv jsonb; cost numeric; roll numeric:=random(); v_rarity text; chosen public.case_items%rowtype; item jsonb;
+  uid uuid:=auth.uid();
+  bal numeric;
+  inv jsonb;
+  cost numeric;
+  roll numeric;
+  item_roll numeric;
+  item_count integer;
+  item_offset integer;
+  v_rarity text;
+  chosen public.case_items%rowtype;
+  item jsonb;
+  fair_round public.case_fairness_rounds%rowtype;
+  expected_commitment text;
 begin
   if uid is null then raise exception 'AUTH_REQUIRED'; end if;
   cost:=public.case_cost(p_case_id);
-  if cost is null then raise exception 'INVALID_CASE'; end if;
-  select balance,inventory into bal,inv from public.profiles where id=uid for update;
+  if cost is null or p_cost is null or round(p_cost,2)<>round(cost,2) then raise exception 'INVALID_CASE_COST'; end if;
+  perform 1 from public.profiles where id=uid for update;
+  if not found then raise exception 'PROFILE_NOT_FOUND'; end if;
+  select * into fair_round from public.case_fairness_rounds where id=p_round_id and user_id=uid and consumed_at is null for update;
+  if fair_round.id is null then raise exception 'FAIRNESS_COMMIT_REQUIRED'; end if;
+  if fair_round.case_id<>lower(trim(p_case_id)) then raise exception 'FAIRNESS_CASE_MISMATCH'; end if;
+  if fair_round.created_at < now()-interval '5 minutes' then
+    update public.case_fairness_rounds set consumed_at=now() where id=fair_round.id;
+    raise exception 'FAIRNESS_COMMIT_EXPIRED';
+  end if;
+  expected_commitment:=encode(digest(fair_round.server_seed||':'||fair_round.client_nonce||':'||fair_round.case_id,'sha256'),'hex');
+  if expected_commitment<>fair_round.commitment then raise exception 'FAIRNESS_COMMIT_INVALID'; end if;
+  select balance,inventory into bal,inv from public.profiles where id=uid;
   if bal is null then raise exception 'PROFILE_NOT_FOUND'; end if;
   if bal<cost then raise exception 'INSUFFICIENT_FUNDS'; end if;
+  roll:=public.fair_uniform(fair_round.server_seed,fair_round.client_nonce,fair_round.case_id,'rarity');
+  item_roll:=public.fair_uniform(fair_round.server_seed,fair_round.client_nonce,fair_round.case_id,'item');
   v_rarity:=case when roll<.01 then 'legendary' when roll<.06 then 'mythical' when roll<.18 then 'epic' when roll<.45 then 'rare' else 'common' end;
-  select ci.* into chosen from public.case_items ci where ci.case_id=lower(trim(p_case_id)) and ci.rarity=v_rarity order by random() limit 1;
+  select count(*)::int into item_count from public.case_items where case_id=lower(trim(p_case_id)) and rarity=v_rarity;
+  if item_count<1 then raise exception 'CASE_ITEMS_UNAVAILABLE'; end if;
+  item_offset:=least(item_count-1,floor(item_roll*item_count)::int);
+  select ci.* into chosen from public.case_items ci where ci.case_id=lower(trim(p_case_id)) and ci.rarity=v_rarity order by ci.item_index offset item_offset limit 1;
   if chosen.item_index is null then raise exception 'CASE_ITEMS_UNAVAILABLE'; end if;
-  item:=jsonb_build_object('id',public.gen_random_uuid()::text,'emoji',chosen.emoji,'rarity',chosen.rarity,'price',chosen.item_price,'case_id',chosen.case_id,'caseKey',chosen.case_id,'obtainedAt',now());
+  item:=jsonb_build_object('id',public.gen_random_uuid()::text,'item_index',chosen.item_index,'emoji',chosen.emoji,'rarity',chosen.rarity,'price',chosen.item_price,'case_id',chosen.case_id,'caseKey',chosen.case_id,'obtainedAt',now());
   update public.profiles set balance=bal-cost,inventory=coalesce(inv,'[]'::jsonb)||jsonb_build_array(item),best_drop=case when best_drop is null or coalesce((best_drop->>'price')::numeric,0)<chosen.item_price then item else best_drop end,stats=jsonb_set(jsonb_set(jsonb_set(coalesce(stats,'{}'::jsonb),'{opens}',to_jsonb(coalesce((stats->>'opens')::int,0)+1),true),'{wins}',to_jsonb(coalesce((stats->>'wins')::int,0)+1),true),'{spent}',to_jsonb(coalesce((stats->>'spent')::numeric,0)+cost),true),'{earned}',to_jsonb(coalesce((stats->>'earned')::numeric,0)+chosen.item_price),true),updated_at=now() where id=uid;
   if to_regclass('public.live_drops') is not null then
-    execute 'insert into public.live_drops(user_id,nickname,item,case_id,item_price,created_at) values ($1,$2,$3,$4,$5,now())' using uid,(select nickname from public.profiles where id=uid),item,chosen.case_id,chosen.item_price;
+    execute 'insert into public.live_drops(user_id,nickname,item,case_id,item_price,created_at) values ($1,$2,$3,$4,$5,now())' using uid,(select nickname from public.profiles where id=uid),jsonb_build_object('emoji',item->>'emoji','rarity',item->>'rarity','price',item->>'price'),chosen.case_id,chosen.item_price;
     execute 'delete from public.live_drops where created_at < now()-interval ''30 minutes''';
   end if;
-  return jsonb_build_object('item',item,'balance',bal-cost,'cost',cost);
+  update public.case_fairness_rounds set consumed_at=now(),result=jsonb_build_object('item',item,'balance',bal-cost,'cost',cost) where id=fair_round.id;
+  return jsonb_build_object(
+    'item',item,
+    'balance',bal-cost,
+    'cost',cost,
+    'fairness',jsonb_build_object(
+      'round_id',fair_round.id,
+      'commitment',fair_round.commitment,
+      'server_seed',fair_round.server_seed,
+      'client_nonce',fair_round.client_nonce,
+      'algorithm','sha256-csprng-v1'
+    )
+  );
 end; $$;
-revoke execute on function public.open_case_server(text,numeric) from public,anon;
-
 -- Canonical Upgrade RPC. The 7-argument signature is the only supported client contract.
 -- Emoji Drops — authoritative Upgrade target and chance validation.
 -- Target identity is resolved against the same server-owned case catalog used by case opening.
 create or replace function public.upgrade_server(p_item_id text,p_target_price numeric,p_multiplier numeric,p_target_emoji text,p_target_rarity text,p_target_case_id text,p_chance numeric) returns jsonb
 language plpgsql security definer set search_path='' as $$
 declare
-  uid uuid:=auth.uid(); inv jsonb; src jsonb; src_price numeric; target public.case_items%rowtype; max_chance numeric; chance numeric; roll numeric:=random(); success boolean; result jsonb;
+  uid uuid:=auth.uid(); inv jsonb; src jsonb; src_price numeric; target public.case_items%rowtype; max_chance numeric; chance numeric; roll numeric:=public.secure_uniform_roll(); success boolean; result jsonb;
 begin
   if uid is null then raise exception 'AUTH_REQUIRED'; end if;
   select inventory into inv from public.profiles where id=uid for update;
@@ -587,20 +707,45 @@ grant execute on function public.market_snapshot() to anon;
 
 create or replace function public.buy_market_listing(p_listing_id uuid) returns jsonb
 language plpgsql security definer set search_path='' as $$
-declare uid uuid:=auth.uid(); l public.market_listings%rowtype; buyer public.profiles%rowtype; seller public.profiles%rowtype; item jsonb;
+declare
+  uid uuid:=auth.uid();
+  l public.market_listings%rowtype;
+  buyer public.profiles%rowtype;
+  seller public.profiles%rowtype;
+  item jsonb;
+  seller_id uuid;
 begin
   if uid is null then raise exception 'AUTH_REQUIRED'; end if;
+
+  -- Read the immutable seller id first, then lock both profiles in deterministic order,
+  -- and only then lock the listing row. This prevents buy/buy and buy/cancel deadlocks.
+  select ml.seller_id into seller_id from public.market_listings ml where ml.id=p_listing_id;
+  if seller_id is null then raise exception 'LISTING_UNAVAILABLE'; end if;
+  if seller_id=uid then raise exception 'SELF_PURCHASE_FORBIDDEN'; end if;
+
+  perform 1 from public.profiles where id in (uid,seller_id) order by id for update;
+
   select * into l from public.market_listings where id=p_listing_id for update;
   if l.id is null or l.status<>'active' then raise exception 'LISTING_UNAVAILABLE'; end if;
-  if l.seller_id=uid then raise exception 'SELF_PURCHASE_FORBIDDEN'; end if;
+  if l.seller_id<>seller_id then raise exception 'LISTING_UNAVAILABLE'; end if;
+
   item:=l.item;
-  perform 1 from public.profiles where id in (uid,l.seller_id) order by id for update;
   select * into buyer from public.profiles where id=uid;
   select * into seller from public.profiles where id=l.seller_id;
   if buyer.id is null or seller.id is null then raise exception 'PROFILE_NOT_FOUND'; end if;
   if buyer.balance<l.listing_price then raise exception 'INSUFFICIENT_FUNDS'; end if;
-  update public.profiles set balance=balance-l.listing_price,inventory=coalesce(inventory,'[]'::jsonb)||jsonb_build_array(item),stats=jsonb_set(coalesce(stats,'{}'::jsonb),'{spent}',to_jsonb(coalesce((stats->>'spent')::numeric,0)+l.listing_price),true),updated_at=now() where id=uid;
-  update public.profiles set balance=balance+l.listing_price,stats=jsonb_set(coalesce(stats,'{}'::jsonb),'{earned}',to_jsonb(coalesce((stats->>'earned')::numeric,0)+l.listing_price),true),updated_at=now() where id=l.seller_id;
+
+  update public.profiles
+     set balance=balance-l.listing_price,
+         inventory=coalesce(inventory,'[]'::jsonb)||jsonb_build_array(item),
+         stats=jsonb_set(coalesce(stats,'{}'::jsonb),'{spent}',to_jsonb(coalesce((stats->>'spent')::numeric,0)+l.listing_price),true),
+         updated_at=now()
+   where id=uid;
+  update public.profiles
+     set balance=balance+l.listing_price,
+         stats=jsonb_set(coalesce(stats,'{}'::jsonb),'{earned}',to_jsonb(coalesce((stats->>'earned')::numeric,0)+l.listing_price),true),
+         updated_at=now()
+   where id=l.seller_id;
   update public.market_listings set status='sold',buyer_id=uid,sold_at=now() where id=l.id;
   return jsonb_build_object('item',item,'balance',(select balance from public.profiles where id=uid),'listing_id',l.id,'listing_price',l.listing_price);
 end; $$;
@@ -609,25 +754,30 @@ grant execute on function public.buy_market_listing(uuid) to authenticated;
 
 create or replace function public.cancel_market_listing(p_listing_id uuid) returns jsonb
 language plpgsql security definer set search_path='' as $$
-declare uid uuid:=auth.uid(); l public.market_listings%rowtype;
+declare
+  uid uuid:=auth.uid();
+  l public.market_listings%rowtype;
+  seller_id uuid;
 begin
   if uid is null then raise exception 'AUTH_REQUIRED'; end if;
+  select ml.seller_id into seller_id from public.market_listings ml where ml.id=p_listing_id;
+  if seller_id is null then raise exception 'LISTING_UNAVAILABLE'; end if;
+  if seller_id<>uid then raise exception 'NOT_LISTING_OWNER'; end if;
+  perform 1 from public.profiles where id=uid for update;
   select * into l from public.market_listings where id=p_listing_id for update;
-  if l.id is null or l.status<>'active' then raise exception 'LISTING_UNAVAILABLE'; end if;
-  if l.seller_id<>uid then raise exception 'NOT_LISTING_OWNER'; end if;
-  update public.profiles set inventory=coalesce(inventory,'[]'::jsonb)||jsonb_build_array(l.item),updated_at=now() where id=uid;
-  update public.market_listings set status='cancelled',cancelled_at=now() where id=l.id;
+  if l.id is null or l.status<>'active' or l.seller_id<>seller_id then raise exception 'LISTING_UNAVAILABLE'; end if;
+  update public.profiles
+     set inventory=coalesce(inventory,'[]'::jsonb)||jsonb_build_array(l.item),
+         updated_at=now()
+   where id=uid;
+  update public.market_listings
+     set status='cancelled',cancelled_at=now()
+   where id=l.id;
   return jsonb_build_object('item',l.item,'listing_id',l.id);
 end; $$;
 revoke execute on function public.cancel_market_listing(uuid) from public,anon;
 grant execute on function public.cancel_market_listing(uuid) to authenticated;
 
--- Direct table access is intentionally denied for the economy tables; clients use the narrow RPC surface.
-revoke all on table public.profiles from anon,authenticated;
-revoke all on table public.case_items from anon,authenticated;
-revoke all on table public.market_listings from anon,authenticated;
-
--- Live Drops is read-only to clients; writes are performed by server-side RPCs.
 create table if not exists public.live_drops (
   id bigint generated always as identity primary key,
   user_id uuid references public.profiles(id) on delete cascade,
@@ -643,18 +793,55 @@ drop policy if exists "live_drops_read_authenticated" on public.live_drops;
 create policy "live_drops_read_authenticated" on public.live_drops for select to authenticated using (true);
 drop policy if exists "live_drops_read_anon" on public.live_drops;
 create policy "live_drops_read_anon" on public.live_drops for select to anon using (true);
-grant select (id,nickname,item,case_id,item_price,created_at) on public.live_drops to authenticated,anon;
+grant select (nickname,item,case_id,item_price,created_at) on public.live_drops to authenticated,anon;
+-- Public Live Drops payload contract: never persist private inventory identity in the public item JSON.
+update public.live_drops
+   set item=jsonb_build_object('emoji',item->>'emoji','rarity',item->>'rarity','price',item->>'price')
+ where item ? 'id' or item ? 'caseKey' or item ? 'obtainedAt';
 create index if not exists live_drops_created_idx on public.live_drops(created_at desc);
 create index if not exists live_drops_user_idx on public.live_drops(user_id);
 
--- Realtime is optional in local Supabase projects; add the table only when the publication exists.
-do $ begin
+-- Live Drops use a custom public Broadcast payload instead of Postgres Changes.
+do $
+begin
   if exists (select 1 from pg_publication where pubname='supabase_realtime')
-     and not exists (select 1 from pg_publication_tables where pubname='supabase_realtime' and schemaname='public' and tablename='live_drops') then
-    execute 'alter publication supabase_realtime add table public.live_drops';
+     and exists (select 1 from pg_publication_tables where pubname='supabase_realtime' and schemaname='public' and tablename='live_drops') then
+    execute 'alter publication supabase_realtime drop table public.live_drops';
   end if;
 exception when others then null;
 end $;
+
+create or replace function public.live_drops_broadcast_insert()
+returns trigger
+language plpgsql
+security definer
+set search_path=''
+as $
+begin
+  perform realtime.send(
+    jsonb_build_object(
+      'nickname',new.nickname,
+      'item',jsonb_build_object(
+        'emoji',new.item->>'emoji',
+        'rarity',new.item->>'rarity',
+        'price',new.item->>'price'
+      ),
+      'case_id',new.case_id,
+      'item_price',new.item_price,
+      'created_at',new.created_at
+    ),
+    'live_drop',
+    'emoji-drops-live-final',
+    false
+  );
+  return new;
+end;
+$;
+revoke execute on function public.live_drops_broadcast_insert() from public,anon,authenticated;
+drop trigger if exists live_drops_broadcast_insert on public.live_drops;
+create trigger live_drops_broadcast_insert
+after insert on public.live_drops
+for each row execute function public.live_drops_broadcast_insert();
 
 -- Make the intended public API explicit; new functions are not executable by arbitrary roles.
 alter default privileges in schema public revoke select,insert,update,delete on tables from anon,authenticated;
@@ -664,7 +851,7 @@ alter default privileges in schema public revoke execute on functions from anon;
 alter default privileges in schema public revoke execute on functions from authenticated;
 
 -- Canonical client execution grants (final overload surface).
-revoke execute on function public.open_case_server(text,numeric) from public,anon;
-grant execute on function public.open_case_server(text,numeric) to authenticated;
+revoke execute on function public.open_case_server(text,numeric,uuid) from public,anon;
+grant execute on function public.open_case_server(text,numeric,uuid) to authenticated;
 revoke execute on function public.upgrade_server(text,numeric,numeric,text,text,text,numeric) from public,anon;
 grant execute on function public.upgrade_server(text,numeric,numeric,text,text,text,numeric) to authenticated;
