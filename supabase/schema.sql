@@ -584,7 +584,7 @@ begin
   item:=jsonb_build_object('id',public.gen_random_uuid()::text,'item_index',chosen.item_index,'emoji',chosen.emoji,'rarity',chosen.rarity,'price',chosen.item_price,'case_id',chosen.case_id,'caseKey',chosen.case_id,'obtainedAt',now());
   update public.profiles set balance=bal-cost,inventory=coalesce(inv,'[]'::jsonb)||jsonb_build_array(item),best_drop=case when best_drop is null or coalesce((best_drop->>'price')::numeric,0)<chosen.item_price then item else best_drop end,stats=jsonb_set(jsonb_set(jsonb_set(coalesce(stats,'{}'::jsonb),'{opens}',to_jsonb(coalesce((stats->>'opens')::int,0)+1),true),'{wins}',to_jsonb(coalesce((stats->>'wins')::int,0)+1),true),'{spent}',to_jsonb(coalesce((stats->>'spent')::numeric,0)+cost),true),'{earned}',to_jsonb(coalesce((stats->>'earned')::numeric,0)+chosen.item_price),true),updated_at=now() where id=uid;
   if to_regclass('public.live_drops') is not null then
-    execute 'insert into public.live_drops(user_id,nickname,item,case_id,item_price,created_at) values ($1,$2,$3,$4,$5,now())' using uid,(select nickname from public.profiles where id=uid),item,chosen.case_id,chosen.item_price;
+    execute 'insert into public.live_drops(user_id,nickname,item,case_id,item_price,created_at) values ($1,$2,$3,$4,$5,now())' using uid,(select nickname from public.profiles where id=uid),jsonb_build_object('emoji',item->>'emoji','rarity',item->>'rarity','price',item->>'price'),chosen.case_id,chosen.item_price;
     execute 'delete from public.live_drops where created_at < now()-interval ''30 minutes''';
   end if;
   update public.case_fairness_rounds set consumed_at=now(),result=jsonb_build_object('item',item,'balance',bal-cost,'cost',cost) where id=fair_round.id;
@@ -760,6 +760,10 @@ create policy "live_drops_read_authenticated" on public.live_drops for select to
 drop policy if exists "live_drops_read_anon" on public.live_drops;
 create policy "live_drops_read_anon" on public.live_drops for select to anon using (true);
 grant select (nickname,item,case_id,item_price,created_at) on public.live_drops to authenticated,anon;
+-- Public Live Drops payload contract: never persist private inventory identity in the public item JSON.
+update public.live_drops
+   set item=jsonb_build_object('emoji',item->>'emoji','rarity',item->>'rarity','price',item->>'price')
+ where item ? 'id' or item ? 'caseKey' or item ? 'obtainedAt';
 create index if not exists live_drops_created_idx on public.live_drops(created_at desc);
 create index if not exists live_drops_user_idx on public.live_drops(user_id);
 
