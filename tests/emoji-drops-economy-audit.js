@@ -23,7 +23,7 @@ const rows=Object.entries(ctx.__cases).map(([key,items])=>{
   const ev=Object.entries(weights).reduce((sum,[rarity,p])=>sum+p*av[rarity],0);
   return {key,cost:Number(ctx.__prices[key]),ev:Number(ev.toFixed(2)),ratio:Number((ev/ctx.__prices[key]).toFixed(3)),count:items.length};
 });
-const serverRows=[...schema.matchAll(/\\('([^']+)',\\d+,'([^']*)','(common|rare|epic|mythical|legendary)',([0-9.]+)\\)/g)].map(m=>({case_id:m[1],rarity:m[3],price:Number(m[4])}));
+const serverRows=[...schema.matchAll(/\('([^']+)',\d+,'([^']*)','(common|rare|epic|mythical|legendary)',([0-9.]+)\)/g)].map(m=>({case_id:m[1],rarity:m[3],price:Number(m[4])}));
 if(serverRows.length<300)throw new Error('Server catalog unexpectedly small: '+serverRows.length);
 for(const row of rows){
   const exp=expected[row.key];
