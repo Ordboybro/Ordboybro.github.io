@@ -4,14 +4,14 @@ create extension if not exists pgcrypto;
 -- Cryptographically strong uniform roll for server-authoritative outcomes.
 -- The result remains server-side; this is not a provably-fair reveal protocol by itself.
 create or replace function public.secure_uniform_roll() returns numeric
-language sql volatile security definer set search_path='' as $
+language sql volatile security definer set search_path='' as $$
   select (
     get_byte(gen_random_bytes(4),0)::numeric*16777216 +
     get_byte(gen_random_bytes(4),1)::numeric*65536 +
     get_byte(gen_random_bytes(4),2)::numeric*256 +
     get_byte(gen_random_bytes(4),3)::numeric
   ) / 4294967296;
-$;
+$$;
 revoke execute on function public.secure_uniform_roll() from public,anon,authenticated;
 
 
@@ -762,13 +762,13 @@ create index if not exists live_drops_created_idx on public.live_drops(created_a
 create index if not exists live_drops_user_idx on public.live_drops(user_id);
 
 -- Realtime is optional in local Supabase projects; add the table only when the publication exists.
-do $ begin
+do $$ begin
   if exists (select 1 from pg_publication where pubname='supabase_realtime')
      and not exists (select 1 from pg_publication_tables where pubname='supabase_realtime' and schemaname='public' and tablename='live_drops') then
     execute 'alter publication supabase_realtime add table public.live_drops';
   end if;
 exception when others then null;
-end $;
+end $$;
 
 -- Make the intended public API explicit; new functions are not executable by arbitrary roles.
 alter default privileges in schema public revoke select,insert,update,delete on tables from anon,authenticated;
