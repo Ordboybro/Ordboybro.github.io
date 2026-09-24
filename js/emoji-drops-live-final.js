@@ -31,7 +31,7 @@ function paint(rows,configured,error,status){
 }
 async function refresh(){
  if(inFlight)return;
- const c=client(),ok=Boolean(cfg().url&&cfg().anonKey&&c);
+ const c=client(),ok=Boolean(cfg().url&&cfg().publishableKey&&c);
  if(!ok){paint([],false,false,'OFFLINE');return}
  inFlight=true;
  try{
