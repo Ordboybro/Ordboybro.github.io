@@ -1,6 +1,6 @@
 # Emoji Drops — final plan progress
 
-Updated: 2026-09-24
+Updated: 2026-09-24 — second-half hardening pass
 Branch: `final/emoji-drops-11-10-implementation-2026-09-23`
 PR: #35
 
@@ -91,3 +91,27 @@ This file is the persistent checkpoint for the user's request to finish **the re
 ## Release status
 
 The implementation work from the supplied final plan has been applied in code, schema, migrations and QA contracts. **The release gate is still open: GitHub is failing the workflow before a job is created (`jobs=[]`), so the current head has not been fully executed.** Do not merge until a valid full run is green.
+
+### Final hardening findings from the second-half review
+
+18. Fairness receipt correctness
+   - Fixed the canonical fairness migration receipt bug: the open RPC now returns fair_round.id instead of the nonexistent round.id.
+   - The fairness contract now checks the canonical fair_round variable, rejects any pre-result server_seed leak from the commitment RPC, and requires the post-result seed/commitment receipt.
+   - The client continues to verify the SHA-256 commitment and exact catalog index before the reel.
+
+19. Navigation guard precision
+   - Tightened the synthetic-touch click guard from 8 seconds to 900ms. It still blocks stale cross-target synthetic clicks without suppressing a later intentional tap.
+   - Navigation remains owned by pointerdown + click; pointerup is not a navigation trigger.
+
+20. Authenticated/local state boundary
+   - Added a release gate for anonymous local state versus authenticated server state.
+   - Login resets local state before profile_snapshot; logout/refresh failure restores the isolated demo state instead of merging stale authenticated inventory.
+   - Supabase client naming remains on the publishable-key model.
+
+21. External market/security review
+   - Current Supabase documentation recommends Broadcast over Postgres Changes for scalability/security, while distinguishing public and private channel authorization. Emoji Drops keeps Live Drops intentionally public and payload-minimized, with REST fallback and lifecycle cleanup rather than adding a new user-facing surface or an unnecessary transport migration.
+   - Current competitor patterns emphasize visible odds, live activity, upgrade/market loops and verifiable fairness. Emoji Drops keeps those elements while avoiding artificial urgency/FOMO.
+   - Current EU/FTC consumer-protection guidance reinforces clear price/odds information and avoiding manipulative purchase design, especially where minors can encounter paid randomized content.
+
+22. Release blocker
+   - GitHub's workflow-run connector currently returns no run objects for the latest PR head, so the full current-head CI result cannot yet be independently confirmed from this interface. The branch remains unmerged by design.
