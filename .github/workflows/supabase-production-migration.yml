@@ -38,6 +38,7 @@ jobs:
           test -n "$SUPABASE_DB_PASSWORD" || { echo 'Missing SUPABASE_DB_PASSWORD secret'; exit 1; }
           test -f supabase/migrations/20260923153500_market_live_canonical.sql
           test -f supabase/migrations/20260924123000_market_concurrency_final.sql
+          test -f supabase/migrations/20260924130000_live_drops_broadcast_public.sql
           supabase link --project-ref "$PROJECT_REF" --password "$SUPABASE_DB_PASSWORD"
       - name: Preview pending migrations
         run: supabase db push --dry-run
@@ -49,3 +50,4 @@ jobs:
           set -euo pipefail
           supabase migration list --linked
           supabase migration list --linked | grep -q '20260924123000' || { echo 'Final Market concurrency migration was not applied'; exit 1; }
+          supabase migration list --linked | grep -q '20260924130000' || { echo 'Live Drops Broadcast migration was not applied'; exit 1; }
