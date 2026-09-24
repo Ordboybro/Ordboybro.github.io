@@ -1,5 +1,6 @@
 const fs=require('fs');const app=fs.readFileSync('js/app-v2.js','utf8');const index=fs.readFileSync('index.html','utf8');const files=fs.readdirSync('js');
 if(!/const version=336;/.test(app)||!index.includes('js/app-v2.js?v=runtime-336'))throw Error('Runtime owner/cache version drift');
+if(/<style\\b/i.test(index)||/openModal|winModal|profileModal|statsModal|upgradeModal|authModal|document\\.write/i.test(index))throw Error('Legacy HTML/CSS shell remains in index.html');
 const supa=fs.readFileSync('js/supabase-config.js','utf8'),auth=fs.readFileSync('js/supabase-auth.js','utf8');if(!supa.includes('publishableKey')||auth.includes('anonKey'))throw Error('Supabase publishable-key naming drift');
 const requiredOwners=[['cases','js/emoji-drops-case-showcase-exact.js'],['upgrade','js/emoji-drops-upgrade-final.js'],['market','js/emoji-drops-market-v26.js'],['live','js/emoji-drops-live-final.js'],['transaction','js/emoji-drops-transaction-layer.js']];
 for(const [name,file] of requiredOwners){if(!files.includes(file.replace(/^js\//,'')))throw Error(`Missing canonical ${name} owner: ${file}`);if(!app.includes(file))throw Error(`Canonical ${name} owner not loaded by runtime manifest`)}
