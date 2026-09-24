@@ -43,7 +43,7 @@ const required=[
   'drop function if exists public.open_case_server(text,numeric)',
   "p_round_id uuid",
   "FAIRNESS_COMMIT_REQUIRED",
-  "FAIRNESS_COMMIT_INVALID"
+  "FAIRNESS_COMMIT_INVALID",
   'revoke all on table public.market_listings from anon,authenticated',
   'revoke all on table public.profiles from anon,authenticated',
   'revoke select,insert,update,delete on tables from anon,authenticated',
