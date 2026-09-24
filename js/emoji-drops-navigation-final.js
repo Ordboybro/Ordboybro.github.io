@@ -37,7 +37,8 @@ function handleClick(e){
   const b=e.target?.closest?.('[data-view]'),v=b?.getAttribute('data-view');
   if(!b||!V.includes(v))return;
   const now=Date.now();
-  if(lastPointerView===v&&now-lastPointerTime<700)return;
+  if(e.pointerType==='touch'||e.pointerType==='pen')return;
+  if(lastPointerTime&&now-lastPointerTime<3500)return;
   e.preventDefault();e.stopPropagation();
   commit(v,'click');
 }
