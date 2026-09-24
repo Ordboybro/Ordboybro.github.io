@@ -17,8 +17,8 @@ if(rows.length<300)throw new Error('Server catalog unexpectedly small: '+rows.le
 for(const k of Object.keys(prices)){
   if(!schema.includes("('"+k+"',"))throw new Error('Server catalog incomplete: '+k);
 }
-if((schema.match(/create or replace function public\\.open_case_server\\(/g)||[]).length!==1)throw new Error('Multiple open_case_server definitions');
-if((schema.match(/create or replace function public\\.upgrade_server\\(/g)||[]).length!==1)throw new Error('Multiple upgrade_server definitions');
+if((schema.match(/create or replace function public\.open_case_server\(/g)||[]).length!==1)throw new Error('Multiple open_case_server definitions');
+if((schema.match(/create or replace function public\.upgrade_server\(/g)||[]).length!==1)throw new Error('Multiple upgrade_server definitions');
 for(const marker of ['for update','SELF_PURCHASE_FORBIDDEN','claim_daily_server','INVALID_TARGET','case_items_lookup_idx','alter publication supabase_realtime add table public.live_drops','secure_uniform_roll','roll numeric:=public.secure_uniform_roll()']){
   if(!schema.includes(marker))throw new Error('Economy/realtime contract missing: '+marker);
 }
