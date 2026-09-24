@@ -25,8 +25,10 @@ function css(){if($('#'+ID+'-style'))return;const s=document.createElement('styl
 #view-profile .ed-history-row{min-height:44px!important;align-items:center!important}
 @media(max-width:700px){
 .ed-main{padding:9px 10px 70px!important}
-.ed-nav{margin-bottom:11px!important}
-.ed-nav button{height:48px!important;font-size:14px!important}
+.ed-nav{grid-template-columns:repeat(2,minmax(0,1fr))!important;margin-bottom:11px!important;gap:7px!important}
+.ed-nav button{height:48px!important;min-width:0!important;font-size:14px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+.ed-nav button.active{pointer-events:none!important;z-index:1!important}
+.ed-nav button:not(.active){position:relative!important;z-index:2!important}
 .ed-cases{gap:9px!important}
 .ed-case{min-height:252px!important;padding:0 8px 11px!important;border-radius:18px!important}
 .ed-case-art{height:138px!important;margin:0 -8px!important;font-size:64px!important}
