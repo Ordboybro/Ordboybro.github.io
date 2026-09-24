@@ -20,7 +20,7 @@ for(const marker of ['navigation-final','case-showcase-exact','transaction-layer
 if((app.split('js/emoji-drops-live-final.js').length-1)!==1)throw Error('Live Drops owner loaded more than once');
 if(!app.includes('installPointerLighting();'))throw Error('Premium pointer lighting is defined but not installed');
 if(!app.includes('--ed-surface-raised:')||!app.includes('--ed-radius-sm:')||!app.includes('--ed-radius-lg:')||!app.includes('--ed-shadow-lg:')||!app.includes('--ed-motion-fast:')||!app.includes('--ed-motion-slow:'))throw Error('Unified design tokens missing');
-const core=fs.readFileSync('js/emoji-drops-core.js','utf8'),exact=fs.readFileSync('js/emoji-drops-case-showcase-exact.js','utf8'),fav=fs.readFileSync('js/emoji-drops-final-ux.js','utf8'),nav=fs.readFileSync('js/emoji-drops-navigation-final.js','utf8');
+const core=fs.readFileSync('js/emoji-drops-core.js','utf8'),exact=fs.readFileSync('js/emoji-drops-case-showcase-exact.js','utf8'),fav=fs.readFileSync('js/emoji-drops-final-ux.js','utf8'),nav=fs.readFileSync('js/emoji-drops-navigation-final.js','utf8'),smooth=fs.readFileSync('js/emoji-drops-smooth-ui.js','utf8');
 if(core.includes("document.addEventListener('pointerup'")&&core.includes('[data-view]'))throw Error('Core runtime is competing with navigation-final for data-view events');
 if(!nav.includes("document.addEventListener('pointerdown'")||!nav.includes("document.addEventListener('click'"))throw Error('Navigation-final does not own pointerdown/click data-view lifecycle');
 if(nav.includes("document.addEventListener('pointerup'"))throw Error('Navigation-final must not use pointerup for view activation: touch pointerup can retarget and race with click synthesis');
