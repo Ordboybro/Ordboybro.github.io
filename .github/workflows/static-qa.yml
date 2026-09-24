@@ -138,6 +138,8 @@ jobs:
         run: node tests/emoji-drops-p3-p4-self-test.js
       - name: Supabase schema security and atomicity audit
         run: node tests/emoji-drops-supabase-schema-audit.js
+      - name: Committed fairness contract
+        run: node tests/emoji-drops-fairness-contract.js
       - name: Exact server/frontend catalog consistency
         run: node tests/emoji-drops-catalog-consistency.js
       - name: Canonical economy consistency
