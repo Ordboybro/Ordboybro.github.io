@@ -129,7 +129,7 @@ begin
     'balance',bal-cost,
     'cost',cost,
     'fairness',jsonb_build_object(
-      'round_id',round.id,
+      'round_id',fair_round.id,
       'commitment',fair_round.commitment,
       'server_seed',fair_round.server_seed,
       'client_nonce',fair_round.client_nonce,
