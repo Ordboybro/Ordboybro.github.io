@@ -1,5 +1,5 @@
 const fs=require('fs');const app=fs.readFileSync('js/app-v2.js','utf8');const index=fs.readFileSync('index.html','utf8');const files=fs.readdirSync('js');
-if(!/const version=333;/.test(app)||!index.includes('js/app-v2.js?v=runtime-333'))throw Error('Runtime owner/cache version drift');
+if(!/const version=334;/.test(app)||!index.includes('js/app-v2.js?v=runtime-334'))throw Error('Runtime owner/cache version drift');
 if(/id="(?:openModal|winModal|profileModal|upgradeModal|authModal)"/.test(index)||/function (?:changeNickname|changePassword|deleteAccount|edSettingsToast)\(/.test(index))throw Error('Legacy UI shell still embedded in index.html');
 const core=readCore();
 function readCore(){return fs.readFileSync('js/emoji-drops-core.js','utf8')}
