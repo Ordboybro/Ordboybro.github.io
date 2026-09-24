@@ -7,7 +7,7 @@ async function waitForCurrentProduction(u,attempts=24){
   for(let i=0;i<attempts;i++){
     last=await get(u);
     const body=String(last.body||'');
-    if(last.status>=200&&last.status<400&&body.includes('app-v2.js?v=runtime-336')&&body.includes('emoji-drops-navigation-final.js'))return last;
+    if(last.status>=200&&last.status<400&&body.includes('app-v2.js?v=runtime-336'))return last;
     await sleep(10000);
   }
   return last;
@@ -25,7 +25,8 @@ const get=u=>new Promise((res,rej)=>{const x=https.get(u,{headers:{'User-Agent':
    await p.goto(u,{waitUntil:'domcontentloaded',timeout:20000});
    await p.waitForFunction(()=>window.__emojiDropsRuntimeLoader?.complete===true,{timeout:15000});
    await p.waitForSelector('#view-cases.active .ed-case',{state:'visible',timeout:5000});
-   const state=await p.evaluate(()=>({active:[...document.querySelectorAll('.ed-view.active')].map(x=>x.id),doc:document.documentElement.scrollWidth,body:document.body.scrollWidth,w:innerWidth}));
+   const state=await p.evaluate(()=>({active:[...document.querySelectorAll('.ed-view.active')].map(x=>x.id),doc:document.documentElement.scrollWidth,body:document.body.scrollWidth,w:innerWidth,navReady:!!window.__emojiDropsNavigationFinal?.ready,runtimeComplete:!!window.__emojiDropsRuntimeLoader?.complete}));
+   if(!state.navReady||!state.runtimeComplete)throw Error(`Production runtime manifest contract failed: ${JSON.stringify(state)}`);
    if(state.active.length!==1||state.active[0]!=='view-cases')throw Error(`Production boot active-view contract failed: ${JSON.stringify(state)}`);
    if(state.doc>state.w+1||state.body>state.w+1)throw Error(`Production horizontal overflow: ${JSON.stringify(state)}`);
    for(const name of ['inventory','upgrade','market','profile']){
