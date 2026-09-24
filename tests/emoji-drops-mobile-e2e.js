@@ -19,7 +19,7 @@ async function waitActiveView(page,name,stage){
 }
 async function touchCard(page){
   const card=page.locator('#view-cases.active .ed-case').first();
-  await card.waitFor({state:'attached',timeout:5000});
+  try{await card.waitFor({state:'attached',timeout:5000})}catch(err){const d=await page.evaluate(()=>({view:window.__edView||null,active:[...document.querySelectorAll('.ed-view.active')].map(x=>x.id),casesCount:document.querySelectorAll('#view-cases .ed-case').length,casesHtml:document.querySelector('#view-cases')?.innerHTML?.slice(0,500)||'',navTrace:window.__edNavTrace||[],navActive:[...document.querySelectorAll('.ed-nav [data-view].active')].map(x=>x.getAttribute('data-view')),size:[innerWidth,innerHeight]}));throw Error('TOUCH_CARD_NOT_READY:'+JSON.stringify(d)+' cause='+String(err?.message||err))}
   const style=await card.evaluate(el=>{const s=getComputedStyle(el),r=el.getBoundingClientRect();return{width:r.width,height:r.height,display:s.display,visibility:s.visibility,pointerEvents:s.pointerEvents}});
   if(style.width<1||style.height<1||style.display==='none'||style.visibility==='hidden'||style.pointerEvents==='none')throw Error(`Case card is not physically laid out: ${JSON.stringify(style)}`);
   await card.evaluate(el=>el.scrollIntoView({block:'center',inline:'nearest'}));
