@@ -86,6 +86,8 @@ if(/(?:service_role|service-role|SUPABASE_SERVICE_ROLE_KEY)\s*[:=]/i.test(browse
 }
 if(!/grant select \(nickname,item,case_id,item_price,created_at\) on public\.live_drops to authenticated,anon/i.test(schema))throw new Error('Live Drops public column grant is missing or exposes private fields');
 if(!fs.existsSync(fairnessMigration))throw new Error('Committed fairness production migration missing');
+if(!/delete from public\.case_fairness_rounds where user_id=uid and consumed_at is null;[\s\S]*perform 1 from public\.profiles where id=uid for update;/i.test(schema))throw new Error('Fairness commit lock order must be fairness-round -> profile');
+if(!/select \* into fair_round from public\.case_fairness_rounds[\s\S]*for update;[\s\S]*select balance,inventory into bal,inv from public\.profiles where id=uid for update;/i.test(schema))throw new Error('Case open lock order must be fairness-round -> profile');
 const fairnessMigrationSql=fs.readFileSync(fairnessMigration,'utf8');
 for(const marker of ['create table if not exists public.case_fairness_rounds','create or replace function public.case_fairness_commit','create or replace function public.open_case_server(p_case_id text,p_cost numeric,p_round_id uuid)','drop function if exists public.open_case_server(text,numeric)','create or replace function public.upgrade_server','secure_uniform_roll','notify pgrst, \'reload schema\''])if(!fairnessMigrationSql.includes(marker))throw new Error('Committed fairness migration marker missing: '+marker);
 
