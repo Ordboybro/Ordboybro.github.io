@@ -3,6 +3,7 @@ const fs=require('fs');
 const crypto=require('crypto');
 const migration=fs.readFileSync('supabase/market-live-migration.sql','utf8');
 const migrationChain=fs.readFileSync('supabase/migrations/20260923153500_market_live_canonical.sql','utf8');
+const finalMigration=fs.readFileSync('supabase/migrations/20260924123000_market_concurrency_final.sql','utf8');
 const schema=fs.readFileSync('supabase/schema.sql','utf8');
 if(crypto.createHash('sha256').update(migration).digest('hex')!==crypto.createHash('sha256').update(migrationChain).digest('hex')) throw Error('Canonical Market migration source and migration-chain copy drifted');
 
@@ -29,6 +30,8 @@ if(/market_snapshot\(\).*?seller_id uuid/is.test(migration))
   throw Error('Production migration must not expose seller_id in market_snapshot');
 if(!/security definer set search_path=''/i.test(migration))
   throw Error('Production market RPCs must use SECURITY DEFINER with empty search_path');
+for(const marker of ['create or replace function public.buy_market_listing(p_listing_id uuid)','create or replace function public.cancel_market_listing(p_listing_id uuid)','pg_get_function_identity_arguments(p.oid)','r.args <> \'uuid\'','perform 1 from public.profiles where id in (uid,seller_id) order by id for update'])if(!finalMigration.includes(marker))throw Error('Final production Market migration contract missing: '+marker);
+if(!/select seller_id into seller_id[\s\S]*perform 1 from public\.profiles where id in \(uid,seller_id\) order by id for update;[\s\S]*select \* into l from public\.market_listings where id=p_listing_id for update/i.test(finalMigration))throw Error('Final Market buy migration must lock profiles before listing');
 if(/(?:^|\n)do \$(?:\n|$)|(?:\n)end \$;/m.test(migration))
   throw Error('Production market migration contains malformed bare dollar-quote delimiters');
 
