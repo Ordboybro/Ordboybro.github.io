@@ -2,6 +2,7 @@ const fs=require('fs');
 const schema=fs.readFileSync('supabase/schema.sql','utf8');
 const browser=fs.readFileSync('js/supabase-config.js','utf8');
 const tx=fs.readFileSync('js/emoji-drops-transaction-layer.js','utf8');
+const fairnessMigration='supabase/migrations/20260924110000_case_fairness_commitment.sql';
 
 if(/\.from\(['"]profiles['"]\)/i.test(tx))throw new Error('Transaction recovery must not read profiles directly; use profile_snapshot RPC');
 
@@ -84,6 +85,9 @@ if(/(?:service_role|service-role|SUPABASE_SERVICE_ROLE_KEY)\s*[:=]/i.test(browse
   throw new Error('Secret/service key exposed to browser');
 }
 if(!/grant select \(nickname,item,case_id,item_price,created_at\) on public\.live_drops to authenticated,anon/i.test(schema))throw new Error('Live Drops public column grant is missing or exposes private fields');
+if(!fs.existsSync(fairnessMigration))throw new Error('Committed fairness production migration missing');
+const fairnessMigrationSql=fs.readFileSync(fairnessMigration,'utf8');
+for(const marker of ['create table if not exists public.case_fairness_rounds','create or replace function public.case_fairness_commit','create or replace function public.open_case_server(p_case_id text,p_cost numeric,p_round_id uuid)','drop function if exists public.open_case_server(text,numeric)','create or replace function public.upgrade_server','secure_uniform_roll','notify pgrst, \'reload schema\''])if(!fairnessMigrationSql.includes(marker))throw new Error('Committed fairness migration marker missing: '+marker);
 
 const marketSig=schema.match(/market_snapshot\(\)\s*returns table\(([\s\S]*?)\)\s+language/i)?.[1]||'';
 if(!/\bis_owner\s+boolean\b/i.test(marketSig))throw new Error('market_snapshot must expose is_owner instead of seller_id');
