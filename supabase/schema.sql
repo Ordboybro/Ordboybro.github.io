@@ -527,11 +527,11 @@ begin
   if public.case_cost(case_key) is null then raise exception 'INVALID_CASE'; end if;
   if char_length(nonce)<8 or char_length(nonce)>128 then raise exception 'INVALID_CLIENT_NONCE'; end if;
   if not exists(select 1 from public.case_items where case_id=case_key) then raise exception 'CASE_ITEMS_UNAVAILABLE'; end if;
-  -- Lock order contract: fairness round -> profile. This matches open_case_server
-  -- and prevents commit/open deadlocks under concurrent taps or retries.
-  delete from public.case_fairness_rounds where user_id=uid and consumed_at is null;
+  -- Canonical mutation order: profile -> fairness round.
+  -- Both commit and open use the same order to prevent concurrent commit/open deadlocks.
   perform 1 from public.profiles where id=uid for update;
   if not found then raise exception 'PROFILE_NOT_FOUND'; end if;
+  delete from public.case_fairness_rounds where user_id=uid and consumed_at is null;
   seed:=encode(public.gen_random_bytes(32),'hex');
   commitment:=encode(digest(seed||':'||nonce||':'||case_key,'sha256'),'hex');
   insert into public.case_fairness_rounds(user_id,case_id,client_nonce,server_seed,commitment)
@@ -563,6 +563,8 @@ begin
   if uid is null then raise exception 'AUTH_REQUIRED'; end if;
   cost:=public.case_cost(p_case_id);
   if cost is null or p_cost is null or round(p_cost,2)<>round(cost,2) then raise exception 'INVALID_CASE_COST'; end if;
+  perform 1 from public.profiles where id=uid for update;
+  if not found then raise exception 'PROFILE_NOT_FOUND'; end if;
   select * into fair_round from public.case_fairness_rounds where id=p_round_id and user_id=uid and consumed_at is null for update;
   if fair_round.id is null then raise exception 'FAIRNESS_COMMIT_REQUIRED'; end if;
   if fair_round.case_id<>lower(trim(p_case_id)) then raise exception 'FAIRNESS_CASE_MISMATCH'; end if;
@@ -572,7 +574,7 @@ begin
   end if;
   expected_commitment:=encode(digest(fair_round.server_seed||':'||fair_round.client_nonce||':'||fair_round.case_id,'sha256'),'hex');
   if expected_commitment<>fair_round.commitment then raise exception 'FAIRNESS_COMMIT_INVALID'; end if;
-  select balance,inventory into bal,inv from public.profiles where id=uid for update;
+  select balance,inventory into bal,inv from public.profiles where id=uid;
   if bal is null then raise exception 'PROFILE_NOT_FOUND'; end if;
   if bal<cost then raise exception 'INSUFFICIENT_FUNDS'; end if;
   roll:=public.fair_uniform(fair_round.server_seed,fair_round.client_nonce,fair_round.case_id,'rarity');
@@ -705,20 +707,45 @@ grant execute on function public.market_snapshot() to anon;
 
 create or replace function public.buy_market_listing(p_listing_id uuid) returns jsonb
 language plpgsql security definer set search_path='' as $$
-declare uid uuid:=auth.uid(); l public.market_listings%rowtype; buyer public.profiles%rowtype; seller public.profiles%rowtype; item jsonb;
+declare
+  uid uuid:=auth.uid();
+  l public.market_listings%rowtype;
+  buyer public.profiles%rowtype;
+  seller public.profiles%rowtype;
+  item jsonb;
+  seller_id uuid;
 begin
   if uid is null then raise exception 'AUTH_REQUIRED'; end if;
+
+  -- Read the immutable seller id first, then lock both profiles in deterministic order,
+  -- and only then lock the listing row. This prevents buy/buy and buy/cancel deadlocks.
+  select ml.seller_id into seller_id from public.market_listings ml where ml.id=p_listing_id;
+  if seller_id is null then raise exception 'LISTING_UNAVAILABLE'; end if;
+  if seller_id=uid then raise exception 'SELF_PURCHASE_FORBIDDEN'; end if;
+
+  perform 1 from public.profiles where id in (uid,seller_id) order by id for update;
+
   select * into l from public.market_listings where id=p_listing_id for update;
   if l.id is null or l.status<>'active' then raise exception 'LISTING_UNAVAILABLE'; end if;
-  if l.seller_id=uid then raise exception 'SELF_PURCHASE_FORBIDDEN'; end if;
+  if l.seller_id<>seller_id then raise exception 'LISTING_UNAVAILABLE'; end if;
+
   item:=l.item;
-  perform 1 from public.profiles where id in (uid,l.seller_id) order by id for update;
   select * into buyer from public.profiles where id=uid;
   select * into seller from public.profiles where id=l.seller_id;
   if buyer.id is null or seller.id is null then raise exception 'PROFILE_NOT_FOUND'; end if;
   if buyer.balance<l.listing_price then raise exception 'INSUFFICIENT_FUNDS'; end if;
-  update public.profiles set balance=balance-l.listing_price,inventory=coalesce(inventory,'[]'::jsonb)||jsonb_build_array(item),stats=jsonb_set(coalesce(stats,'{}'::jsonb),'{spent}',to_jsonb(coalesce((stats->>'spent')::numeric,0)+l.listing_price),true),updated_at=now() where id=uid;
-  update public.profiles set balance=balance+l.listing_price,stats=jsonb_set(coalesce(stats,'{}'::jsonb),'{earned}',to_jsonb(coalesce((stats->>'earned')::numeric,0)+l.listing_price),true),updated_at=now() where id=l.seller_id;
+
+  update public.profiles
+     set balance=balance-l.listing_price,
+         inventory=coalesce(inventory,'[]'::jsonb)||jsonb_build_array(item),
+         stats=jsonb_set(coalesce(stats,'{}'::jsonb),'{spent}',to_jsonb(coalesce((stats->>'spent')::numeric,0)+l.listing_price),true),
+         updated_at=now()
+   where id=uid;
+  update public.profiles
+     set balance=balance+l.listing_price,
+         stats=jsonb_set(coalesce(stats,'{}'::jsonb),'{earned}',to_jsonb(coalesce((stats->>'earned')::numeric,0)+l.listing_price),true),
+         updated_at=now()
+   where id=l.seller_id;
   update public.market_listings set status='sold',buyer_id=uid,sold_at=now() where id=l.id;
   return jsonb_build_object('item',item,'balance',(select balance from public.profiles where id=uid),'listing_id',l.id,'listing_price',l.listing_price);
 end; $$;
