@@ -22,6 +22,7 @@ function handlePointerDown(e){
   if((e.pointerType!=='touch'&&e.pointerType!=='pen'))return;
   const b=e.target?.closest?.('[data-view]'),v=b?.getAttribute('data-view');
   if(!b||!V.includes(v))return;
+  try{if(Number.isFinite(e.pointerId)&&typeof b.setPointerCapture==='function')b.setPointerCapture(e.pointerId)}catch{}
   lastPointerTime=Date.now();
   lastPointerView=v;
 }
