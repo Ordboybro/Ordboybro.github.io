@@ -1,26 +1,74 @@
 const fs=require('fs');
 const path=require('path');
 const read=p=>fs.readFileSync(p,'utf8');
-const html=read('index.html'),loader=read('js/app-v2.js'),bootstrap=read('data.js');
-const requiredFiles=['js/data.js','js/app-v2.js','js/emoji-drops-data-export.js','js/emoji-drops-schema-migration.js','js/emoji-drops-data-bridge.js','js/emoji-drops-hardening.js','js/emoji-drops-core.js','js/emoji-drops-transaction-layer.js','js/emoji-drops-runtime-guards.js','js/emoji-drops-final-hardening.js','js/emoji-drops-release-polish.js','js/emoji-drops-product-layer.js','js/emoji-drops-product-plus.js','js/emoji-drops-action-resilience.js','js/emoji-drops-quality-final.js','js/emoji-drops-p3-polish.js','js/emoji-drops-p4-final.js','js/emoji-drops-v23-stability.js','js/emoji-drops-case-showcase-exact.js','js/emoji-drops-exact-landscape-polish.js','js/emoji-drops-case-authority-v2.js','js/emoji-drops-case-open-bridge.js','js/emoji-drops-reference-v23-studio.js','js/emoji-drops-case-authority-finalizer.js','js/emoji-drops-market-v26.js','js/emoji-drops-market-authority-final.js','js/emoji-drops-smooth-ui.js','js/emoji-drops-final-product-polish.js','js/emoji-drops-modal-finalizer.js','js/emoji-drops-upgrade-final.js','js/emoji-drops-final-ux.js'];
-for(const f of requiredFiles)if(!fs.existsSync(f))throw Error(`Missing runtime asset: ${f}`);
-for(const marker of ['js/data.js?v=data-sync-5','js/emoji-drops-data-export.js?v=data-export-1'])if(!bootstrap.includes(marker))throw Error(`Dataset bootstrap contract missing: ${marker}`);
-const appSource=loader;for(const marker of ['emoji-drops-reference-v23-studio.js','emoji-drops-market-v26.js','emoji-drops-live-final.js'])if(!appSource.includes(marker))throw Error(`Canonical product runtime contract missing: ${marker}`);
-const exportBridge=read('js/emoji-drops-data-export.js');for(const marker of ['window.cases=cases','window.casePrices=casePrices','window.rarities=rarities'])if(!exportBridge.includes(marker))throw Error(`Dataset export missing: ${marker}`);
-const dataBridge=read('js/emoji-drops-data-bridge.js');for(const marker of ['window.cases','window.casePrices','window.rarities','__emojiDropsDataBridge'])if(!dataBridge.includes(marker))throw Error(`Dataset bridge missing: ${marker}`);
-const scripts=[...html.matchAll(/<script[^>]+src=['\"]([^'\"]+)/gi)].map(m=>m[1].split('?')[0]);if(scripts.length!==2||!scripts.includes('js/data.js')||!scripts.includes('js/app-v2.js'))throw Error(`Unexpected root scripts: ${scripts.join(', ')}`);
-const order=requiredFiles.slice(3);const filesMatch=loader.match(/const files=\[(.*?)\];/s);if(!filesMatch)throw Error('Runtime files manifest missing');const runtimeFiles=[...filesMatch[1].matchAll(/['\"]([^'\"]+\.js)(?:\?[^'\"]*)?['\"]/g)].map(m=>path.basename(m[1]));const positions=order.map(x=>runtimeFiles.indexOf(path.basename(x)));if(positions.some(x=>x<0)||positions.some((x,i)=>i&&x<=positions[i-1]))throw Error(`Runtime order failed: ${JSON.stringify(positions)}`);
-const acceptableVersions=[['supabase-auth-8'],['case-open-bridge-34'],['txn-13'],['upgrade-final-29'],['final-ux-15'],['smooth-ui-3'],['live-final-20'],['market-v26-20']];for(const group of acceptableVersions)if(!group.some(v=>loader.includes(v)))throw Error(`Cache version missing: ${group.join(' or ')}`);
-const bridge=read('js/emoji-drops-case-open-bridge.js');for(const marker of ['normalizeKey','pointerdown','pointerup','skipSyntheticTouchClick','delayedRetry','TOUCH_GUARD_MS','Card-level touch opening is intentionally disabled'])if(!bridge.includes(marker))throw Error(`Case opener bridge contract missing: ${marker}`);if(/bridge v1[01]\b/.test(bridge))throw Error('Case opener bridge still advertises obsolete v11/v10 contract');
-const authority=read('js/emoji-drops-case-authority-v2.js');for(const marker of ['version:8','normalizeKey','keyFromElement','#edExactBox .edx-open button'])if(!authority.includes(marker))throw Error(`Case authority contract missing: ${marker}`);
-const liveOwner=read('js/emoji-drops-live-final.js');for(const marker of ['Live Drops','live_drops','postgres_changes','setInterval(refresh,3000)','MutationObserver','destroy:function'])if(!liveOwner.includes(marker))throw Error(`Live Drops owner contract missing: ${marker}`);
-const deletedLegacy=['js/emoji-drops-case-showcase.js','js/emoji-drops-case-showcase-final.js','js/emoji-drops-case-showcase-override.js','js/emoji-drops-case-authority.js','js/emoji-drops-ui-polish.js','js/emoji-drops-ui-polish-v2.js','js/emoji-drops-main-reference.js','js/emoji-drops-main-reference-v2.js','js/emoji-drops-layout-v3.js','js/emoji-drops-reference-v5.js','js/emoji-drops-reference-interaction-fix.js','js/emoji-drops-reference-v8-luxe.js','js/emoji-drops-reference-v9-hitfix.js','js/emoji-drops-reference-v10-stability.js','js/emoji-drops-reference-v11-modal-reset.js','js/emoji-drops-reference-v12-action-surface.js','js/emoji-drops-reference-v13-fixed-action.js','js/emoji-drops-reference-v14-no-nested-scroll.js','js/emoji-drops-reference-v15-case-precedence.js','js/emoji-drops-reference-v16-modal-footer.js','js/emoji-drops-reference-v17-scroll-container-fix.js','js/emoji-drops-reference-v18-modal-cleanup.js','js/emoji-drops-reference-v18-modal-zindex.js','js/emoji-drops-reference-v20-studio.js','js/functional-final.js','js/game-transaction-engine.js','js/motion-system.js','js/product-quality.js','js/runtime-action-bridge.js','js/runtime-final-qa.js','js/runtime-hardening.js','js/runtime-qa.js','js/transaction-guard.js','js/transaction-serialization.js','js/ux-overhaul.js'];for(const dead of deletedLegacy)if(fs.existsSync(dead))throw Error(`Deleted legacy file still present: ${dead}`);if(loader.match(/emoji-drops-(?:ui-polish|main-reference|layout-v3|reference-v\d+|reference-interaction-fix)\.js/))throw Error('Legacy visual layer still loaded');
-const ref=read('js/emoji-drops-reference-v23-studio.js');for(const marker of ['v24','ed-profile-hub','ed-studio-page','Live Drops','min-height:48px','min-width:50px'])if(!ref.includes(marker))throw Error(`v23 visual contract missing: ${marker}`);for(const n of [1,2,3])if(!fs.existsSync(`assets/emoji-drops/sprite-${n}.b64`))throw Error(`Missing sprite chunk ${n}`);for(const n of ['smile','nature','food'])if(!fs.existsSync(`assets/emoji-drops/live-${n}.b64`))throw Error(`Missing live artwork ${n}`);if(!fs.existsSync('assets/emoji-drops/smile.b64'))throw Error('Missing exact Smile artwork');console.log('Static audit v3 OK: parsed runtime manifest order, dataset bridge, exact visual authority, Live Drops owner, dead-layer cleanup and exact assets');
+const html=read('index.html');
+const loader=read('js/app-v2.js');
+const data=read('js/data.js');
+const schema=read('supabase/schema.sql');
 
-const marketSource=read('js/emoji-drops-market-v26.js');
-if(!marketSource.includes('x.is_owner'))throw Error('Market snapshot privacy owner flag contract missing');
-const canonicalSchema=read('supabase/schema.sql');
-if(!/market_snapshot\(\)[\s\S]*?is_owner boolean/s.test(canonicalSchema))throw Error('Canonical market snapshot must expose is_owner instead of seller UUID');
-const marketSig=canonicalSchema.match(/market_snapshot\(\)\s*returns table\(([\s\S]*?)\)\s+language/i)?.[1]||'';if(/\bseller_id\s+uuid\b/i.test(marketSig))throw Error('Canonical market snapshot still exposes seller_id');
-if(!fs.existsSync('supabase/migrations/20260922150000_market_snapshot_privacy.sql'))throw Error('Market privacy migration missing');
-console.log('Market snapshot privacy contract OK');
+const scripts=[...html.matchAll(/<script[^>]+src=['"]([^'"]+)/gi)].map(m=>m[1].split('?')[0]);
+if(scripts.length!==2||scripts[0]!=='js/data.js'||scripts[1]!=='js/app-v2.js')throw Error('Root shell must load only data.js then app-v2.js');
+if(!html.includes('js/app-v2.js?v=runtime-336'))throw Error('Root runtime cache contract must be runtime-336');
+for(const marker of ['window.cases=cases','window.casePrices=casePrices','window.rarities=rarities'])if(!data.includes(marker))throw Error('data.js canonical export missing: '+marker);
+
+const filesMatch=loader.match(/const files=\[(.*?)\];/s);
+if(!filesMatch)throw Error('Runtime files manifest missing');
+const runtime=[...filesMatch[1].matchAll(/['"]([^'"]+\.js)(?:\?[^'"]*)?['"]/g)].map(m=>path.basename(m[1]));
+const expected=[
+ 'supabase-config.js','supabase-auth.js','emoji-drops-schema-migration.js','emoji-drops-hardening.js',
+ 'emoji-drops-core.js','emoji-drops-transaction-layer.js','emoji-drops-runtime-guards.js','emoji-drops-final-hardening.js',
+ 'emoji-drops-release-polish.js','emoji-drops-product-layer.js','emoji-drops-navigation-final.js','emoji-drops-quality-final.js',
+ 'emoji-drops-p4-final.js','emoji-drops-case-showcase-exact.js','emoji-drops-reference-v23-studio.js','emoji-drops-market-v26.js',
+ 'emoji-drops-final-product-polish.js','emoji-drops-upgrade-final.js','emoji-drops-final-ux.js','emoji-drops-live-final.js','emoji-drops-p5-final-audit.js'
+];
+if(JSON.stringify(runtime)!==JSON.stringify(expected))throw Error('Canonical runtime manifest/order drift: '+JSON.stringify(runtime));
+for(const file of runtime)if(!fs.existsSync(path.join('js',file)))throw Error('Missing runtime module: '+file);
+for(const marker of [
+ 'const version=336;','supabase-auth-8','core-25','case-showcase-exact-40','market-v26-21','live-final-20',
+ 'upgrade-final-29','final-ux-15','p5-final-audit-2','emoji-drops-navigation-final.js?v=navigation-final-11'
+])if(!loader.includes(marker))throw Error('Runtime/cache marker missing: '+marker);
+
+const retired=[
+ 'emoji-drops-data-export.js','emoji-drops-data-bridge.js','emoji-drops-product-plus.js','emoji-drops-action-resilience.js','emoji-drops-p3-polish.js',
+ 'emoji-drops-v23-stability.js','emoji-drops-exact-landscape-polish.js','emoji-drops-case-authority-v2.js','emoji-drops-case-open-bridge.js',
+ 'emoji-drops-case-authority-finalizer.js','emoji-drops-market-authority-final.js','emoji-drops-smooth-ui.js','emoji-drops-modal-finalizer.js',
+ 'emoji-drops-cta-lock.js'
+];
+for(const name of retired){
+ if(fs.existsSync(path.join('js',name)))throw Error('Retired module still present: '+name);
+ if(loader.includes(name))throw Error('Retired module still loaded: '+name);
+}
+
+const nav=read('js/emoji-drops-navigation-final.js');
+for(const marker of ['version:11','emoji-drops-view-committed','pointerdown','TOUCH_CLICK_GUARD_MS','stopImmediatePropagation'])if(!nav.includes(marker))throw Error('Navigation ownership contract missing: '+marker);
+if(/pointerup[^\n]*commit\(/.test(nav))throw Error('Navigation must not commit views from pointerup');
+
+const exact=read('js/emoji-drops-case-showcase-exact.js');
+for(const marker of ['version:15','case_fairness_commit','verifyFairnessReceipt','orientation:landscape','#edExactBox .edx-open','data-result-locked'])if(!exact.includes(marker))throw Error('Exact case contract missing: '+marker);
+if(/window\.addEventListener\(['"]click['"]/.test(exact))throw Error('Exact case must not own a global click navigation layer');
+
+const live=read('js/emoji-drops-live-final.js');
+for(const marker of ['version:20','postgres_changes','SUBSCRIBED','CHANNEL_ERROR','FALLBACK','destroyed','generation','nickname,item,case_id,item_price,created_at'])if(!live.includes(marker))throw Error('Live Drops lifecycle contract missing: '+marker);
+if(/setInterval\(\(\)=>.*scrollBy/.test(live)||/rotateTimer/.test(live))throw Error('Live Drops must not auto-rotate attention');
+
+const market=read('js/emoji-drops-market-v26.js');
+if(!market.includes('version:32')||!market.includes('is_owner')||!market.includes('destroy'))throw Error('Market owner lifecycle/privacy contract missing');
+
+const core=read('js/emoji-drops-core.js');
+if(!core.includes("rpc('profile_snapshot',{})")||!core.includes("window.__emojiDropsCore={version:APP"))throw Error('Core server-authoritative profile contract missing');
+if(/localStorage\.setItem\([^\n]+users/.test(core))throw Error('Authenticated legacy users mirror still present');
+
+const supa=read('js/supabase-config.js');
+const auth=read('js/supabase-auth.js');
+if(!supa.includes('publishableKey')||/anonKey/.test(supa)||!auth.includes('publishableKey')||/anonKey/.test(auth))throw Error('Supabase publishable-key naming drift');
+
+if(!schema.includes('case_fairness_rounds')||!schema.includes('case_fairness_commit')||!schema.includes('secure_uniform_roll'))throw Error('Server fairness/security contract missing');
+const marketSig=schema.match(/market_snapshot\(\)\s*returns table\(([\s\S]*?)\)\s+language/i)?.[1]||'';
+if(/seller_id\s+uuid/i.test(marketSig)||!/is_owner\s+boolean/i.test(marketSig))throw Error('Market privacy contract drift');
+for(const mig of ['supabase/migrations/20260922150000_market_snapshot_privacy.sql','supabase/migrations/20260923170000_canonical_market_rpc_identity.sql','supabase/migrations/20260923190000_final_rpc_identity_hardening.sql','supabase/migrations/20260924110000_case_fairness_commitment.sql'])if(!fs.existsSync(mig))throw Error('Required production migration missing: '+mig);
+
+for(const n of [1,2,3])if(!fs.existsSync(`assets/emoji-drops/sprite-${n}.b64`))throw Error('Missing sprite chunk '+n);
+for(const n of ['smile','nature','food'])if(!fs.existsSync(`assets/emoji-drops/live-${n}.b64`))throw Error('Missing Live Drops art '+n);
+if(!fs.existsSync('assets/emoji-drops/smile.b64'))throw Error('Missing exact Smile art');
+
+console.log('Static audit v3 OK: single root shell, canonical 336 runtime, retired-layer cleanup, navigation/case/live/market ownership, publishable-key naming, fairness production migrations and required visual assets.');
