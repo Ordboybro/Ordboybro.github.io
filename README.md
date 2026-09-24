@@ -1,52 +1,88 @@
 # 🎰 Emoji Drops
 
-> A browser-based case-opening simulator with roulette, Live Drops, profile progression, inventory, market and item upgrades.
+> A polished browser-based case-opening simulator with Cases, Upgrade, Market, Live Drops, Profile and Inventory.
 
-[![Static QA](https://github.com/Ordboybro/Ordboybro.github.io/actions/workflows/static-qa.yml/badge.svg)](https://github.com/Ordboybro/Ordboybro.github.io/actions/workflows/static-qa.yml)  
+[![Static QA](https://github.com/Ordboybro/Ordboybro.github.io/actions/workflows/static-qa.yml/badge.svg)](https://github.com/Ordboybro/Ordboybro.github.io/actions/workflows/static-qa.yml)
+[![GitHub Pages](https://img.shields.io/badge/demo-GitHub%20Pages-111111?logo=github)](https://ordboybro.github.io/)
+
 **Live demo:** https://ordboybro.github.io/
 
-Emoji Drops is a static-first web application built with vanilla HTML, CSS and JavaScript. The UI follows a dark premium reference direction: Cases / Upgrade / Market are the primary navigation, Profile contains Inventory and related account sections, and case cards use large thematic emojis.
+## 🎯 About the project
 
-> This is a simulator / portfolio project. It does not process real-money gambling or payments.
+Emoji Drops is a portfolio web application built from scratch with vanilla HTML, CSS and JavaScript. It recreates the feel of a modern case-opening interface while keeping the project in a controlled, static-first architecture.
 
-## ✨ Features
+The product focuses on a few existing surfaces and makes them feel coherent and production-ready:
 
-- 📦 Eight themed cases with weighted rarity drops
-- 🎰 Exact case-opening modal with roulette/reel presentation
-- ⚡ Resilient opening and interaction handling
-- 🔴 Live Drops feed
-- 👤 Profile with Inventory and account sections
-- 📊 Statistics, progression and achievements
-- 🚀 Item upgrades with transaction-safe state mutation
-- 🛒 Market flows and balance/inventory consistency
-- 📱 Responsive portrait and landscape layouts
-- 📅 Daily rewards with server-authoritative authenticated claims
-- 💾 Local cache with server synchronization for authenticated economy
-- 🛡️ Runtime hardening, accessibility, recovery and lifecycle QA
+- 📦 themed Cases with weighted rarity drops and a reel-style opening flow
+- ⚡ Upgrade with an authoritative transaction result and separate visual animation
+- 🛒 Market with server-backed listing and purchase flows
+- 🔴 Live Drops with Realtime/polling fallback
+- 👤 Profile, Inventory, statistics and progression
+- 📱 responsive mobile and landscape layouts
+- ♿ keyboard/focus support and reduced-motion handling
+- 🛡️ recovery, lifecycle, economy and security regression coverage
+
+> **Portfolio project:** Emoji Drops is a simulator. It does not process real-money gambling or payments.
+
+## ▶️ Demo & visual QA
+
+**[Open the live demo](https://ordboybro.github.io/)**
+
+The repository also has a dedicated [showcase page](docs/SHOWCASE.md) with the live demo and the latest CI-generated visual QA evidence.
+
+The visual QA workflow captures browser screenshots for the exact commit being tested. This keeps the repository from accumulating stale screenshots while still preserving reproducible release evidence in GitHub Actions.
 
 ## 🧱 Runtime architecture
 
-`js/app-v2.js` is the deterministic bootstrap/loader. The production runtime uses a deterministic bootstrap with server-authoritative Case/Upgrade/Market transactions, a single Live Drops controller with controlled Realtime/polling fallback, explicit case-open interaction, shared visual tokens, reduced-motion handling, lifecycle cleanup, responsive safe-area treatment and non-native settings feedback. Existing UX surfaces are polished in place; no new user-facing feature set is being added.
+The application uses a deterministic bootstrap in `js/app-v2.js`. Runtime modules are loaded in a controlled order and the QA suite verifies the expected ownership contracts.
 
-## 🧪 Quality & CI
+The current runtime includes:
 
-Every push and pull request to `main` runs the static QA workflow. It checks syntax, canonical economy, transaction/recovery behavior, product flows, Chromium browser E2E, Upgrade, accessibility, performance, responsive/touch behavior, multi-tab recovery and security.
+- server-authoritative Case / Upgrade / Market transactions
+- controlled Live Drops Realtime with polling fallback
+- explicit case-open interaction ownership
+- shared visual tokens and interaction states
+- reduced-motion support
+- responsive safe-area and touch handling
+- lifecycle cleanup and recovery guards
+- accessibility and security regression checks
 
-After the latest UX repair pass, a fresh full QA run is required before declaring the project fully green. A previous green run is not treated as proof for the newer commit.
+Existing UX surfaces are refined in place; the project is not expanding its feature set with extra user-facing buttons.
+
+## 🧪 Quality gate
+
+Every push and pull request to `main` runs the full static QA workflow.
+
+The release gate covers:
+
+- JavaScript syntax and asset/bootstrap integrity
+- canonical economy and transaction contracts
+- case opening and Upgrade browser E2E
+- accessibility
+- performance and lifecycle budgets
+- responsive/mobile/touch behavior
+- recovery and multi-tab behavior
+- Supabase anonymous security checks
+- architecture and visual-regression smoke tests
+- production smoke
+- final release gate
+
+A release is considered verified only when the workflow for the exact current `main` commit finishes successfully.
 
 ## 🛠️ Tech stack
 
-- HTML5
-- CSS3
-- Vanilla JavaScript
-- Browser APIs / Canvas where needed
-- Local browser storage
-- Playwright for browser E2E
-- GitHub Actions for CI
+- **HTML5 / CSS3**
+- **Vanilla JavaScript**
+- **Supabase** for authenticated/server-side data and economy operations
+- **Browser APIs / Canvas** where needed
+- **Local browser storage** for resilient client state
+- **Playwright + axe-core** for browser and accessibility QA
+- **GitHub Actions** for CI
+- **GitHub Pages** for deployment
 
 ## 🚀 Run locally
 
-Because the project is static, a simple HTTP server is enough:
+The frontend is static, so a simple HTTP server is enough:
 
 ```bash
 git clone https://github.com/Ordboybro/Ordboybro.github.io.git
@@ -54,34 +90,38 @@ cd Ordboybro.github.io
 python -m http.server 8000
 ```
 
-Open `http://localhost:8000`.
+Then open:
 
-## 📂 Project structure
+```
+http://localhost:8000
+```
+
+## 📂 Repository structure
 
 ```text
 .
-├── .github/workflows/static-qa.yml
-├── index.html
-├── mobile.html
-├── data.js
-├── js/
-│   ├── app-v2.js
-│   ├── canonical runtime modules
-│   └── UX/interaction repair layer
-├── assets/emoji-drops/
-├── tests/
-├── docs/
-├── supabase/
-├── logo.png
-├── 404.html
+├── .github/workflows/      # CI / release QA
+├── assets/emoji-drops/     # project artwork/data assets
+├── docs/                   # setup, QA, schema and showcase documentation
+├── js/                     # runtime modules and UI owners
+├── supabase/               # database/functions source
+├── tests/                  # static, browser and security QA
+├── index.html              # application entry point
+├── 404.html                # GitHub Pages fallback
+├── data.js                 # shared data entry point
+├── SECURITY.md             # security reporting policy
+├── logo.png                # project branding
 └── README.md
 ```
 
-## 📈 Project status
+## 🔐 Security
 
-**Final hardening pass:** runtime ownership, lifecycle safety, responsive UX, accessibility, motion discipline, Supabase authority and regression contracts have been tightened. The repository contains the full production QA gate; a fresh main-branch run is the release gate, and a green release is only claimed after every current-main check finishes successfully. The production codebase has received a focused repair pass for the reported Favorites, iOS search zoom, tap flash, modal close, case-result animation, Upgrade interaction conflict and Profile UX issues. Full QA and production smoke verification must pass before this status is changed to production-ready.
+Security-sensitive issues should be reported privately. See [SECURITY.md](SECURITY.md).
+
+Do not commit credentials, service-role keys or other secrets. Supabase server-side credentials must stay out of the client bundle.
 
 ## 👨‍💻 Author
 
-**ORDBOY**  
-GitHub: https://github.com/Ordboybro
+**ORDBOY**
+
+[GitHub profile](https://github.com/Ordboybro)
