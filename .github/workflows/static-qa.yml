@@ -1,4 +1,5 @@
 name: EmojiDrops static QA
+# Release contract synchronized with runtime v336 / Live Drops v20.
 on:
   push:
     branches: [main]
@@ -14,10 +15,10 @@ jobs:
   qa:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: 22
+          node-version: 24
       - name: Syntax
         run: |
           set -euo pipefail
@@ -32,16 +33,16 @@ jobs:
           h=Path('index.html').read_text(); refs=re.findall(r"<script[^>]+src=['\"]([^'\"]+)",h,re.I)
           missing=[x for x in refs if not x.split('?',1)[0].startswith(('http://','https://','//','data:')) and not Path(x.split('?',1)[0].lstrip('/')).exists()]
           if missing: raise SystemExit('Missing assets: '+str(missing))
-          a=Path('js/app-v2.js').read_text(); order=['emoji-drops-schema-migration.js','emoji-drops-data-bridge.js','emoji-drops-hardening.js','emoji-drops-core.js','emoji-drops-transaction-layer.js','emoji-drops-runtime-guards.js','emoji-drops-final-hardening.js','emoji-drops-release-polish.js','emoji-drops-product-layer.js','emoji-drops-product-plus.js','emoji-drops-action-resilience.js','emoji-drops-quality-final.js','emoji-drops-p3-polish.js','emoji-drops-p4-final.js','emoji-drops-case-showcase-exact.js','emoji-drops-exact-landscape-polish.js','emoji-drops-case-authority-v2.js','emoji-drops-case-open-bridge.js','emoji-drops-reference-v23-studio.js']
+          a=Path('js/app-v2.js').read_text(); order=['emoji-drops-schema-migration.js','emoji-drops-hardening.js','emoji-drops-core.js','emoji-drops-transaction-layer.js','emoji-drops-runtime-guards.js','emoji-drops-final-hardening.js','emoji-drops-release-polish.js','emoji-drops-product-layer.js','emoji-drops-navigation-final.js','emoji-drops-quality-final.js','emoji-drops-p4-final.js','emoji-drops-case-showcase-exact.js','emoji-drops-reference-v23-studio.js','emoji-drops-market-v26.js','emoji-drops-final-product-polish.js','emoji-drops-upgrade-final.js','emoji-drops-final-ux.js','emoji-drops-live-final.js','emoji-drops-p5-final-audit.js']
           m=re.search(r"const files=\[(.*?)\];",a,re.S)
           if not m: raise SystemExit('Runtime files manifest missing')
           runtime_files=[x.split('?',1)[0].lstrip('/') for x in re.findall(r"['\"]([^'\"]+\.js)(?:\?[^'\"]*)?['\"]",m.group(1))]
           missing_runtime=[x for x in runtime_files if not Path(x).exists()]
           if missing_runtime: raise SystemExit('Missing runtime modules: '+str(missing_runtime))
           runtime=[Path(x).name for x in re.findall(r"['\"]([^'\"]+\.js)(?:\?[^'\"]*)?['\"]",m.group(1))]
-          positions=[runtime.index(x) if x in runtime else -1 for x in order]
-          if any(x<0 for x in positions) or positions!=sorted(positions): raise SystemExit('Runtime order failed: '+str(list(zip(order,positions))))
-          for v in ['schema-1','data-bridge-1','core-24','supabase-auth-7','hardening-9','txn-13','guards-8','final-11','release-1','product-6','product-plus-6','action-21','quality-final-1','p3-polish-v8','p4-3','v23-stability-1','exact-landscape-1','case-showcase-exact-38','authority-8','case-open-bridge-33','studio-37','authority-finalizer-6','market-v26-20','market-authority-final-2','smooth-ui-3','final-product-polish-8','modal-finalizer-10','upgrade-final-29','final-ux-15','live-final-19','p5-final-audit-2']:
+          selected=[x for x in runtime if x in order]
+          if selected!=order: raise SystemExit('Runtime order failed: '+str(selected))
+          for v in ['schema-1','core-25','supabase-auth-8','hardening-9','txn-13','guards-8','final-11','release-1','product-6','quality-final-1','p4-3','case-showcase-exact-40','studio-37','market-v26-21','final-product-polish-8','upgrade-final-29','final-ux-15','live-final-20','p5-final-audit-2']:
               if v not in a: raise SystemExit('Cache version missing: '+v)
           product=Path('js/emoji-drops-product-layer.js').read_text()
           app=Path('js/app-v2.js').read_text()
@@ -50,7 +51,7 @@ jobs:
           if 'emojiDropsFavoritesV2' not in app: raise SystemExit('Canonical favorites V2 contract missing')
           if 'function stage2FavoriteSort' in app: raise SystemExit('Obsolete duplicate Favorites owner still loaded')
           market=Path('js/emoji-drops-market-v26.js').read_text()
-          if 'version:31' not in market or 'destroy' not in market: raise SystemExit('Market lifecycle owner contract missing')
+          if 'version:32' not in market or 'destroy' not in market: raise SystemExit('Market lifecycle owner contract missing')
           if '((streak-1)%7)+1' not in Path('supabase/schema.sql').read_text(): raise SystemExit('Daily reward cycle contract missing')
           if 'streak?((streak-1)%7)+1:0' not in Path('js/emoji-drops-core.js').read_text(): raise SystemExit('Daily UI cycle contract missing')
           txlayer=Path('js/emoji-drops-transaction-layer.js').read_text()
@@ -74,31 +75,33 @@ jobs:
           for n in ['smile','nature','food']:
               if not Path(f'assets/emoji-drops/live-{n}.b64').exists(): raise SystemExit(f'Missing Live Drops artwork: {n}')
           if not Path('assets/emoji-drops/smile.b64').exists(): raise SystemExit('Missing exact Smile modal artwork')
-          for path,marker in [('js/emoji-drops-reference-v23-studio.js','observerDebounceMs:90'),('js/emoji-drops-case-authority-v2.js','observerDebounceMs:120'),('js/emoji-drops-market-authority-final.js','observerDebounceMs:100')]:
+          for path,marker in [('js/emoji-drops-reference-v23-studio.js','observerDebounceMs:90')]:
               if marker not in Path(path).read_text(): raise SystemExit('Observer budget contract missing: '+path)
-          if 'const version=332' not in app: raise SystemExit('Runtime version/cache bump missing')
-          if 'js/app-v2.js?v=runtime-332' not in Path('index.html').read_text(): raise SystemExit('Production runtime cache contract missing')
+          if 'const version=336' not in app: raise SystemExit('Runtime version/cache bump missing')
+          config=Path('js/supabase-config.js').read_text()
+          auth=Path('js/supabase-auth.js').read_text()
+          if 'publishableKey' not in config or 'publishableKey' not in auth: raise SystemExit('Supabase publishable-key naming contract missing')
+          if 'anonKey' in config or 'anonKey' in auth: raise SystemExit('Legacy anonKey naming remains in production client bridge')
+          if 'js/app-v2.js?v=runtime-336' not in Path('index.html').read_text(): raise SystemExit('Production runtime cache contract missing')
           upgrade=Path('js/emoji-drops-upgrade-final.js').read_text()
           rpc_i=upgrade.find('const result=await tx.run(')
           wheel_i=upgrade.find('wheel.style.transform')
           if rpc_i < 0 or wheel_i < 0 or wheel_i < rpc_i: raise SystemExit('Upgrade animation starts before authoritative RPC result')
           if 'prefers-reduced-motion:reduce' not in app or '.edfp-wheel' not in app or '.edx-reel' not in app: raise SystemExit('Reduced-motion coverage missing for cinematic surfaces')
           live=Path('js/emoji-drops-live-final.js').read_text()
-          if 'version:19' not in live: raise SystemExit('Live Drops owner version mismatch')
-          if 'live-final-19' not in app: raise SystemExit('Live Drops cache contract missing')
+          if 'version:20' not in live: raise SystemExit('Live Drops owner version mismatch')
+          if 'live-final-20' not in app: raise SystemExit('Live Drops cache contract missing')
           if 'SUBSCRIBED' not in live or 'FALLBACK' not in live or '● LIVE' not in live: raise SystemExit('Live Drops Realtime status contract missing')
           if '--ed-bg:#070707' not in app or '--ed-surface:#101010' not in app or 'prefers-reduced-motion:reduce' not in app: raise SystemExit('Design-system/reduced-motion contract missing')
           if 'profile_snapshot' not in Path('supabase/schema.sql').read_text() or 'profile_snapshot' not in Path('js/emoji-drops-core.js').read_text(): raise SystemExit('Server profile sync contract missing')
           if 'authoritative owner' not in app or 'case-showcase-exact' not in app or 'transaction-layer' not in app: raise SystemExit('Runtime ownership contract missing')
           exact=Path('js/emoji-drops-case-showcase-exact.js').read_text()
-          for marker in ['version:14','aria-modal="true"','case-open','translateX','role="dialog"','₽','Case items','edx-result-actions','edx-claim','edx-sell','sell_item_server']:
+          for marker in ['version:15','aria-modal="true"','openCase','translateX','role="dialog"','₽','Case items','edx-result-actions','edx-claim','edx-sell','sell_item_server','case_fairness_commit','verifyFairnessReceipt']:
               if marker not in exact: raise SystemExit('Exact showcase contract missing: '+marker)
           if "onpointerup=closeEvent" in exact or "ontouchend=closeEvent" in exact or "closeFromTouch" in exact: raise SystemExit('Duplicate/undefined modal touch-close owner remains')
           if "window.addEventListener('click',e=>{const closeButton" in exact: raise SystemExit('Global case modal click owner still duplicates native button owner')
           if "remote:false" not in exact: raise SystemExit('Local case transaction must explicitly disable remote recovery')
-          landscape=Path('js/emoji-drops-exact-landscape-polish.js').read_text()
-          for marker in ['orientation:landscape','max-height:500px','position:sticky','.edx-open button']:
-              if marker not in landscape: raise SystemExit('Exact landscape contract missing: '+marker)
+          if 'orientation:landscape' not in exact or 'max-height:500px' not in exact or '#edExactBox .edx-open' not in exact or 'position:sticky' not in exact: raise SystemExit('Exact landscape/CTA contract missing after ownership merge')
           PY
           node tests/emoji-drops-static-audit-v3.js
       - name: Final release readiness gate
@@ -125,14 +128,20 @@ jobs:
         run: node tests/emoji-drops-release-polish-self-test.js
       - name: Product quality
         run: node tests/emoji-drops-product-self-test.js
-      - name: Product-plus workflows
+      - name: Product-plus retirement contract
         run: node tests/emoji-drops-product-plus-self-test.js
-      - name: Action resilience
+      - name: Action-resilience retirement contract
         run: node tests/emoji-drops-action-resilience-self-test.js
       - name: P3/P4 contracts
         run: node tests/emoji-drops-p3-p4-self-test.js
       - name: Supabase schema security and atomicity audit
         run: node tests/emoji-drops-supabase-schema-audit.js
+      - name: Committed fairness contract
+        run: node tests/emoji-drops-fairness-contract.js
+      - name: Auth/local/cloud boundary
+        run: node tests/emoji-drops-auth-boundary-self-test.js
+      - name: Exact server/frontend catalog consistency
+        run: node tests/emoji-drops-catalog-consistency.js
       - name: Canonical economy consistency
         run: |
           set -euo pipefail
@@ -151,7 +160,7 @@ jobs:
             if sum(1 for r in rows if r[0]==k)<10: raise SystemExit('Server catalog incomplete: '+k)
           if len(re.findall(r'create or replace function public\.open_case_server\(',schema))!=1: raise SystemExit('Multiple open_case_server definitions')
           if len(re.findall(r'create or replace function public\.upgrade_server\(',schema))!=1: raise SystemExit('Multiple upgrade_server definitions')
-          for marker in ['for update','SELF_PURCHASE_FORBIDDEN','claim_daily_server','INVALID_TARGET','case_items_lookup_idx','alter publication supabase_realtime add table public.live_drops']:
+          for marker in ['for update','SELF_PURCHASE_FORBIDDEN','claim_daily_server','INVALID_TARGET','case_items_lookup_idx','alter publication supabase_realtime add table public.live_drops','secure_uniform_roll','roll numeric:=public.secure_uniform_roll()']:
             if marker not in schema: raise SystemExit('Economy/realtime contract missing: '+marker)
           print('Canonical economy consistency OK')
           PY
@@ -159,13 +168,19 @@ jobs:
         run: node tests/emoji-drops-security-audit.js
       - name: Market privacy regression
         run: node tests/emoji-drops-market-privacy-self-test.js
+      - name: Market race contract
+        run: node tests/emoji-drops-market-race-contract.js
+      - name: Live Drops realtime lifecycle contract
+        run: node tests/emoji-drops-live-realtime-contract.js
+      - name: Market production migration audit
+        run: node tests/emoji-drops-market-migration-audit.js
       - name: Final hardening contract
         run: node -e "const fs=require('fs');const s=fs.readFileSync('js/emoji-drops-final-hardening.js','utf8');for(const x of ['aria-live','aria-modal','Escape','focus-trap','PerformanceObserver','storageHealth','stateHealth'])if(!s.includes(x))throw Error(x);console.log('Final hardening contract OK')"
       - name: Browser dependencies
         run: |
           set -euo pipefail
           npm install --no-save --no-package-lock playwright@1.55.0 axe-core@4.13.0
-          npx playwright install --with-deps chromium
+          npx playwright install --with-deps chromium webkit
       - name: Focused case diagnostic
         run: node tests/emoji-drops-case-diagnostic.js
       - name: Browser E2E matrix
@@ -181,27 +196,37 @@ jobs:
         run: node tests/emoji-drops-performance-budget-e2e.js
       - name: Mobile responsive and touch E2E
         run: node tests/emoji-drops-mobile-e2e.js
+      - name: 100-cycle long-session lifecycle E2E
+        timeout-minutes: 4
+        run: node tests/emoji-drops-long-session-e2e.js
       - name: Recovery and multi-tab E2E
         run: node tests/emoji-drops-recovery-e2e.js
       - name: Live Supabase anonymous security matrix
+        id: live_supabase_security
+        continue-on-error: true
         run: node tests/emoji-drops-supabase-anon-security-e2e.js
       - name: Security audit
+        if: always()
         run: node tests/emoji-drops-security-audit.js
       - name: P2-P4 architecture audit
+        if: always()
         run: node tests/emoji-drops-architecture-audit.js
       - name: P2-P4 visual regression smoke
+        if: always()
         run: node tests/emoji-drops-visual-regression-smoke.js
       - name: Upload visual QA artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: emoji-drops-visual-qa-${{ github.run_id }}
           path: /tmp/emoji-drops-*.png
           if-no-files-found: ignore
           retention-days: 7
       - name: Production smoke
+        if: always()
         run: node tests/emoji-drops-production-smoke.js
       - name: Final P2/P3 contract smoke
+        if: always()
         run: node tests/emoji-drops-p5-p3-self-test.js
       - name: Release evidence manifest
         if: always()
@@ -235,8 +260,12 @@ jobs:
       - name: Final release gate
         if: always()
         run: |
-          if [ "${{ job.status }}" != "success" ]; then
+          if [ "${{ success() }}" != "true" ]; then
             echo "Release gate FAILED: one or more required QA steps did not pass."
+            exit 1
+          fi
+          if [ "${{ steps.live_supabase_security.outcome }}" = "failure" ]; then
+            echo "Release gate FAILED: live Supabase security matrix failed (production migration/security blocker)."
             exit 1
           fi
           echo "Release gate PASSED for SHA ${GITHUB_SHA}"
