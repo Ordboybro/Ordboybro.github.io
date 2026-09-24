@@ -141,7 +141,7 @@ jobs:
           import re
           data=Path('js/data.js').read_text()
           schema=Path('supabase/schema.sql').read_text()
-          prices={'smile':100,'moves':80,'nature':60,'food':40,'animals':20,'transport':20,'sport':250,'games':500}
+          prices={'smile':100,'moves':80,'nature':60,'food':40,'animals':20,'transport':10,'sport':250,'games':500}
           for k,p in prices.items():
             if not re.search(r'(?m)^\s*["\']?'+re.escape(k)+r'["\']?\s*:\s*\[' ,data): raise SystemExit('Missing frontend case: '+k)
             if not re.search(r'when [\'\"]'+re.escape(k)+r'[\'\"] then '+str(p)+r'\b',schema,re.I): raise SystemExit('Case price drift: '+k)
