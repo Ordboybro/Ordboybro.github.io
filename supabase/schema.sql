@@ -1,6 +1,19 @@
 -- Emoji Drops — server-authoritative economy v8.
 -- Canonical case prices and authoritative random outcomes stay on the server.
 create extension if not exists pgcrypto;
+-- Cryptographically strong uniform roll for server-authoritative outcomes.
+-- The result remains server-side; this is not a provably-fair reveal protocol by itself.
+create or replace function public.secure_uniform_roll() returns numeric
+language sql volatile security definer set search_path='' as $
+  select (
+    get_byte(gen_random_bytes(4),0)::numeric*16777216 +
+    get_byte(gen_random_bytes(4),1)::numeric*65536 +
+    get_byte(gen_random_bytes(4),2)::numeric*256 +
+    get_byte(gen_random_bytes(4),3)::numeric
+  ) / 4294967296;
+$;
+revoke execute on function public.secure_uniform_roll() from public,anon,authenticated;
+
 
 create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
@@ -464,7 +477,7 @@ on conflict (case_id,item_index) do update set emoji=excluded.emoji,rarity=exclu
 create or replace function public.open_case_server(p_case_id text, p_cost numeric default null) returns jsonb
 language plpgsql security definer set search_path='' as $$
 declare
-  uid uuid:=auth.uid(); bal numeric; inv jsonb; cost numeric; roll numeric:=random(); v_rarity text; chosen public.case_items%rowtype; item jsonb;
+  uid uuid:=auth.uid(); bal numeric; inv jsonb; cost numeric; roll numeric:=public.secure_uniform_roll(); v_rarity text; chosen public.case_items%rowtype; item jsonb;
 begin
   if uid is null then raise exception 'AUTH_REQUIRED'; end if;
   cost:=public.case_cost(p_case_id);
