@@ -115,3 +115,17 @@ The implementation work from the supplied final plan has been applied in code, s
 
 22. Release blocker
    - GitHub's workflow-run connector currently returns no run objects for the latest PR head, so the full current-head CI result cannot yet be independently confirmed from this interface. The branch remains unmerged by design.
+
+23. Concurrency hardening found during second-half deep review
+   - Fairness commit and case-open previously acquired the shared profile/fairness-row locks in opposite orders, creating a real deadlock path under concurrent commit/open/retry activity.
+   - Canonical schema + production fairness migration now use the same fairness-round -> profile lock order as open_case_server.
+   - The Supabase schema audit now statically enforces that lock order.
+
+24. Live Drops privacy hardening
+   - The public item JSON previously carried private inventory identity fields (id, caseKey, obtainedAt) even though the feed only needs emoji/rarity/price.
+   - Canonical schema and production fairness migration now persist only the public item subset and scrub legacy rows.
+   - The browser Realtime/REST bridges also strip the same fields defensively before painting.
+
+25. Transparency / simulator labeling
+   - Header balance is explicitly labeled ДЕМО, with an accessible virtual-balance label.
+   - Public metadata now states that the site is a virtual simulator and the in-game balance is not real money.
