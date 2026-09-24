@@ -1,7 +1,7 @@
 const fs=require('fs'),vm=require('vm');
 const storage=new Map();
 const ctx={window:{addEventListener:()=>{}},document:{addEventListener:()=>{},querySelector:()=>null},localStorage:{getItem:k=>storage.get(k)??null,setItem:(k,v)=>storage.set(k,String(v)),removeItem:k=>storage.delete(k)},console,setTimeout:(fn)=>fn(),setInterval:()=>1,clearInterval:()=>{},Date,JSON,Math};
-ctx.window.__emojiDropsCore={_s:{balance:250,inventory:[],stats:{},history:[]},state(){return this._s},render(){}};
+ctx.window.EmojiDropsAuth={userId:'test-user'};ctx.window.__emojiDropsCore={_s:{balance:250,inventory:[],stats:{},history:[]},state(){return this._s},render(){},storageKey(){return 'emojiDropsStateV3:user:test-user'}};
 vm.createContext(ctx);vm.runInContext(fs.readFileSync('js/emoji-drops-transaction-layer.js','utf8'),ctx,{timeout:2000});
 const t=ctx.window.__emojiDropsTransactions;
 const txSource=fs.readFileSync('js/emoji-drops-transaction-layer.js','utf8');
@@ -9,14 +9,14 @@ for(const marker of ['remote_committed_resynced','recoverySynced','resyncRemote(
 if(!t||t.version!==11||typeof t.run!=='function'||typeof t.resyncRemote!=='function'||t.maxHistory!==200||t.journal!=='emojiDropsTxnV4'||t.commitGraceMs!==1200||t.nonBlockingLease!==true||t.faultAware!==true||t.leaseOwnershipVerified!==true||t.webLocksPrimary!==false||!t.phases||t.phases.PREPARING!=='PREPARING'||t.phases.SUBMITTING!=='SUBMITTING'||t.phases.COMMITTED!=='COMMITTED'||t.phases.ANIMATING!=='ANIMATING'||t.phases.REVEALED!=='REVEALED'||t.phases.ROLLED_BACK!=='ROLLED_BACK')throw new Error('Transaction v10 contract missing');
 const s=ctx.window.__emojiDropsCore._s,before=JSON.parse(JSON.stringify(s));
 const tx=t.begin('test');
-if(!tx||!tx.before||!storage.has('emojiDropsTxnV4'))throw new Error('Journal begin failed');
+if(!tx||!tx.before||!storage.has('emojiDropsTxnV4:test-user'))throw new Error('Journal begin failed');
 s.balance=0;s.inventory.push({id:'x',emoji:'😀',rarity:'common',price:'10₽'});
 if(!t.rollback(tx))throw new Error('Rollback failed');
 if(JSON.stringify(s)!==JSON.stringify(before))throw new Error('Rollback did not restore state');
-const tx2=t.begin('commit-test');s.balance=225;storage.set('emojiDropsStateV3',JSON.stringify(s));if(!t.commit(tx2))throw new Error('Commit verification failed');
-const j=JSON.parse(storage.get('emojiDropsTxnV4'));if(j.v!==11||j.status!=='committed'||!j.afterHash||!j.beforeHash)throw new Error('Committed journal metadata missing');
+const tx2=t.begin('commit-test');s.balance=225;storage.set('emojiDropsStateV3:user:test-user',JSON.stringify(s));if(!t.commit(tx2))throw new Error('Commit verification failed');
+const j=JSON.parse(storage.get('emojiDropsTxnV4:test-user'));if(j.v!==11||j.status!=='committed'||!j.afterHash||!j.beforeHash)throw new Error('Committed journal metadata missing');
 ctx.window.__emojiDropsFaults={transaction:true,storageWrite:false,storageRead:false};if(t.begin('fault-test')!==null)throw new Error('Transaction fault injection did not block begin');
 ctx.window.__emojiDropsFaults.transaction=false;ctx.window.__emojiDropsFaults.storageRead=true;const tx3=t.begin('read-fault');if(!tx3)throw new Error('Storage-read fault prevented transaction setup unexpectedly');s.balance=200;if(t.commit(tx3)!==false)throw new Error('Storage-read fault did not fail commit verification');
 ctx.window.__emojiDropsFaults.storageRead=false;
-const lease=t.acquire();if(!lease)throw new Error('Lease fallback acquire failed');const tx4=t.begin('lease-loss');s.balance=190;storage.set('emojiDropsStateV3',JSON.stringify({...s,balance:225}));storage.set('emojiDropsLockV4',JSON.stringify({owner:'other-tab',expires:Date.now()+1000}));if(t.commit(tx4)!==false)throw new Error('Lost lease was not rejected');if(s.balance!==225)throw new Error('Lost lease did not resync persisted state');t.release();storage.delete('emojiDropsLockV4');
-(async()=>{let held=false;await t.withLock(()=>new Promise(resolve=>{held=Boolean(storage.get('emojiDropsLockV4'));resolve()}));if(!held)throw new Error('Fallback lock was not held for async transaction');if(storage.has('emojiDropsLockV4'))throw new Error('Fallback lock was not released');console.log('Transaction v10 self-test OK: journal, rollback, hash verification, Web Locks primary contract, lease ownership, stale/lost-lock recovery, async fallback lifetime and fault injection')})().catch(err=>{console.error(err);process.exitCode=1});
+const lease=t.acquire();if(!lease)throw new Error('Lease fallback acquire failed');const tx4=t.begin('lease-loss');s.balance=190;storage.set('emojiDropsStateV3:user:test-user',JSON.stringify({...s,balance:225}));storage.set('emojiDropsLockV4:test-user',JSON.stringify({owner:'other-tab',expires:Date.now()+1000}));if(t.commit(tx4)!==false)throw new Error('Lost lease was not rejected');if(s.balance!==225)throw new Error('Lost lease did not resync persisted state');t.release();storage.delete('emojiDropsLockV4:test-user');
+(async()=>{let held=false;await t.withLock(()=>new Promise(resolve=>{held=Boolean(storage.get('emojiDropsLockV4:test-user'));resolve()}));if(!held)throw new Error('Fallback lock was not held for async transaction');if(storage.has('emojiDropsLockV4:test-user'))throw new Error('Fallback lock was not released');console.log('Transaction v10 self-test OK: journal, rollback, hash verification, Web Locks primary contract, lease ownership, stale/lost-lock recovery, async fallback lifetime and fault injection')})().catch(err=>{console.error(err);process.exitCode=1});
