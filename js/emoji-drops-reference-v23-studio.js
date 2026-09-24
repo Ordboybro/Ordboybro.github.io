@@ -35,7 +35,7 @@ function css(){if($('#'+ID+'-style'))return;const s=document.createElement('styl
 .ed-case-art{height:138px!important;margin:0 -8px!important;font-size:64px!important}
 .ed-case h3{font-size:15px!important}
 .ed-case-price{font-size:17px!important;margin-top:4px!important}
-.ed-case>.ed-btn{min-height:45px!important;font-size:13px!important;margin-top:7px!important}
+.ed-case>.ed-btn{min-height:48px!important;height:48px!important;font-size:13px!important;margin-top:7px!important}
 #view-profile .ed-profile>.ed-panel:first-child{grid-template-columns:1fr 1fr!important}
 #view-profile .ed-profile-main,#view-profile .ed-profile>.ed-panel:last-child{min-height:220px!important}
 }
