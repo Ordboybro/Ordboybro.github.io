@@ -28,6 +28,8 @@ const retired=['emoji-drops-action-resilience.js','emoji-drops-p3-polish.js','em
 for(const file of retired)if(app.includes(file))throw Error('Retired compatibility layer still loaded: '+file);
 if(!nav.includes("e.pointerType==='touch'"))throw Error('Navigation-final touch pointerdown ownership contract missing');
 if(core.includes('className=\'ed-ripple\'')||core.includes('.ed-ripple')||core.includes('pointerdown',core.indexOf('document.addEventListener'))&&core.includes('ed-ripple'))throw Error('Legacy white click/ripple effect still loaded');
+if(!/\.ed-view\{display:none;pointer-events:none;visibility:hidden\}/.test(core)||!/\.ed-view\.active\{display:block;pointer-events:auto;visibility:visible\}/.test(core))throw Error('Inactive views must be non-interactive and hidden from hit testing');
+if(/window\.addEventListener\(['"]click['"][\s\S]{0,500}edExact/.test(exact))throw Error('Exact case backdrop handling must stay scoped to its modal instance');
 if(!core.includes('edBalanceUp')||!core.includes('edBalanceDown')||!core.includes('function renderBalance()'))throw Error('Authoritative balance feedback missing');
 if(!exact.includes('#edBalance'))throw Error('Exact case balance surface is not synchronized');
 if(!exact.includes('result-kicker')||!exact.includes('Added to Inventory')||!exact.includes('class="edx-claim">Continue'))throw Error('Case result hierarchy contract missing');
