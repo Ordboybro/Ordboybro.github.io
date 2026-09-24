@@ -2,6 +2,7 @@ name: EmojiDrops static QA
 # Release contract synchronized with runtime v336 / Live Drops v20.
 on:
   push:
+    branches: [main]
   pull_request:
     branches: [main]
   workflow_dispatch:
