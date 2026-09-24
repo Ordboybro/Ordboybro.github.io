@@ -19,26 +19,31 @@ function commit(v,source){
   return activate(v);
 }
 function handlePointerDown(e){
-  if((e.pointerType!=='touch'&&e.pointerType!=='pen'))return;
+  if(e.pointerType!=='touch'&&e.pointerType!=='pen')return;
   const b=e.target?.closest?.('[data-view]'),v=b?.getAttribute('data-view');
   if(!b||!V.includes(v))return;
+  e.preventDefault();
+  e.stopPropagation();
   try{if(Number.isFinite(e.pointerId)&&typeof b.setPointerCapture==='function')b.setPointerCapture(e.pointerId)}catch{}
   lastPointerTime=Date.now();
   lastPointerView=v;
+  if(!document.getElementById('view-'+v)?.classList.contains('active'))commit(v,'pointer');
 }
 function handlePointerUp(e){
-  if((e.pointerType!=='touch'&&e.pointerType!=='pen'))return;
-  const b=e.target?.closest?.('[data-view]'),v=b?.getAttribute('data-view');
-  if(!b||!V.includes(v))return;
-  if(document.getElementById('view-'+v)?.classList.contains('active'))return;
-  commit(v,'pointer');
+  if(e.pointerType!=='touch'&&e.pointerType!=='pen')return;
+  const b=e.target?.closest?.('[data-view]');
+  if(!b||!V.includes(b.getAttribute('data-view')))return;
+  e.preventDefault();
+  e.stopPropagation();
 }
 function handleClick(e){
   const b=e.target?.closest?.('[data-view]'),v=b?.getAttribute('data-view');
   if(!b||!V.includes(v))return;
-  const now=Date.now();
-  if(e.pointerType==='touch'||e.pointerType==='pen')return;
-  if(lastPointerTime&&now-lastPointerTime<3500)return;
+  if(e.pointerType==='touch'||e.pointerType==='pen'||(lastPointerTime&&Date.now()-lastPointerTime<3500)){
+    e.preventDefault();
+    e.stopPropagation();
+    return;
+  }
   e.preventDefault();e.stopPropagation();
   commit(v,'click');
 }
@@ -49,5 +54,5 @@ function install(){
   document.addEventListener('click',handleClick,{capture:true});
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
-window.__emojiDropsNavigationFinal={version:6,ready:true,force,activate,generation:()=>generation};
+window.__emojiDropsNavigationFinal={version:7,ready:true,force,activate,generation:()=>generation};
 })();
