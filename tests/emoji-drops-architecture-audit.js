@@ -3,7 +3,7 @@ if(!/const version=331;/.test(app)||!index.includes('js/app-v2.js?v=runtime-331'
 if(/id="(?:openModal|winModal|profileModal|upgradeModal|authModal)"/.test(index)||/function (?:changeNickname|changePassword|deleteAccount|edSettingsToast)\(/.test(index))throw Error('Legacy UI shell still embedded in index.html');
 const core=readCore();
 function readCore(){return fs.readFileSync('js/emoji-drops-core.js','utf8')}
-if(!core.includes('window.__emojiDropsCore={version:APP,state:()=>S,render:renderAll,view};'))throw Error('Canonical navigation API missing');
+if(!core.includes('window.__emojiDropsCore={version:APP,state:()=>S,render:renderAll,view,storageKey:stateKey};'))throw Error('Canonical navigation API missing');
 if(core.includes("pointerup',e=>{if(e.pointerType!=='touch')return;const b=e.target.closest?.('[data-view]'"))throw Error('Core still owns touch navigation events');
 if(/const v=t\.dataset\.view;if\(v\)\{view\(v\);return\}/.test(core))throw Error('Core still owns navigation click dispatch');
 const requiredOwners=[['cases','js/emoji-drops-case-showcase-exact.js'],['upgrade','js/emoji-drops-upgrade-final.js'],['market','js/emoji-drops-market-v26.js'],['live','js/emoji-drops-live-final.js'],['transaction','js/emoji-drops-transaction-layer.js']];
