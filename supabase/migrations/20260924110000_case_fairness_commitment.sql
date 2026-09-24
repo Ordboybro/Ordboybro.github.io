@@ -80,26 +80,26 @@ declare
   v_rarity text;
   chosen public.case_items%rowtype;
   item jsonb;
-  round public.case_fairness_rounds%rowtype;
+  fair_round public.case_fairness_rounds%rowtype;
   expected_commitment text;
 begin
   if uid is null then raise exception 'AUTH_REQUIRED'; end if;
   cost:=public.case_cost(p_case_id);
   if cost is null or p_cost is null or round(p_cost,2)<>round(cost,2) then raise exception 'INVALID_CASE_COST'; end if;
-  select * into round from public.case_fairness_rounds where id=p_round_id and user_id=uid and consumed_at is null for update;
-  if round.id is null then raise exception 'FAIRNESS_COMMIT_REQUIRED'; end if;
-  if round.case_id<>lower(trim(p_case_id)) then raise exception 'FAIRNESS_CASE_MISMATCH'; end if;
-  if round.created_at < now()-interval '5 minutes' then
-    update public.case_fairness_rounds set consumed_at=now() where id=round.id;
+  select * into fair_round from public.case_fairness_rounds where id=p_round_id and user_id=uid and consumed_at is null for update;
+  if fair_round.id is null then raise exception 'FAIRNESS_COMMIT_REQUIRED'; end if;
+  if fair_round.case_id<>lower(trim(p_case_id)) then raise exception 'FAIRNESS_CASE_MISMATCH'; end if;
+  if fair_round.created_at < now()-interval '5 minutes' then
+    update public.case_fairness_rounds set consumed_at=now() where id=fair_round.id;
     raise exception 'FAIRNESS_COMMIT_EXPIRED';
   end if;
-  expected_commitment:=encode(digest(round.server_seed||':'||round.client_nonce||':'||round.case_id,'sha256'),'hex');
-  if expected_commitment<>round.commitment then raise exception 'FAIRNESS_COMMIT_INVALID'; end if;
+  expected_commitment:=encode(digest(fair_round.server_seed||':'||fair_round.client_nonce||':'||fair_round.case_id,'sha256'),'hex');
+  if expected_commitment<>fair_round.commitment then raise exception 'FAIRNESS_COMMIT_INVALID'; end if;
   select balance,inventory into bal,inv from public.profiles where id=uid for update;
   if bal is null then raise exception 'PROFILE_NOT_FOUND'; end if;
   if bal<cost then raise exception 'INSUFFICIENT_FUNDS'; end if;
-  roll:=public.fair_uniform(round.server_seed,round.client_nonce,round.case_id,'rarity');
-  item_roll:=public.fair_uniform(round.server_seed,round.client_nonce,round.case_id,'item');
+  roll:=public.fair_uniform(fair_round.server_seed,fair_round.client_nonce,fair_round.case_id,'rarity');
+  item_roll:=public.fair_uniform(fair_round.server_seed,fair_round.client_nonce,fair_round.case_id,'item');
   v_rarity:=case when roll<.01 then 'legendary' when roll<.06 then 'mythical' when roll<.18 then 'epic' when roll<.45 then 'rare' else 'common' end;
   select count(*)::int into item_count from public.case_items where case_id=lower(trim(p_case_id)) and rarity=v_rarity;
   if item_count<1 then raise exception 'CASE_ITEMS_UNAVAILABLE'; end if;
@@ -123,17 +123,17 @@ begin
   end if;
   update public.case_fairness_rounds
     set consumed_at=now(),result=jsonb_build_object('item',item,'balance',bal-cost,'cost',cost)
-    where id=round.id;
+    where id=fair_round.id;
   return jsonb_build_object(
     'item',item,
     'balance',bal-cost,
     'cost',cost,
     'fairness',jsonb_build_object(
       'round_id',round.id,
-      'commitment',round.commitment,
-      'server_seed',round.server_seed,
-      'client_nonce',round.client_nonce,
-      'case_id',round.case_id,
+      'commitment',fair_round.commitment,
+      'server_seed',fair_round.server_seed,
+      'client_nonce',fair_round.client_nonce,
+      'case_id',fair_round.case_id,
       'algorithm','sha256-csprng-v1'
     )
   );
