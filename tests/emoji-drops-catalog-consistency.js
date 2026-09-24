@@ -8,6 +8,7 @@ const prices={smile:100,moves:80,nature:60,food:40,animals:20,transport:20,sport
 
 const sandbox={
   document:{getElementById(){return null}},
+  window:{},
   console,
   JSON,
   Number,
