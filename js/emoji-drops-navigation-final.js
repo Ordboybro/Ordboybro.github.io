@@ -5,7 +5,8 @@ function activate(v){const root=document.getElementById('view-'+v);if(!root)retu
 function ensure(v,token){if(token!==undefined&&token!==generation)return false;if(v!==lastView)return false;const root=document.getElementById('view-'+v);if(!root||root.querySelector(selector(v)))return false;return activate(v)}
 function schedule(v,token,delay){setTimeout(()=>ensure(v,token),delay)}
 function force(v){if(!V.includes(v))return false;lastView=v;generation++;const token=generation;if(!activate(v))return false;emitCommitted(v,'navigation-final-force');schedule(v,token,0);schedule(v,token,140);return true}
-const TOUCH_CLICK_GUARD_MS=8000;
+// Guard only the browser's synthetic click that can follow a touch; keep the window short.
+const TOUCH_CLICK_GUARD_MS=900;
 let lastTouch=0,lastTouchTarget=null,lastView='',generation=0;
 function emitCommitted(v,source='navigation-final'){window.dispatchEvent(new CustomEvent('emoji-drops-view-committed',{detail:{view:v,source,generation}}))}
 function commit(v){lastView=v;generation++;const token=generation;if(!activate(v))return;emitCommitted(v);schedule(v,token,0);schedule(v,token,140)}
