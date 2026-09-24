@@ -144,7 +144,8 @@ revoke execute on function public.profile_snapshot() from public,anon;
 grant execute on function public.profile_snapshot() to authenticated;
 revoke execute on function public.claim_daily_server() from public,anon;
 grant execute on function public.claim_daily_server() to authenticated;
-revoke execute on function public.open_case_server(text,numeric) from public,anon;
+revoke execute on function public.open_case_server(text,numeric,uuid) from public,anon;
+grant execute on function public.open_case_server(text,numeric,uuid) to authenticated;
 revoke execute on function public.sell_all_server() from public,anon;
 grant execute on function public.sell_all_server() to authenticated;
 revoke execute on function public.upgrade_server(text,numeric,numeric) from public,anon,authenticated;
@@ -474,17 +475,105 @@ insert into public.case_items(case_id,item_index,emoji,rarity,item_price) values
 ('games',34,'👑','legendary',500)
 on conflict (case_id,item_index) do update set emoji=excluded.emoji,rarity=excluded.rarity,item_price=excluded.item_price;
 
-create or replace function public.open_case_server(p_case_id text, p_cost numeric default null) returns jsonb
+-- Provably-fair case round: a commitment is exposed before the result and the seed is released only after consumption.
+create table if not exists public.case_fairness_rounds (
+  id uuid primary key default public.gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  case_id text not null,
+  client_nonce text not null,
+  server_seed text not null,
+  commitment text not null,
+  created_at timestamptz not null default now(),
+  consumed_at timestamptz,
+  result jsonb
+);
+alter table public.case_fairness_rounds enable row level security;
+revoke all on table public.case_fairness_rounds from public,anon,authenticated;
+create unique index if not exists case_fairness_active_user_idx
+  on public.case_fairness_rounds(user_id) where consumed_at is null;
+create index if not exists case_fairness_user_created_idx
+  on public.case_fairness_rounds(user_id,created_at desc);
+
+create or replace function public.fair_uniform(p_seed text,p_nonce text,p_case_id text,p_label text) returns numeric
+language sql immutable security definer set search_path='' as $fairuniform$
+  with d as (
+    select digest(coalesce(p_seed,'')||':'||coalesce(p_nonce,'')||':'||lower(trim(coalesce(p_case_id,'')))||':'||coalesce(p_label,''),'sha256') as b
+  )
+  select (
+    get_byte(b,0)::numeric*72057594037927936 +
+    get_byte(b,1)::numeric*281474976710656 +
+    get_byte(b,2)::numeric*1099511627776 +
+    get_byte(b,3)::numeric*4294967296 +
+    get_byte(b,4)::numeric*16777216 +
+    get_byte(b,5)::numeric*65536 +
+    get_byte(b,6)::numeric*256 +
+    get_byte(b,7)::numeric
+  ) / 18446744073709551616 from d
+$fairuniform$;
+revoke execute on function public.fair_uniform(text,text,text,text) from public,anon,authenticated;
+
+create or replace function public.case_fairness_commit(p_case_id text,p_client_nonce text) returns jsonb
+language plpgsql security definer set search_path='' as $faircommit$
+declare
+  uid uuid:=auth.uid();
+  case_key text:=lower(trim(coalesce(p_case_id,'')));
+  nonce text:=trim(coalesce(p_client_nonce,''));
+  seed text;
+  commitment text;
+  round_id uuid;
+begin
+  if uid is null then raise exception 'AUTH_REQUIRED'; end if;
+  if public.case_cost(case_key) is null then raise exception 'INVALID_CASE'; end if;
+  if char_length(nonce)<8 or char_length(nonce)>128 then raise exception 'INVALID_CLIENT_NONCE'; end if;
+  if not exists(select 1 from public.case_items where case_id=case_key) then raise exception 'CASE_ITEMS_UNAVAILABLE'; end if;
+  perform 1 from public.profiles where id=uid for update;
+  if not found then raise exception 'PROFILE_NOT_FOUND'; end if;
+  delete from public.case_fairness_rounds where user_id=uid and consumed_at is null;
+  seed:=encode(public.gen_random_bytes(32),'hex');
+  commitment:=encode(digest(seed||':'||nonce||':'||case_key,'sha256'),'hex');
+  insert into public.case_fairness_rounds(user_id,case_id,client_nonce,server_seed,commitment)
+    values(uid,case_key,nonce,seed,commitment)
+    returning id into round_id;
+  return jsonb_build_object('round_id',round_id,'case_id',case_key,'client_nonce',nonce,'commitment',commitment,'algorithm','sha256-csprng-v1');
+end; $faircommit$;
+revoke execute on function public.case_fairness_commit(text,text) from public,anon;
+grant execute on function public.case_fairness_commit(text,text) to authenticated;
+
+drop function if exists public.open_case_server(text,numeric);
+create or replace function public.open_case_server(p_case_id text,p_cost numeric,p_round_id uuid) returns jsonb
 language plpgsql security definer set search_path='' as $$
 declare
-  uid uuid:=auth.uid(); bal numeric; inv jsonb; cost numeric; roll numeric:=public.secure_uniform_roll(); item_roll numeric:=public.secure_uniform_roll(); item_count integer; item_offset integer; v_rarity text; chosen public.case_items%rowtype; item jsonb;
+  uid uuid:=auth.uid();
+  bal numeric;
+  inv jsonb;
+  cost numeric;
+  roll numeric;
+  item_roll numeric;
+  item_count integer;
+  item_offset integer;
+  v_rarity text;
+  chosen public.case_items%rowtype;
+  item jsonb;
+  round public.case_fairness_rounds%rowtype;
+  expected_commitment text;
 begin
   if uid is null then raise exception 'AUTH_REQUIRED'; end if;
   cost:=public.case_cost(p_case_id);
-  if cost is null then raise exception 'INVALID_CASE'; end if;
+  if cost is null or p_cost is null or round(p_cost,2)<>round(cost,2) then raise exception 'INVALID_CASE_COST'; end if;
+  select * into round from public.case_fairness_rounds where id=p_round_id and user_id=uid and consumed_at is null for update;
+  if round.id is null then raise exception 'FAIRNESS_COMMIT_REQUIRED'; end if;
+  if round.case_id<>lower(trim(p_case_id)) then raise exception 'FAIRNESS_CASE_MISMATCH'; end if;
+  if round.created_at < now()-interval '5 minutes' then
+    update public.case_fairness_rounds set consumed_at=now() where id=round.id;
+    raise exception 'FAIRNESS_COMMIT_EXPIRED';
+  end if;
+  expected_commitment:=encode(digest(round.server_seed||':'||round.client_nonce||':'||round.case_id,'sha256'),'hex');
+  if expected_commitment<>round.commitment then raise exception 'FAIRNESS_COMMIT_INVALID'; end if;
   select balance,inventory into bal,inv from public.profiles where id=uid for update;
   if bal is null then raise exception 'PROFILE_NOT_FOUND'; end if;
   if bal<cost then raise exception 'INSUFFICIENT_FUNDS'; end if;
+  roll:=public.fair_uniform(round.server_seed,round.client_nonce,round.case_id,'rarity');
+  item_roll:=public.fair_uniform(round.server_seed,round.client_nonce,round.case_id,'item');
   v_rarity:=case when roll<.01 then 'legendary' when roll<.06 then 'mythical' when roll<.18 then 'epic' when roll<.45 then 'rare' else 'common' end;
   select count(*)::int into item_count from public.case_items where case_id=lower(trim(p_case_id)) and rarity=v_rarity;
   if item_count<1 then raise exception 'CASE_ITEMS_UNAVAILABLE'; end if;
@@ -497,7 +586,19 @@ begin
     execute 'insert into public.live_drops(user_id,nickname,item,case_id,item_price,created_at) values ($1,$2,$3,$4,$5,now())' using uid,(select nickname from public.profiles where id=uid),item,chosen.case_id,chosen.item_price;
     execute 'delete from public.live_drops where created_at < now()-interval ''30 minutes''';
   end if;
-  return jsonb_build_object('item',item,'balance',bal-cost,'cost',cost);
+  update public.case_fairness_rounds set consumed_at=now(),result=jsonb_build_object('item',item,'balance',bal-cost,'cost',cost) where id=round.id;
+  return jsonb_build_object(
+    'item',item,
+    'balance',bal-cost,
+    'cost',cost,
+    'fairness',jsonb_build_object(
+      'round_id',round.id,
+      'commitment',round.commitment,
+      'server_seed',round.server_seed,
+      'client_nonce',round.client_nonce,
+      'algorithm','sha256-csprng-v1'
+    )
+  );
 end; $$;
 revoke execute on function public.open_case_server(text,numeric) from public,anon;
 
