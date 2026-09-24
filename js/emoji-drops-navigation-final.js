@@ -24,6 +24,13 @@ function handlePointerDown(e){
   if(!b||!V.includes(v))return;
   commit(v,'pointer');
 }
+function handlePointerUp(e){
+  if((e.pointerType!=='touch'&&e.pointerType!=='pen'))return;
+  const b=e.target?.closest?.('[data-view]'),v=b?.getAttribute('data-view');
+  if(!b||!V.includes(v))return;
+  if(document.getElementById('view-'+v)?.classList.contains('active'))return;
+  commit(v,'pointer');
+}
 function handleClick(e){
   const b=e.target?.closest?.('[data-view]'),v=b?.getAttribute('data-view');
   if(!b||!V.includes(v))return;
@@ -35,6 +42,7 @@ function handleClick(e){
 function force(v){return commit(v,'force')}
 function install(){
   document.addEventListener('pointerdown',handlePointerDown,{capture:true,passive:false});
+  document.addEventListener('pointerup',handlePointerUp,{capture:true,passive:true});
   document.addEventListener('click',handleClick,{capture:true});
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
