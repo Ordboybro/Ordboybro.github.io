@@ -45,7 +45,7 @@ if(A.configured){
        socket.onmessage=e=>{
         try{
          const m=JSON.parse(e.data);
-         if(m?.event==='phx_reply'&&m?.ref===joinRef){if(m?.payload?.status==='ok'){joined=true;if(joinTimer){clearTimeout(joinTimer);joinTimer=0}statusCb?.('SUBSCRIBED')}else{statusCb?.('CHANNEL_ERROR');try{socket?.close()}catch{}}}else if(m?.event==='phx_error'||m?.event==='phx_close'){statusCb?.('CHANNEL_ERROR')}else if(m?.event==='postgres_changes'&&handler?.cb){const p=m.payload?.data||m.payload;const publicRow=r=>{const x=r&&typeof r==='object'?r:{};return {nickname:x.nickname,item:x.item,case_id:x.case_id,item_price:x.item_price,created_at:x.created_at}};handler.cb({eventType:p?.type||'INSERT',new:publicRow(p?.record),old:publicRow(p?.old_record),schema:p?.schema||'public',table:p?.table||'live_drops'})}
+         if(m?.event==='phx_reply'&&m?.ref===joinRef){if(m?.payload?.status==='ok'){joined=true;if(joinTimer){clearTimeout(joinTimer);joinTimer=0}statusCb?.('SUBSCRIBED')}else{statusCb?.('CHANNEL_ERROR');try{socket?.close()}catch{}}}else if(m?.event==='phx_error'||m?.event==='phx_close'){statusCb?.('CHANNEL_ERROR')}else if(m?.event==='postgres_changes'&&handler?.cb){const p=m.payload?.data||m.payload;const publicRow=r=>{const x=r&&typeof r==='object'?r:{},i=x.item&&typeof x.item==='object'?x.item:{};return {nickname:x.nickname,item:{emoji:i.emoji,rarity:i.rarity,price:i.price},case_id:x.case_id,item_price:x.item_price,created_at:x.created_at}};handler.cb({eventType:p?.type||'INSERT',new:publicRow(p?.record),old:publicRow(p?.old_record),schema:p?.schema||'public',table:p?.table||'live_drops'})}
         }catch{}
        };
        socket.onerror=()=>{statusCb?.('CHANNEL_ERROR')};
