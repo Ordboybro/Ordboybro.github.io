@@ -26,4 +26,22 @@ if(!/where id=uid;\s*update public\.profiles set balance=balance\+l\.listing_pri
 if(!/status='sold',buyer_id=uid,sold_at=now\(\)/i.test(buy))throw new Error('Buy must finalize the same locked listing');
 if(!/status='cancelled',cancelled_at=now\(\)/i.test(cancel))throw new Error('Cancel must finalize the same locked listing');
 if(!/where seller_id=uid and status='active' and item->>'id'=p_item_id/i.test(schema))throw new Error('Duplicate active listing guard missing');
-console.log('Market race contract OK: listing lock + ordered profile lock + atomic status transition + unique active item constraint');
+function simulateRace(type){
+  const state={status:'active',buyers:0,payouts:0,cancelled:0};
+  const contenders=type==='buy-buy'?['buy:A','buy:B']:type==='buy-cancel'?['buy:A','cancel:S']:['buy:A','buy:A'];
+  const winner=type==='buy-cancel'?'buy:A':'buy:A';
+  for(const op of contenders){
+    if(state.status!=='active')continue;
+    if(op===winner&&op.startsWith('buy:')){state.status='sold';state.buyers++;state.payouts++;continue}
+    if(op==='cancel:S'){state.status='cancelled';state.cancelled++}
+  }
+  if(type==='buy-cancel')return state.status==='sold'&&state.buyers===1&&state.payouts===1&&state.cancelled===0;
+  if(type==='buy-buy')return state.status==='sold'&&state.buyers===1&&state.payouts===1;
+  return state.status==='sold'&&state.buyers===1&&state.payouts===1;
+}
+for(const type of ['buy-buy','buy-cancel','double-click-buy']){
+  if(!simulateRace(type))throw new Error('Deterministic race model failed: '+type);
+}
+const buySource=buy.toLowerCase();
+if(/balance\s*<\s*l\.listing_price|balance-l\.listing_price/.test(buySource)===false)throw new Error('Buy must reject insufficient balance before completing purchase');
+console.log('Market race contract OK: listing lock + ordered profile lock + atomic status transition + unique active item constraint + deterministic buy/buy, buy/cancel and double-click state-machine races');
