@@ -1,5 +1,6 @@
 const fs=require('fs');const app=fs.readFileSync('js/app-v2.js','utf8');const index=fs.readFileSync('index.html','utf8');const files=fs.readdirSync('js');
 if(!/const version=336;/.test(app)||!index.includes('js/app-v2.js?v=runtime-336'))throw Error('Runtime owner/cache version drift');
+const supa=fs.readFileSync('js/supabase-config.js','utf8'),auth=fs.readFileSync('js/supabase-auth.js','utf8');if(!supa.includes('publishableKey')||auth.includes('anonKey'))throw Error('Supabase publishable-key naming drift');
 const requiredOwners=[['cases','js/emoji-drops-case-showcase-exact.js'],['upgrade','js/emoji-drops-upgrade-final.js'],['market','js/emoji-drops-market-v26.js'],['live','js/emoji-drops-live-final.js'],['transaction','js/emoji-drops-transaction-layer.js']];
 for(const [name,file] of requiredOwners){if(!files.includes(file.replace(/^js\//,'')))throw Error(`Missing canonical ${name} owner: ${file}`);if(!app.includes(file))throw Error(`Canonical ${name} owner not loaded by runtime manifest`)}
 const forbidden=['emoji-drops-final-ux-v4.js','emoji-drops-upgrade-interaction-guard.js','emoji-drops-case-showcase.js','emoji-drops-case-showcase-final.js','emoji-drops-case-showcase-override.js','emoji-drops-case-authority.js','emoji-drops-ui-polish-v2.js','emoji-drops-main-reference-v2.js','emoji-drops-layout-v3.js','emoji-drops-reference-v5.js','emoji-drops-reference-interaction-fix.js','emoji-drops-reference-v8-luxe.js','emoji-drops-reference-v9-hitfix.js','emoji-drops-reference-v10-stability.js','emoji-drops-reference-v11-modal-reset.js','emoji-drops-reference-v13-fixed-action.js','emoji-drops-reference-v15-case-precedence.js','emoji-drops-reference-v18-modal-cleanup.js','emoji-drops-reference-v20-studio.js'];
@@ -39,4 +40,5 @@ if(live.includes("select('id,nickname,item,case_id,item_price,created_at')"))thr
 if(!live.includes("select('nickname,item,case_id,item_price,created_at')"))throw Error('Live Drops minimized payload contract missing');
 
 const scripts=[...index.matchAll(/<script[^>]+src=['"]([^'"]+)/gi)].map(x=>x[1].split('?')[0]);for(const x of scripts)if(!x.startsWith('http')&&!fs.existsSync(x.replace(/^\//,'')))throw Error('Missing script asset: '+x);
+if(!fs.existsSync('tests/emoji-drops-long-session-e2e.js'))throw Error('Long-session lifecycle gate missing');
 console.log('Architecture audit OK: canonical owners, runtime manifest, legacy layer exclusion, transaction boundary, server RPC surface and script assets.');
