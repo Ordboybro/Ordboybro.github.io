@@ -30,6 +30,9 @@ need(live.includes('SUBSCRIBED')&&live.includes('CHANNEL_ERROR')&&live.includes(
 need(app.includes('--ed-bg:#070707')&&app.includes('--ed-surface:#101010')&&app.includes('--ed-surface-2:#151515')&&app.includes('--ed-border:#292929'),'shared design tokens missing');
 need(app.includes('prefers-reduced-motion:reduce'),'reduced-motion contract missing');
 need(index.includes('viewport-fit=cover'),'safe-area viewport contract missing');
+const supa=fs.readFileSync('js/supabase-config.js','utf8'),auth=fs.readFileSync('js/supabase-auth.js','utf8');
+need(supa.includes('publishableKey')&&!supa.includes('anonKey'),'publishable-key config naming drift');
+need(auth.includes('publishableKey')&&!auth.includes('anonKey'),'publishable-key auth bridge naming drift');
 const required=['js/emoji-drops-case-showcase-exact.js','js/emoji-drops-transaction-layer.js','js/emoji-drops-upgrade-final.js','js/emoji-drops-market-v26.js','js/emoji-drops-live-final.js'];
 for(const f of required)need(app.includes(f),`canonical runtime owner missing: ${f}`);
 if(fail.length){console.error('Release readiness FAILED');for(const x of fail)console.error(' - '+x);process.exit(1)}
