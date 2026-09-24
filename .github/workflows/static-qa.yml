@@ -172,6 +172,8 @@ jobs:
         run: node tests/emoji-drops-market-race-contract.js
       - name: 10/20/50 concurrency invariant model
         run: node tests/emoji-drops-concurrency-model.js
+      - name: DB performance/index contract
+        run: node tests/emoji-drops-db-performance-contract.js
       - name: Live Drops realtime lifecycle contract
         run: node tests/emoji-drops-live-realtime-contract.js
       - name: Market production migration audit
