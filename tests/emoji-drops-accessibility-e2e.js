@@ -7,8 +7,14 @@ async function waitForServer(){for(let i=0;i<40;i++){try{await new Promise((reso
 async function waitForModalReady(page){
   await page.waitForSelector('#edExact.show',{timeout:5000});
   const open=page.locator('#edExact.show .edx-open button').first();
-  await open.waitFor({state:'visible',timeout:5000});
+  await open.waitFor({state:'attached',timeout:5000});
   await open.scrollIntoViewIfNeeded();
+  await page.waitForFunction(()=>{
+    const b=document.querySelector('#edExact.show .edx-open button');
+    if(!b)return false;
+    const r=b.getBoundingClientRect(),s=getComputedStyle(b),a=getComputedStyle(b.parentElement||b);
+    return r.width>0&&r.height>0&&s.display!=='none'&&s.visibility!=='hidden'&&s.opacity!=='0'&&a.display!=='none'&&a.visibility!=='hidden';
+  },null,{timeout:5000});
 }
 async function audit(page,label){await page.addScriptTag({content:axe.source});const result=await page.evaluate(async()=>axe.run(document,{runOnly:{type:'tag',values:['wcag2a','wcag2aa']}}));const serious=result.violations.filter(v=>['critical','serious'].includes(v.impact));if(serious.length){const diagnostics=await page.evaluate(()=>[...document.querySelectorAll('small')].map(el=>{const chain=[];let n=el;for(let i=0;i<5&&n;i++,n=n.parentElement){const s=getComputedStyle(n);chain.push({tag:n.tagName,cls:n.className,color:s.color,bg:s.backgroundColor,opacity:s.opacity,html:n.outerHTML.slice(0,300)})}return {text:el.textContent,chain}}));const summary=serious.map(v=>`${v.id}(${v.impact}): ${v.nodes.slice(0,3).map(n=>n.html).join(' | ')}`).join('\\n');throw Error(`Accessibility ${label} failed:\n${summary}\nDIAGNOSTICS:${JSON.stringify(diagnostics)}`)}return result.violations}
 async function visibleViewNames(page){return await page.locator('[data-view]').evaluateAll(xs=>[...new Set(xs.filter(x=>{const s=getComputedStyle(x),r=x.getBoundingClientRect();return s.display!=='none'&&s.visibility!=='hidden'&&s.opacity!=='0'&&r.width>0&&r.height>0}).map(x=>x.getAttribute('data-view')).filter(Boolean))])}
