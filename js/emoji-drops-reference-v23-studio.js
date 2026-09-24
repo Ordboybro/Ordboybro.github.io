@@ -24,6 +24,7 @@ function css(){if($('#'+ID+'-style'))return;const s=document.createElement('styl
 #view-profile .ed-history .ed-panel{max-height:390px!important;overflow:auto!important}
 #view-profile .ed-history-row{min-height:44px!important;align-items:center!important}
 @media(max-width:700px){
+.ed-nav button:hover{transform:none!important}
 .ed-main{padding:9px 10px 70px!important}
 .ed-nav{grid-template-columns:repeat(2,minmax(0,1fr))!important;margin-bottom:11px!important;gap:7px!important}
 .ed-nav button{height:48px!important;min-width:0!important;font-size:14px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
