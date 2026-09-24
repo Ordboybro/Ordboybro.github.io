@@ -22,14 +22,14 @@ function handlePointerDown(e){
   if((e.pointerType!=='touch'&&e.pointerType!=='pen'))return;
   const b=e.target?.closest?.('[data-view]'),v=b?.getAttribute('data-view');
   if(!b||!V.includes(v))return;
-  commit(v,'pointer');
+  lastPointerTime=Date.now();
+  lastPointerView=v;
 }
 function handlePointerUp(e){
   if((e.pointerType!=='touch'&&e.pointerType!=='pen'))return;
   const b=e.target?.closest?.('[data-view]'),v=b?.getAttribute('data-view');
   if(!b||!V.includes(v))return;
-  if(document.getElementById('view-'+v)?.classList.contains('active'))return;
-  commit(v,'pointer');
+  /* Do not activate here: the native click must be allowed to fire on the same stable button. */
 }
 function handleClick(e){
   const b=e.target?.closest?.('[data-view]'),v=b?.getAttribute('data-view');
