@@ -477,7 +477,7 @@ on conflict (case_id,item_index) do update set emoji=excluded.emoji,rarity=exclu
 create or replace function public.open_case_server(p_case_id text, p_cost numeric default null) returns jsonb
 language plpgsql security definer set search_path='' as $$
 declare
-  uid uuid:=auth.uid(); bal numeric; inv jsonb; cost numeric; roll numeric:=public.secure_uniform_roll(); v_rarity text; chosen public.case_items%rowtype; item jsonb;
+  uid uuid:=auth.uid(); bal numeric; inv jsonb; cost numeric; roll numeric:=public.secure_uniform_roll(); item_roll numeric:=public.secure_uniform_roll(); item_count integer; item_offset integer; v_rarity text; chosen public.case_items%rowtype; item jsonb;
 begin
   if uid is null then raise exception 'AUTH_REQUIRED'; end if;
   cost:=public.case_cost(p_case_id);
@@ -486,7 +486,10 @@ begin
   if bal is null then raise exception 'PROFILE_NOT_FOUND'; end if;
   if bal<cost then raise exception 'INSUFFICIENT_FUNDS'; end if;
   v_rarity:=case when roll<.01 then 'legendary' when roll<.06 then 'mythical' when roll<.18 then 'epic' when roll<.45 then 'rare' else 'common' end;
-  select ci.* into chosen from public.case_items ci where ci.case_id=lower(trim(p_case_id)) and ci.rarity=v_rarity order by random() limit 1;
+  select count(*)::int into item_count from public.case_items where case_id=lower(trim(p_case_id)) and rarity=v_rarity;
+  if item_count<1 then raise exception 'CASE_ITEMS_UNAVAILABLE'; end if;
+  item_offset:=least(item_count-1,floor(item_roll*item_count)::int);
+  select ci.* into chosen from public.case_items ci where ci.case_id=lower(trim(p_case_id)) and ci.rarity=v_rarity order by ci.item_index offset item_offset limit 1;
   if chosen.item_index is null then raise exception 'CASE_ITEMS_UNAVAILABLE'; end if;
   item:=jsonb_build_object('id',public.gen_random_uuid()::text,'emoji',chosen.emoji,'rarity',chosen.rarity,'price',chosen.item_price,'case_id',chosen.case_id,'caseKey',chosen.case_id,'obtainedAt',now());
   update public.profiles set balance=bal-cost,inventory=coalesce(inv,'[]'::jsonb)||jsonb_build_array(item),best_drop=case when best_drop is null or coalesce((best_drop->>'price')::numeric,0)<chosen.item_price then item else best_drop end,stats=jsonb_set(jsonb_set(jsonb_set(coalesce(stats,'{}'::jsonb),'{opens}',to_jsonb(coalesce((stats->>'opens')::int,0)+1),true),'{wins}',to_jsonb(coalesce((stats->>'wins')::int,0)+1),true),'{spent}',to_jsonb(coalesce((stats->>'spent')::numeric,0)+cost),true),'{earned}',to_jsonb(coalesce((stats->>'earned')::numeric,0)+chosen.item_price),true),updated_at=now() where id=uid;
@@ -504,7 +507,7 @@ revoke execute on function public.open_case_server(text,numeric) from public,ano
 create or replace function public.upgrade_server(p_item_id text,p_target_price numeric,p_multiplier numeric,p_target_emoji text,p_target_rarity text,p_target_case_id text,p_chance numeric) returns jsonb
 language plpgsql security definer set search_path='' as $$
 declare
-  uid uuid:=auth.uid(); inv jsonb; src jsonb; src_price numeric; target public.case_items%rowtype; max_chance numeric; chance numeric; roll numeric:=random(); success boolean; result jsonb;
+  uid uuid:=auth.uid(); inv jsonb; src jsonb; src_price numeric; target public.case_items%rowtype; max_chance numeric; chance numeric; roll numeric:=public.secure_uniform_roll(); success boolean; result jsonb;
 begin
   if uid is null then raise exception 'AUTH_REQUIRED'; end if;
   select inventory into inv from public.profiles where id=uid for update;
