@@ -1,0 +1,26 @@
+'use strict';
+const fs=require('fs');
+const schema=fs.readFileSync('supabase/schema.sql','utf8');
+const exact=fs.readFileSync('js/emoji-drops-case-showcase-exact.js','utf8');
+
+const need=(ok,msg)=>{if(!ok)throw new Error(msg)};
+need(/create table if not exists public\.case_fairness_rounds/i.test(schema),'Fairness round table missing');
+need(/alter table public\.case_fairness_rounds enable row level security/i.test(schema),'Fairness round RLS missing');
+need(/revoke all on table public\.case_fairness_rounds from public,anon,authenticated/i.test(schema),'Fairness round table must not be directly selectable');
+need(/case_fairness_active_user_idx[\s\S]*?where consumed_at is null/i.test(schema),'Exactly one active fairness round per user is not constrained');
+need(/create or replace function public\.fair_uniform\(p_seed text,p_nonce text,p_case_id text,p_label text\)[\s\S]*?security definer set search_path=''/i.test(schema),'Fair uniform verifier function must be SECURITY DEFINER with empty search_path');
+need(/revoke execute on function public\.fair_uniform\(text,text,text,text\) from public,anon,authenticated/i.test(schema),'Fair uniform helper must not be publicly executable');
+need(/create or replace function public\.case_fairness_commit\(p_case_id text,p_client_nonce text\)[\s\S]*?server_seed text[\s\S]*?commitment text/i.test(schema),'Commit RPC must generate server seed + commitment');
+need(/grant execute on function public\.case_fairness_commit\(text,text\) to authenticated/i.test(schema),'Commit RPC must be authenticated-only');
+need(/create or replace function public\.open_case_server\(p_case_id text,p_cost numeric,p_round_id uuid\)/i.test(schema),'Open RPC must consume the committed round id');
+need(/select \* into round from public\.case_fairness_rounds[\s\S]*?for update/i.test(schema),'Open RPC must lock the committed fairness round');
+need(/expected_commitment:=encode\(digest\(round\.server_seed\|\|':'\|\|round\.client_nonce\|\|':'\|\|round\.case_id,'sha256'\),\'hex'\)/i.test(schema),'Open RPC must re-check the commitment');
+need(/fair_uniform\(round\.server_seed,round\.client_nonce,round\.case_id,'rarity'\)/i.test(schema),'Authoritative rarity roll must be committed');
+need(/fair_uniform\(round\.server_seed,round\.client_nonce,round\.case_id,'item'\)/i.test(schema),'Authoritative item roll must be committed');
+need(/server_seed.*commitment|commitment.*server_seed/i.test(schema),'Fairness receipt must include commitment and revealed seed');
+need(!/open_case_server\([^)]*p_round_id uuid/.test(schema.replace(/create or replace function public\.open_case_server\(p_case_id text,p_cost numeric,p_round_id uuid\)/,'')),'Unexpected duplicate open_case_server definition');
+need(!/open_case_server\([^)]*\)\s+returns/i.test(exact.split('function transactionOpen')[1]?.slice(0,7000)||''),'Client must call the canonical commit/open RPC contract, not an old direct two-argument path');
+need(/case_fairness_commit/.test(exact),'Client must request a fairness commitment before opening');
+need(/p_round_id:round\.round_id/.test(exact),'Client must send the committed round id to the open RPC');
+need(/verifyFairnessReceipt/.test(exact)&&/SHA-256/.test(exact),'Client must verify the returned commitment before animating');
+console.log('Fairness contract OK: authenticated commit, locked single-use round, empty-search-path verifier, committed case outcome, revealed receipt, and client-side commitment verification.');
