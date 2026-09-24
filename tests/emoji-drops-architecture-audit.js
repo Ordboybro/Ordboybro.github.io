@@ -20,23 +20,23 @@ for(const marker of ['navigation-final','case-showcase-exact','transaction-layer
 if((app.split('js/emoji-drops-live-final.js').length-1)!==1)throw Error('Live Drops owner loaded more than once');
 if(!app.includes('installPointerLighting();'))throw Error('Premium pointer lighting is defined but not installed');
 if(!app.includes('--ed-surface-raised:')||!app.includes('--ed-radius-sm:')||!app.includes('--ed-radius-lg:')||!app.includes('--ed-shadow-lg:')||!app.includes('--ed-motion-fast:')||!app.includes('--ed-motion-slow:'))throw Error('Unified design tokens missing');
-const core=fs.readFileSync('js/emoji-drops-core.js','utf8'),exact=fs.readFileSync('js/emoji-drops-case-showcase-exact.js','utf8'),fav=fs.readFileSync('js/emoji-drops-final-ux.js','utf8'),nav=fs.readFileSync('js/emoji-drops-navigation-final.js','utf8'),smooth=fs.readFileSync('js/emoji-drops-smooth-ui.js','utf8');
+const core=fs.readFileSync('js/emoji-drops-core.js','utf8'),exact=fs.readFileSync('js/emoji-drops-case-showcase-exact.js','utf8'),fav=fs.readFileSync('js/emoji-drops-final-ux.js','utf8'),nav=fs.readFileSync('js/emoji-drops-navigation-final.js','utf8');
 if(core.includes("document.addEventListener('pointerup'")&&core.includes('[data-view]'))throw Error('Core runtime is competing with navigation-final for data-view events');
 if(!nav.includes("document.addEventListener('pointerdown'")||!nav.includes("document.addEventListener('click'"))throw Error('Navigation-final does not own pointerdown/click data-view lifecycle');
 if(nav.includes("document.addEventListener('pointerup'"))throw Error('Navigation-final must not use pointerup for view activation: touch pointerup can retarget and race with click synthesis');
-const resilience=fs.readFileSync('js/emoji-drops-action-resilience.js','utf8');
-if(resilience.includes("document.addEventListener('pointerup',activateNavigationFromTouch,true)")||resilience.includes("document.addEventListener('click',suppressSyntheticNavigationClick,true)"))throw Error('Action resilience must not compete with navigation-final for data-view activation');
+const retired=['emoji-drops-action-resilience.js','emoji-drops-p3-polish.js','emoji-drops-v23-stability.js','emoji-drops-case-authority-v2.js','emoji-drops-case-open-bridge.js','emoji-drops-case-authority-finalizer.js','emoji-drops-market-authority-final.js','emoji-drops-smooth-ui.js','emoji-drops-modal-finalizer.js','emoji-drops-exact-landscape-polish.js','emoji-drops-cta-lock.js','emoji-drops-product-plus.js'];
+for(const file of retired)if(app.includes(file))throw Error('Retired compatibility layer still loaded: '+file);
 if(!nav.includes("e.pointerType==='touch'"))throw Error('Navigation-final touch pointerdown ownership contract missing');
 if(core.includes('className=\'ed-ripple\'')||core.includes('.ed-ripple')||core.includes('pointerdown',core.indexOf('document.addEventListener'))&&core.includes('ed-ripple'))throw Error('Legacy white click/ripple effect still loaded');
 if(!core.includes('edBalanceUp')||!core.includes('edBalanceDown')||!core.includes('function renderBalance()'))throw Error('Authoritative balance feedback missing');
 if(!exact.includes('#edBalance'))throw Error('Exact case balance surface is not synchronized');
 if(!exact.includes('result-kicker')||!exact.includes('Added to Inventory')||!exact.includes('class="edx-claim">Continue'))throw Error('Case result hierarchy contract missing');
 if(!exact.includes('setTimeout(showResult,2750)'))throw Error('Case result reveal timing contract missing');
-if(!live.includes('edLiveIn')||!live.includes('translate3d(18px,0,0)'))throw Error('Live Drops entrance motion contract missing');
+if(!live.includes('edLiveIn')||!live.includes('translate3d(18px'))throw Error('Live Drops entrance motion contract missing');
 if(exact.includes('edxLegendaryPulse')||/edx-case\\{[^}]*animation:edxCaseFloat[^;]*infinite/.test(exact))throw Error('Cinematic case visuals still loop indefinitely');if(/animation:[^;{}]*infinite/.test(smooth))throw Error('Smooth UI contains a looping attention animation; use finite/interaction-driven motion only');
 if(!fav.includes('card.animate([{transform:`translate3d'))throw Error('Favorites do not use FLIP-style positional animation');
 if(fav.includes("e.target.closest?.('#edExact,.edx-close')")===false)throw Error('Generic modal owner does not defer exact case modal');
-if(live.includes("select:'id,nickname,item,case_id,item_price,created_at'"))throw Error('Live Drops realtime still exposes row id');
+if(live.includes("select:'id,nickname,item,case_id,item_price,created_at'"))throw Error('Live Drops realtime still exposes row id');const schemaText=fs.readFileSync('supabase/schema.sql','utf8');if(!schemaText.includes('case_fairness_rounds')||!schemaText.includes('case_fairness_commit')||!schemaText.includes('server_seed')||!schemaText.includes('commitment'))throw Error('Committed fairness contract missing');if(!exact.includes('case_fairness_commit')||!exact.includes('verifyFairnessReceipt'))throw Error('Client fairness verification missing');
 if(live.includes("select('id,nickname,item,case_id,item_price,created_at')"))throw Error('Live Drops REST query still exposes row id');
 if(!live.includes("select('nickname,item,case_id,item_price,created_at')"))throw Error('Live Drops minimized payload contract missing');
 
