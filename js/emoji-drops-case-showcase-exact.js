@@ -96,15 +96,18 @@ async function verifyFairnessReceipt(receipt,caseKey,item){
   const pool=Array.isArray(window.cases?.[serverCase])?window.cases[serverCase].filter(x=>String(x?.rarity||'common')===rarity):[];
   if(!pool.length)throw new Error('FAIRNESS_CATALOG_UNAVAILABLE');
   const itemRoll=fairnessBigInt(itemDigest);
-  const expectedIndex=Number((itemRoll*BigInt(pool.length))>>64n);
-  const expected=pool[expectedIndex];
+  const expectedOffset=Number((itemRoll*BigInt(pool.length))>>64n);
+  const expected=pool[expectedOffset];
   if(!expected)throw new Error('FAIRNESS_ITEM_UNAVAILABLE');
+  const catalog=Array.isArray(window.cases?.[serverCase])?window.cases[serverCase]:[];
+  const expectedCatalogIndex=catalog.findIndex(x=>x===expected);
   const receivedIndex=Number(item?.item_index);
   const receivedPrice=Number(String(item?.price??'').replace(/[^0-9.\-]/g,''));
+  if(expectedCatalogIndex<0)throw new Error('FAIRNESS_CATALOG_INDEX_UNAVAILABLE');
   if(!Number.isInteger(receivedIndex)||receivedIndex<0)throw new Error('FAIRNESS_ITEM_INDEX_INVALID');
-  if(String(item?.rarity)!==rarity||receivedIndex!==expectedIndex)throw new Error('FAIRNESS_OUTCOME_MISMATCH');
+  if(String(item?.rarity)!==rarity||receivedIndex!==expectedCatalogIndex)throw new Error('FAIRNESS_OUTCOME_MISMATCH');
   if(String(item?.emoji)!==String(expected.emoji)||Math.abs(receivedPrice-Number(String(expected.price).replace(/[^0-9.\-]/g,'')))>0.001)throw new Error('FAIRNESS_CATALOG_MISMATCH');
-  window.__emojiDropsFairness={roundId,caseId:serverCase,commitment,verifiedAt:Date.now(),algorithm:String(receipt.algorithm||'sha256-csprng-v1'),rarity,itemIndex:expectedIndex};
+  window.__emojiDropsFairness={roundId,caseId:serverCase,commitment,verifiedAt:Date.now(),algorithm:String(receipt.algorithm||'sha256-csprng-v1'),rarity,itemIndex:expectedCatalogIndex};
   return true;
 }
 function clientNonce(){
