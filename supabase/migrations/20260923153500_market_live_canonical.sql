@@ -66,9 +66,9 @@ begin
           where n.nspname='public'
             and p.proname in ('create_market_listing','buy_market_listing','cancel_market_listing')
   loop
-    if (r.proname='create_market_listing' and r.args <> 'p_item_id text, p_price numeric')
-       or (r.proname='buy_market_listing' and r.args <> 'p_listing_id uuid')
-       or (r.proname='cancel_market_listing' and r.args <> 'p_listing_id uuid') then
+    if (r.proname='create_market_listing' and r.args <> 'text, numeric')
+       or (r.proname='buy_market_listing' and r.args <> 'uuid')
+       or (r.proname='cancel_market_listing' and r.args <> 'uuid') then
       execute format('drop function if exists public.%I(%s)',r.proname,r.args);
     end if;
   end loop;
@@ -129,14 +129,22 @@ grant execute on function public.market_snapshot() to anon;
 
 create or replace function public.buy_market_listing(p_listing_id uuid) returns jsonb
 language plpgsql security definer set search_path='' as $$
-declare uid uuid:=auth.uid(); l public.market_listings%rowtype; buyer public.profiles%rowtype; seller public.profiles%rowtype; item jsonb;
+declare
+  uid uuid:=auth.uid();
+  l public.market_listings%rowtype;
+  buyer public.profiles%rowtype;
+  seller public.profiles%rowtype;
+  item jsonb;
+  seller_id uuid;
 begin
   if uid is null then raise exception 'AUTH_REQUIRED'; end if;
+  select ml.seller_id into seller_id from public.market_listings ml where ml.id=p_listing_id;
+  if seller_id is null then raise exception 'LISTING_UNAVAILABLE'; end if;
+  if seller_id=uid then raise exception 'SELF_PURCHASE_FORBIDDEN'; end if;
+  perform 1 from public.profiles where id in (uid,seller_id) order by id for update;
   select * into l from public.market_listings where id=p_listing_id for update;
-  if l.id is null or l.status<>'active' then raise exception 'LISTING_UNAVAILABLE'; end if;
-  if l.seller_id=uid then raise exception 'SELF_PURCHASE_FORBIDDEN'; end if;
+  if l.id is null or l.status<>'active' or l.seller_id<>seller_id then raise exception 'LISTING_UNAVAILABLE'; end if;
   item:=l.item;
-  perform 1 from public.profiles where id in (uid,l.seller_id) order by id for update;
   select * into buyer from public.profiles where id=uid;
   select * into seller from public.profiles where id=l.seller_id;
   if buyer.id is null or seller.id is null then raise exception 'PROFILE_NOT_FOUND'; end if;
