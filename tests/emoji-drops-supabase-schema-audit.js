@@ -85,6 +85,8 @@ if(/(?:service_role|service-role|SUPABASE_SERVICE_ROLE_KEY)\s*[:=]/i.test(browse
   throw new Error('Secret/service key exposed to browser');
 }
 if(!/grant select \(nickname,item,case_id,item_price,created_at\) on public\.live_drops to authenticated,anon/i.test(schema))throw new Error('Live Drops public column grant is missing or exposes private fields');
+if(/insert into public\.live_drops[\s\S]{0,500}values \(\$1,\$2,\$3,\$4,\$5,now\(\)\)' using uid,[\s\S]*?,item,chosen\.case_id/i.test(schema))throw new Error('Live Drops must not persist the full private inventory item JSON');
+if(!/jsonb_build_object\('emoji',item->>'emoji','rarity',item->>'rarity','price',item->>'price'\)/i.test(schema))throw new Error('Live Drops public item payload sanitization missing');
 if(!fs.existsSync(fairnessMigration))throw new Error('Committed fairness production migration missing');
 if(!/delete from public\.case_fairness_rounds where user_id=uid and consumed_at is null;[\s\S]*perform 1 from public\.profiles where id=uid for update;/i.test(schema))throw new Error('Fairness commit lock order must be fairness-round -> profile');
 if(!/select \* into fair_round from public\.case_fairness_rounds[\s\S]*for update;[\s\S]*select balance,inventory into bal,inv from public\.profiles where id=uid for update;/i.test(schema))throw new Error('Case open lock order must be fairness-round -> profile');
