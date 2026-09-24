@@ -148,7 +148,6 @@ revoke execute on function public.open_case_server(text,numeric,uuid) from publi
 grant execute on function public.open_case_server(text,numeric,uuid) to authenticated;
 revoke execute on function public.sell_all_server() from public,anon;
 grant execute on function public.sell_all_server() to authenticated;
-revoke execute on function public.upgrade_server(text,numeric,numeric) from public,anon,authenticated;
 drop function if exists public.upgrade_server(text,numeric,numeric);
 
 -- Canonical case catalogue and server-side resolution (self-contained schema).
@@ -592,7 +591,7 @@ begin
     'balance',bal-cost,
     'cost',cost,
     'fairness',jsonb_build_object(
-      'round_id',round.id,
+      'round_id',fair_round.id,
       'commitment',fair_round.commitment,
       'server_seed',fair_round.server_seed,
       'client_nonce',fair_round.client_nonce,
@@ -600,8 +599,6 @@ begin
     )
   );
 end; $$;
-revoke execute on function public.open_case_server(text,numeric) from public,anon;
-
 -- Canonical Upgrade RPC. The 7-argument signature is the only supported client contract.
 -- Emoji Drops — authoritative Upgrade target and chance validation.
 -- Target identity is resolved against the same server-owned case catalog used by case opening.
@@ -781,7 +778,7 @@ alter default privileges in schema public revoke execute on functions from anon;
 alter default privileges in schema public revoke execute on functions from authenticated;
 
 -- Canonical client execution grants (final overload surface).
-revoke execute on function public.open_case_server(text,numeric) from public,anon;
-grant execute on function public.open_case_server(text,numeric) to authenticated;
+revoke execute on function public.open_case_server(text,numeric,uuid) from public,anon;
+grant execute on function public.open_case_server(text,numeric,uuid) to authenticated;
 revoke execute on function public.upgrade_server(text,numeric,numeric,text,text,text,numeric) from public,anon;
 grant execute on function public.upgrade_server(text,numeric,numeric,text,text,text,numeric) to authenticated;
