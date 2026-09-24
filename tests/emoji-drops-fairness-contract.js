@@ -14,7 +14,7 @@ need(/create or replace function public\.case_fairness_commit\(p_case_id text,p_
 need(/grant execute on function public\.case_fairness_commit\(text,text\) to authenticated/i.test(schema),'Commit RPC must be authenticated-only');
 need(/create or replace function public\.open_case_server\(p_case_id text,p_cost numeric,p_round_id uuid\)/i.test(schema),'Open RPC must consume the committed round id');
 need(/select \* into fair_round from public\.case_fairness_rounds[\s\S]*?for update/i.test(schema),'Open RPC must lock the committed fairness round');
-need(/expected_commitment:=encode\(digest\(fair_round\.server_seed\|\|':'\|\|fair_round\.client_nonce\|\|':'\|\|fair_round\.case_id,'sha256'\),\'hex'\)/i.test(schema),'Open RPC must re-check the commitment');
+need(/expected_commitment:=encode\(public\.digest\(fair_round\.server_seed\|\|':'\|\|fair_round\.client_nonce\|\|':'\|\|fair_round\.case_id,'sha256'\),\'hex'\)/i.test(schema),'Open RPC must re-check the commitment');
 need(/fair_uniform\(fair_round\.server_seed,fair_round\.client_nonce,fair_round\.case_id,'rarity'\)/i.test(schema),'Authoritative rarity roll must be committed');
 need(/fair_uniform\(fair_round\.server_seed,fair_round\.client_nonce,fair_round\.case_id,'item'\)/i.test(schema),'Authoritative item roll must be committed');
 need(/'server_seed',fair_round\.server_seed/.test(schema),'Fairness receipt must reveal the seed only after the authoritative result');
