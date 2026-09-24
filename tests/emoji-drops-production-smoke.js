@@ -1,14 +1,25 @@
 const https=require('https');
 const {chromium}=require('playwright');
 const urls=[process.env.EMOJI_DROPS_URL||'https://ordboybro.github.io/'];
+const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+async function waitForCurrentProduction(u,attempts=24){
+  let last=null;
+  for(let i=0;i<attempts;i++){
+    last=await get(u);
+    const body=String(last.body||'');
+    if(last.status>=200&&last.status<400&&body.includes('app-v2.js?v=runtime-336')&&body.includes('emoji-drops-navigation-final.js'))return last;
+    await sleep(10000);
+  }
+  return last;
+}
 const get=u=>new Promise((res,rej)=>{const x=https.get(u,{headers:{'User-Agent':'EmojiDrops-QA/1.0'}},r=>{let d='';r.setEncoding('utf8');r.on('data',c=>d+=c);r.on('end',()=>res({status:r.statusCode,body:d,headers:r.headers}))});x.setTimeout(12000,()=>x.destroy(Error('timeout')));x.on('error',rej)});
 (async()=>{
  const b=await chromium.launch({headless:true});
  try{
   for(const u of urls){
-   const r=await get(u);
+   const r=await waitForCurrentProduction(u);
    if(r.status<200||r.status>=400)throw Error(`${u} HTTP ${r.status}`);
-   for(const marker of ['Emoji','Drops','app-v2.js'])if(!r.body.includes(marker))throw Error(`${u} missing production marker: ${marker}`);
+   for(const marker of ['Emoji','Drops','app-v2.js?v=runtime-336','emoji-drops-navigation-final.js'])if(!r.body.includes(marker))throw Error(`${u} missing current production marker: ${marker}`);
    const p=await b.newPage({viewport:{width:390,height:844}});
    const errors=[];p.on('pageerror',e=>errors.push(String(e.message||e)));
    await p.goto(u,{waitUntil:'domcontentloaded',timeout:20000});
