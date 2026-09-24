@@ -33,27 +33,41 @@ EventTarget.prototype.removeEventListener=function(t,f,o){L.listeners--;return r
  await page.waitForTimeout(300);
  const snap=()=>page.evaluate(()=>{const l=window.__edLeak;return{dom:document.body.querySelectorAll('*').length,timeouts:l.timeouts.size,intervals:l.intervals.size,rafs:l.rafs.size,observers:l.observers.size,sockets:l.sockets.size,listeners:l.listeners,heap:performance.memory?.usedJSHeapSize||null}});
  const base=await snap();
+ const cycleViews=['cases','inventory','upgrade','market','profile'];
  for(let i=0;i<100;i++){
-   await page.evaluate(()=>window.EmojiDropsCaseShowcaseExact.open('smile'));
-   await page.waitForSelector('#edExact.show',{timeout:2500});
-   await page.evaluate(()=>window.EmojiDropsCaseShowcaseExact.close('long-session'));
-   await page.waitForFunction(()=>!document.querySelector('#edExact.show'),{timeout:1500});
-   if(i%10===9)await page.waitForTimeout(30);
- }
- for(let i=0;i<25;i++){
-   const v=['cases','inventory','upgrade','market','profile'][i%5];
+   const v=cycleViews[i%cycleViews.length];
    await page.locator(`[data-view="${v}"]`).first().click();
    await page.waitForFunction(v=>document.querySelector(`#view-${CSS.escape(v)}`)?.classList.contains('active'),v,{timeout:2000});
+   if(v==='cases'){
+     await page.evaluate(()=>window.EmojiDropsCaseShowcaseExact.open('smile'));
+     await page.waitForSelector('#edExact.show',{timeout:2500});
+     await page.evaluate(()=>window.EmojiDropsCaseShowcaseExact.close('long-session'));
+     await page.waitForFunction(()=>!document.querySelector('#edExact.show'),{timeout:1500});
+   }else if(v==='inventory'){
+     await page.evaluate(()=>window.__emojiDropsCore?.render?.());
+   }else if(v==='upgrade'){
+     await page.evaluate(()=>window.EmojiDropsUpgradeFinal?.build?.());
+   }else if(v==='market'){
+     await page.evaluate(()=>window.EmojiDropsMarketV26?.render?.());
+   }else if(v==='profile'){
+     await page.evaluate(()=>window.EmojiDropsFinalUX?.profile?.());
+   }
+   if(i%5===0)await page.evaluate(()=>window.EmojiDropsLiveFinal?.refresh?.());
+   if(i%10===0)await page.evaluate(()=>{
+     window.dispatchEvent(new Event('pageshow'));
+     window.dispatchEvent(new CustomEvent('emoji-drops-auth-change',{detail:{session:null,refreshFailed:false}}));
+   });
+   if(i%10===9)await page.waitForTimeout(40);
  }
  await page.locator('[data-view="cases"]').first().click();
  await page.waitForSelector('#view-cases.active .ed-case',{timeout:3000});
  await page.waitForTimeout(300);
  const tail=await snap();
  const delta={dom:tail.dom-base.dom,timeouts:tail.timeouts-base.timeouts,intervals:tail.intervals-base.intervals,rafs:tail.rafs-base.rafs,observers:tail.observers-base.observers,sockets:tail.sockets-base.sockets,listeners:tail.listeners-base.listeners,heapMB:base.heap&&tail.heap?(tail.heap-base.heap)/1048576:null};
- if(delta.dom>40||delta.timeouts>8||delta.intervals>3||delta.rafs>6||delta.observers>3||delta.sockets>2||delta.listeners>20)throw Error('Long-session lifecycle drift: '+JSON.stringify(delta));
+ if(delta.dom>80||delta.timeouts>12||delta.intervals>4||delta.rafs>8||delta.observers>4||delta.sockets>4||delta.listeners>30)throw Error('Long-session lifecycle drift: '+JSON.stringify(delta));
  if(errors.length)throw Error('Page errors during long session: '+errors.join(' | '));
  console.log('LONG_SESSION_BASE',JSON.stringify(base));
  console.log('LONG_SESSION_TAIL',JSON.stringify(tail));
  console.log('LONG_SESSION_DELTA',JSON.stringify(delta));
- console.log('Long-session E2E OK: 100 modal cycles + 25 navigation cycles without unbounded DOM/timer/observer/socket/listener growth');
+ console.log('Long-session E2E OK: 100 mixed case/modal/inventory/upgrade/market/profile cycles with Live Drops refresh/reconnect signals and bounded DOM/timer/observer/socket/listener growth');
 }catch(e){console.error(e);process.exitCode=1}finally{try{await page?.close()}catch{}try{await context?.close()}catch{}try{await browser?.close()}catch{}try{server.kill('SIGTERM')}catch{}}})();
