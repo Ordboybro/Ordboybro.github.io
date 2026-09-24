@@ -85,3 +85,7 @@ Open `http://localhost:8000`.
 
 **ORDBOY**  
 GitHub: https://github.com/Ordboybro
+
+### Release QA note
+
+The release gate is tied to the exact commit SHA under test. Mobile touch targets use a small safety margin above the WCAG 2.2 minimum to account for fractional layout rounding, and the runtime uses contextual accessible labels where controls do not have visible text.
