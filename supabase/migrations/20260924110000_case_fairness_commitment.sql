@@ -108,7 +108,7 @@ begin
     where ci.case_id=lower(trim(p_case_id)) and ci.rarity=v_rarity
     order by ci.item_index offset item_offset limit 1;
   if chosen.item_index is null then raise exception 'CASE_ITEMS_UNAVAILABLE'; end if;
-  item:=jsonb_build_object('id',public.gen_random_uuid()::text,'emoji',chosen.emoji,'rarity',chosen.rarity,'price',chosen.item_price,'case_id',chosen.case_id,'caseKey',chosen.case_id,'obtainedAt',now());
+  item:=jsonb_build_object('id',public.gen_random_uuid()::text,'item_index',chosen.item_index,'emoji',chosen.emoji,'rarity',chosen.rarity,'price',chosen.item_price,'case_id',chosen.case_id,'caseKey',chosen.case_id,'obtainedAt',now());
   update public.profiles
     set balance=bal-cost,
         inventory=coalesce(inv,'[]'::jsonb)||jsonb_build_array(item),
