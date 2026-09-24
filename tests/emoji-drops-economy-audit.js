@@ -8,7 +8,7 @@ const weights={common:.55,rare:.27,epic:.12,mythical:.05,legendary:.01};
 if(Math.abs(Object.values(weights).reduce((a,b)=>a+b,0)-1)>1e-12)throw new Error('Rarity probabilities do not sum to 100%');
 if(!/create or replace function public\.case_cost\(p_case_id text\)/.test(schema))throw new Error('Server case_cost function missing');
 for(const [key,price] of Object.entries({smile:100,moves:80,nature:60,food:40,animals:20,transport:20,sport:250,games:500}))if(!new RegExp("when ['\\\"]"+key+"['\\\"] then "+price+"\\b","i").test(schema))throw new Error('Server case price drift: '+key);
-if(!/roll numeric:=random\(\)/.test(schema)||!/roll<\.01/.test(schema)||!/roll<\.06/.test(schema)||!/roll<\.18/.test(schema)||!/roll<\.45/.test(schema))throw new Error('Server rarity roll thresholds drifted');
+if(!schema.includes('create or replace function public.secure_uniform_roll()')||!/roll numeric:=public\.secure_uniform_roll\(\)/.test(schema)||!/roll<\.01/.test(schema)||!/roll<\.06/.test(schema)||!/roll<\.18/.test(schema)||!/roll<\.45/.test(schema))throw new Error('Server secure RNG/rarity thresholds drifted');
 const expected={
   smile:{cost:100,ev:16.29},moves:{cost:80,ev:12.99},nature:{cost:60,ev:13.43},food:{cost:40,ev:11.13},
   animals:{cost:20,ev:16.76},transport:{cost:20,ev:14.52},sport:{cost:250,ev:19.25},games:{cost:500,ev:29.25}
