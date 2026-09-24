@@ -42,7 +42,7 @@ function css(){if($('#'+ID+'-style'))return;const s=document.createElement('styl
 @media(max-width:430px){
 .ed-case{min-height:246px!important}
 .ed-case-art{height:132px!important}
-.ed-case>.ed-btn{min-height:44px!important}
+.ed-case>.ed-btn{min-height:48px!important}
 #view-profile .ed-profile>.ed-panel:first-child{padding:11px!important}
 #view-profile .ed-profile>.ed-panel:first-child .ed-stat{min-height:74px!important;padding:9px!important}
 #view-profile .ed-profile>.ed-panel:first-child .ed-stat b{font-size:20px!important}
