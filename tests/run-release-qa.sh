@@ -75,10 +75,17 @@ run "Performance budget" node tests/emoji-drops-performance-budget-e2e.js
 run "Mobile responsive/touch" node tests/emoji-drops-mobile-e2e.js
 run "100-cycle long session" node tests/emoji-drops-long-session-e2e.js
 run "Recovery/multi-tab" node tests/emoji-drops-recovery-e2e.js
-run "Live Supabase anonymous security" node tests/emoji-drops-supabase-anon-security-e2e.js
+if [[ "${SKIP_PRODUCTION_QA:-false}" == "true" ]]; then
+  echo "SKIP: Live Supabase anonymous security (covered by post-migration production gate)"
+  echo "SKIP: Production smoke (covered by post-deploy production gate)"
+else
+  run "Live Supabase anonymous security" node tests/emoji-drops-supabase-anon-security-e2e.js
+fi
 run "Architecture audit" node tests/emoji-drops-architecture-audit.js
 run "Visual regression smoke" node tests/emoji-drops-visual-regression-smoke.js
-run "Production smoke" node tests/emoji-drops-production-smoke.js
+if [[ "${SKIP_PRODUCTION_QA:-false}" != "true" ]]; then
+  run "Production smoke" node tests/emoji-drops-production-smoke.js
+fi
 run "Final P5/P3 contract" node tests/emoji-drops-p5-p3-self-test.js
 
 finished="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
