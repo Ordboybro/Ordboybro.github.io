@@ -86,7 +86,7 @@ This file is the persistent checkpoint for the user's request to finish **the re
 17. **Release QA**
    - Browser E2E, Upgrade E2E, accessibility, performance, mobile, recovery, anonymous Supabase security, architecture, visual regression and production smoke are already covered by the required workflow.
    - Added fairness-contract, canonical static-audit and exact 200%/forced-colors accessibility gates.
-   - GitHub is currently creating `static-qa` runs with `conclusion=failure` and `jobs=[]` on this branch, so there is still no valid full-run result for the current head. Do not merge until a valid full run is green.
+   - GitHub Actions now has a valid pull-request QA job on the current branch head. The full release runner is executing the expanded matrix on run `2740`; do not merge until that exact run is green.
 
 ## Release status
 
