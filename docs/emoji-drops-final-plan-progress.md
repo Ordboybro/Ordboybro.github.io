@@ -1,6 +1,6 @@
 # Emoji Drops — final plan progress
 
-Updated: 2026-09-23
+Updated: 2026-09-24
 Branch: `final/emoji-drops-11-10-implementation-2026-09-23`
 PR: #35
 
@@ -15,11 +15,11 @@ This file is the persistent checkpoint for the user's request to finish **the re
    - Navigation is owned by `js/emoji-drops-navigation-final.js`.
    - Exact case modal/reveal is owned by `js/emoji-drops-case-showcase-exact.js`.
    - Transactions, Upgrade, Market, Live Drops, Inventory and Favorites have explicit contracts in the runtime bootstrap.
-   - Fixed a real mobile navigation race: a synthetic/non-touch click arriving shortly after a touch could activate a different navigation target. Navigation v8 now rejects stale cross-target clicks during the active touch window.
+   - Fixed a real mobile navigation race: a synthetic/non-touch click arriving shortly after a touch could activate a different navigation target. Navigation v11 now rejects stale cross-target clicks during the active touch window and publishes a single `emoji-drops-view-committed` event for downstream feature owners.
 
 2. **Design system**
    - Canonical `--ed-*` tokens exist in the runtime bootstrap: surfaces, border, text, muted, accent, rarity, radii, shadows, motion durations and easing.
-   - Runtime visual layers were already migrated to these canonical tokens in this branch; no new visual system was added here.
+   - Repaired a token self-reference introduced during cleanup and added explicit micro/card/modal/reveal/climax/upgrade timing tokens; canonical visual layers now consume shared timing/easing variables.
 
 3. **Main / Cases hierarchy**
    - Existing main surface is intentionally centered on Cases first, with Live Drops below.
@@ -46,12 +46,13 @@ This file is the persistent checkpoint for the user's request to finish **the re
    - Current audit snapshot: Smile 16.29/100, Moves 12.99/80, Nature 13.43/60, Food 11.13/40, Animals 16.76/20, Transport 14.52/20, Sport 19.25/250, Games 29.25/500. These are audit values, not recommendations to change the economy.
 
 8. **Market**
-   - The current CI workflow already contains dedicated Market privacy, race/concurrency and production-migration audit gates. This pass keeps that scope intact rather than inventing another Market implementation.
+   - The current CI workflow contains Market privacy, race/concurrency and production-migration gates. Added deterministic buy/buy, buy/cancel, double-click, retry-after-timeout and refresh-during-mutation state-machine coverage; real two-user DB contention still requires authenticated staging credentials.
 
 ## Second half — implemented / verified in this pass
 
 9. **Security + Supabase production pass**
    - Schema audit enforces RLS, canonical RPC identities, `SECURITY DEFINER SET search_path=''`, ownership checks and locked Market mutations.
+   - Fixed two production-schema defects discovered during this pass: malformed PostgreSQL dollar-quoting and stale grants to retired RPC overloads.
    - Anonymous live matrix verifies direct economy-table denial, mutation RPC denial, constrained Market snapshot and narrow Live Drops payload.
    - Current Supabase guidance was rechecked: private Realtime channels/RLS are recommended for protected topics; public Live Drops remains intentionally limited to non-private fields.
 
@@ -66,7 +67,8 @@ This file is the persistent checkpoint for the user's request to finish **the re
    - Profile item actions were normalized to 48px touch targets.
 
 12. **Accessibility**
-   - Existing axe/keyboard/focus-trap/Escape/focus-restore/reduced-motion gate passes.
+   - Existing axe/keyboard/focus-trap/Escape/focus-restore/reduced-motion gate is retained.
+   - Added automated 320px / 200% zoom and forced-colors + reduced-motion coverage.
    - WCAG 2.2 target-size/focus/reduced-motion guidance was cross-checked against the implementation.
 
 13. **Favorites**
@@ -82,10 +84,10 @@ This file is the persistent checkpoint for the user's request to finish **the re
    - Real listings only, explicit owner state, sell/buy/cancel lifecycle, server-side atomicity and race contracts; duplicate active item listings are blocked by the database constraint.
 
 17. **Release QA**
-   - Browser E2E, Upgrade E2E, accessibility, performance, mobile, recovery, anonymous Supabase security, architecture, visual regression and production smoke have all passed on the latest full run before the release-gate-only workflow fix.
-   - The release gate itself was corrected to evaluate prior-step outcomes with `success()` rather than self-referential `job.status`.
-   - The latest code SHA is now `522be97fb5613c49f6fd56fe72591ed9222bb561`. The workflow was triggered, but GitHub marked the new run as a workflow-file failure with zero jobs, so it has not yet produced a valid test result. Do not merge until a valid full run is green.
+   - Browser E2E, Upgrade E2E, accessibility, performance, mobile, recovery, anonymous Supabase security, architecture, visual regression and production smoke are already covered by the required workflow.
+   - Added fairness-contract, canonical static-audit and exact 200%/forced-colors accessibility gates.
+   - GitHub is currently creating `static-qa` runs with `conclusion=failure` and `jobs=[]` on this branch, so there is still no valid full-run result for the current head. Do not merge until a valid full run is green.
 
 ## Release status
 
-The implementation work for the remaining half is complete. **The code-level mobile blocker found in the latest full run is fixed; the remaining release blocker is obtaining a valid full CI run for the latest SHA.** Do not merge until the full release gate is green.
+The implementation work from the supplied final plan has been applied in code, schema, migrations and QA contracts. **The release gate is still open: GitHub is failing the workflow before a job is created (`jobs=[]`), so the current head has not been fully executed.** Do not merge until a valid full run is green.
