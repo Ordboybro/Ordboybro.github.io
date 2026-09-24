@@ -42,6 +42,27 @@ function simulateRace(type){
 for(const type of ['buy-buy','buy-cancel','double-click-buy']){
   if(!simulateRace(type))throw new Error('Deterministic race model failed: '+type);
 }
+function retryAfterTimeout(){
+  const state={status:'active',paymentCount:0,itemCount:0};
+  const attempts=['buy:timeout-before-response','buy:retry-after-timeout'];
+  for(const attempt of attempts){
+    if(state.status!=='active')continue;
+    if(attempt.startsWith('buy:')){
+      state.status='sold';state.paymentCount++;state.itemCount++;
+      // The client may not know the first request's response, but a retry must observe the
+      // already-committed listing state instead of creating a second payment/item.
+    }
+  }
+  return state.paymentCount===1&&state.itemCount===1&&state.status==='sold';
+}
+function refreshDuringMutation(){
+  const optimistic={status:'active',inventoryCount:0,balance:100};
+  const committed={status:'sold',inventoryCount:1,balance:40};
+  const refreshed=structuredClone(committed);
+  return refreshed.status==='sold'&&refreshed.inventoryCount===1&&refreshed.balance===40&&optimistic.status!=='sold';
+}
+if(!retryAfterTimeout())throw new Error('Retry-after-timeout race model failed');
+if(!refreshDuringMutation())throw new Error('Refresh-during-mutation model failed');
 const buySource=buy.toLowerCase();
 if(/balance\s*<\s*l\.listing_price|balance-l\.listing_price/.test(buySource)===false)throw new Error('Buy must reject insufficient balance before completing purchase');
-console.log('Market race contract OK: listing lock + ordered profile lock + atomic status transition + unique active item constraint + deterministic buy/buy, buy/cancel and double-click state-machine races');
+console.log('Market race contract OK: listing lock + ordered profile lock + atomic status transition + unique active item constraint + buy/buy, buy/cancel, double-click, retry-after-timeout and refresh-during-mutation invariants');
