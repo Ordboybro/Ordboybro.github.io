@@ -15,7 +15,7 @@ begin
       join pg_namespace n on n.oid=p.pronamespace
      where n.nspname='public'
        and (
-         (p.proname='open_case_server' and pg_get_function_identity_arguments(p.oid) <> 'text, numeric')
+         (p.proname='open_case_server' and pg_get_function_identity_arguments(p.oid) <> 'text, numeric, uuid')
          or
          (p.proname='upgrade_server' and pg_get_function_identity_arguments(p.oid) <> 'text, numeric, numeric, text, text, text, numeric')
          or
@@ -36,8 +36,9 @@ begin
 end
 $$;
 
-revoke execute on function public.open_case_server(text,numeric) from public,anon;
-grant execute on function public.open_case_server(text,numeric) to authenticated;
+drop function if exists public.open_case_server(text,numeric);
+revoke execute on function public.open_case_server(text,numeric,uuid) from public,anon;
+grant execute on function public.open_case_server(text,numeric,uuid) to authenticated;
 
 revoke execute on function public.upgrade_server(text,numeric,numeric,text,text,text,numeric) from public,anon;
 grant execute on function public.upgrade_server(text,numeric,numeric,text,text,text,numeric) to authenticated;
