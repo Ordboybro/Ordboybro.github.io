@@ -5,12 +5,14 @@ create extension if not exists pgcrypto;
 -- The result remains server-side; this is not a provably-fair reveal protocol by itself.
 create or replace function public.secure_uniform_roll() returns numeric
 language sql volatile security definer set search_path='' as $$
+  with r as (select public.gen_random_bytes(4) as b)
   select (
-    get_byte(public.gen_random_bytes(4),0)::numeric*16777216 +
-    get_byte(public.gen_random_bytes(4),1)::numeric*65536 +
-    get_byte(public.gen_random_bytes(4),2)::numeric*256 +
-    get_byte(public.gen_random_bytes(4),3)::numeric
-  ) / 4294967296;
+    pg_catalog.get_byte(b,0)::numeric*16777216 +
+    pg_catalog.get_byte(b,1)::numeric*65536 +
+    pg_catalog.get_byte(b,2)::numeric*256 +
+    pg_catalog.get_byte(b,3)::numeric
+  ) / 4294967296
+  from r;
 $$;
 revoke execute on function public.secure_uniform_roll() from public,anon,authenticated;
 
