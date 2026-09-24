@@ -8,7 +8,10 @@ async function waitForModalReady(page){
   await page.waitForSelector('#edExact.show',{timeout:5000});
   const open=page.locator('#edExact.show .edx-open button').first();
   await open.waitFor({state:'attached',timeout:5000});
-  await open.scrollIntoViewIfNeeded();
+  await open.evaluate(el=>{
+    const box=el.closest('#edExactBox');
+    if(box)box.scrollTop=Math.max(0,el.offsetTop-120);
+  });
   await page.waitForFunction(()=>{
     const b=document.querySelector('#edExact.show .edx-open button');
     if(!b)return false;
