@@ -36,7 +36,7 @@ const required=[
   'alter table public.case_fairness_rounds enable row level security',
   'revoke all on table public.case_fairness_rounds from public,anon,authenticated',
   'case_fairness_active_user_idx',
-  'create or replace function public.fair_uniform(text,text,text,text)',
+  'create or replace function public.fair_uniform(p_seed text,p_nonce text,p_case_id text,p_label text)',
   'revoke execute on function public.fair_uniform(text,text,text,text) from public,anon,authenticated',
   'create or replace function public.case_fairness_commit(text,text)',
   'grant execute on function public.case_fairness_commit(text,text) to authenticated',
