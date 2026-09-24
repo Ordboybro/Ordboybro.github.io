@@ -1,7 +1,7 @@
 (()=>{'use strict';
 const V=['cases','upgrade','market','inventory','collections','daily','profile'];
 function selector(v){return v==='cases'?'.ed-case':v==='upgrade'?'.ed-upgrade-grid':v==='market'?'.ed-market-card':v==='inventory'?'.ed-inventory':v==='profile'?'.ed-profile':'.ed-panel'}
-function activate(v){const root=document.getElementById('view-'+v),core=window.__emojiDropsCore;if(!root)return false;try{document.querySelectorAll('.ed-view').forEach(x=>x.classList.toggle('active',x===root));document.querySelectorAll('[data-view]').forEach(x=>x.classList.toggle('active',x.getAttribute('data-view')===v));return true}catch(err){console.error('Emoji Drops navigation activation failed',err);return false}}
+function activate(v){const root=document.getElementById('view-'+v);if(!root)return false;try{document.querySelectorAll('.ed-view').forEach(x=>x.classList.toggle('active',x===root));document.querySelectorAll('[data-view]').forEach(x=>x.classList.toggle('active',x.getAttribute('data-view')===v));window.__edView=v;return true}catch(err){console.error('Emoji Drops navigation activation failed',err);return false}}
 function ensure(v,token){if(token!==undefined&&token!==generation)return false;if(v!==lastView)return false;const root=document.getElementById('view-'+v);if(!root||root.querySelector(selector(v)))return false;return activate(v)}
 function schedule(v,token,delay){setTimeout(()=>ensure(v,token),delay)}
 function force(v){if(!V.includes(v))return false;lastView=v;generation++;const token=generation;if(!activate(v))return false;emitCommitted(v,'navigation-final-force');schedule(v,token,0);schedule(v,token,140);return true}
