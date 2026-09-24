@@ -6,16 +6,9 @@ const server = spawn(process.execPath, ['-e', `require('http').createServer((req
 async function waitForServer(){for(let i=0;i<40;i++){try{await new Promise((resolve,reject)=>{const req=require('node:http').get('http://127.0.0.1:4175/',r=>{r.resume();r.statusCode===200?resolve():reject(Error('HTTP '+r.statusCode))});req.on('error',reject)});return}catch{await new Promise(r=>setTimeout(r,50))}}throw Error('Local test server did not start')}
 async function waitForModalReady(page){
   await page.waitForSelector('#edExact.show',{timeout:5000});
-  await page.waitForFunction(()=>{
-    const m=document.querySelector('#edExact.show');
-    if(!m)return false;
-    const buttons=[...m.querySelectorAll('button')];
-    return buttons.some(b=>{
-      const r=b.getBoundingClientRect();
-      const s=getComputedStyle(b);
-      return r.width>0&&r.height>0&&s.display!=="none"&&s.visibility!=="hidden"&&s.pointerEvents!=="none";
-    });
-  },{timeout:5000});
+  const open=page.locator('#edExact.show .edx-open button').first();
+  await open.waitFor({state:'visible',timeout:5000});
+  await open.scrollIntoViewIfNeeded();
 }
 async function audit(page,label){await page.addScriptTag({content:axe.source});const result=await page.evaluate(async()=>axe.run(document,{runOnly:{type:'tag',values:['wcag2a','wcag2aa']}}));const serious=result.violations.filter(v=>['critical','serious'].includes(v.impact));if(serious.length){const diagnostics=await page.evaluate(()=>[...document.querySelectorAll('small')].map(el=>{const chain=[];let n=el;for(let i=0;i<5&&n;i++,n=n.parentElement){const s=getComputedStyle(n);chain.push({tag:n.tagName,cls:n.className,color:s.color,bg:s.backgroundColor,opacity:s.opacity,html:n.outerHTML.slice(0,300)})}return {text:el.textContent,chain}}));const summary=serious.map(v=>`${v.id}(${v.impact}): ${v.nodes.slice(0,3).map(n=>n.html).join(' | ')}`).join('\\n');throw Error(`Accessibility ${label} failed:\n${summary}\nDIAGNOSTICS:${JSON.stringify(diagnostics)}`)}return result.violations}
 async function visibleViewNames(page){return await page.locator('[data-view]').evaluateAll(xs=>[...new Set(xs.filter(x=>{const s=getComputedStyle(x),r=x.getBoundingClientRect();return s.display!=='none'&&s.visibility!=='hidden'&&s.opacity!=='0'&&r.width>0&&r.height>0}).map(x=>x.getAttribute('data-view')).filter(Boolean))])}
