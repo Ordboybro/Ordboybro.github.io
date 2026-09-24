@@ -33,6 +33,7 @@ async function touchCard(page){
   for(let attempt=1;attempt<=3;attempt++){
     const freshPoint=await opener.boundingBox();
     if(!freshPoint)throw Error('Explicit case-open button lost layout during touch retry');
+    if(attempt===1){const hit=await page.evaluate(()=>{const b=document.querySelector('#view-cases.active [data-open]');if(!b)return null;const r=b.getBoundingClientRect();const el=document.elementFromPoint(r.left+r.width/2,r.top+r.height/2);return{hit:el?.outerHTML?.slice(0,500)||null,button:b.outerHTML.slice(0,500),onclick:typeof b.onclick,disabled:b.disabled,text:b.textContent}});if(hit?.hit&&!hit.hit.includes('data-open'))window.__edPhysicalTapHit=hit}
     await page.touchscreen.tap(freshPoint.x+freshPoint.width/2,freshPoint.y+freshPoint.height/2);
     if(await page.locator('#edExact.show').count())return;
     await page.waitForTimeout(80*attempt);
