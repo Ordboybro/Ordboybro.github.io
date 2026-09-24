@@ -118,8 +118,8 @@ The implementation work from the supplied final plan has been applied in code, s
 
 23. Concurrency hardening found during second-half deep review
    - Fairness commit and case-open previously acquired the shared profile/fairness-row locks in opposite orders, creating a real deadlock path under concurrent commit/open/retry activity.
-   - Canonical schema + production fairness migration now use the same fairness-round -> profile lock order as open_case_server.
-   - The Supabase schema audit now statically enforces that lock order.
+   - Canonical schema + production fairness migration now use the same profile -> fairness-round lock order for commit/open serialization.
+   - The Supabase schema audit now statically enforces that profile-first lock order.
 
 24. Live Drops privacy hardening
    - The public item JSON previously carried private inventory identity fields (id, caseKey, obtainedAt) even though the feed only needs emoji/rarity/price.
