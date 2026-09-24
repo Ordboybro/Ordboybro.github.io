@@ -1,9 +1,1 @@
-const fs=require('fs');
-const s=fs.readFileSync('js/emoji-drops-action-resilience.js','utf8');
-const loader=fs.readFileSync('js/app-v2.js','utf8');
-for(const marker of ['Emoji Drops action resilience v7','emojiDropsActionResilienceV7','data-do-open','data-sell-all','data-upgrade','data-daily','MutationObserver','normalize','setAttribute','pointerup','edPointer','setTimeout','button.click()','RETRY_DELAY','upgradeFallback','upgradeSelection','visibleModal','closeModal','Escape','focusables'])if(!s.includes(marker))throw Error(`Action resilience marker missing: ${marker}`);
-if(/setInterval\s*\(/.test(s))throw Error('Action resilience must not poll');
-const active=loader.match(/emoji-drops-action-resilience\.js\?v=([^'\"]+)/)?.[1];
-if(!active)throw Error('Action resilience loader entry missing');
-if(active!=='action-21')throw Error(`Action resilience loader version mismatch: expected action-20, got ${active}`);
-console.log(`Action resilience self-test OK: compatibility markers + active loader ${active} + deterministic pointer activation + upgrade recovery + modal lifecycle + keyboard focus safety + one-shot verification/retry, no polling`);
+const fs=require('fs');const loader=fs.readFileSync('js/app-v2.js','utf8');if(loader.includes('emoji-drops-action-resilience.js'))throw Error('Retired action-resilience layer is still loaded');if(loader.includes('emoji-drops-case-open-bridge.js'))throw Error('Retired case-open bridge is still loaded');console.log('Action resilience retirement OK: canonical navigation and case owners are now sole action owners');
