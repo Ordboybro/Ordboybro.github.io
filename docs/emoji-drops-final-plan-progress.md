@@ -88,44 +88,15 @@ This file is the persistent checkpoint for the user's request to finish **the re
    - Added fairness-contract, canonical static-audit and exact 200%/forced-colors accessibility gates.
    - GitHub is currently creating `static-qa` runs with `conclusion=failure` and `jobs=[]` on this branch, so there is still no valid full-run result for the current head. Do not merge until a valid full run is green.
 
-## Release status
 
-The implementation work from the supplied final plan has been applied in code, schema, migrations and QA contracts. **The release gate is still open: GitHub is failing the workflow before a job is created (`jobs=[]`), so the current head has not been fully executed.** Do not merge until a valid full run is green.
 
-### Final hardening findings from the second-half review
+## External market / platform audit — 2026-09-24
 
-18. Fairness receipt correctness
-   - Fixed the canonical fairness migration receipt bug: the open RPC now returns fair_round.id instead of the nonexistent round.id.
-   - The fairness contract now checks the canonical fair_round variable, rejects any pre-result server_seed leak from the commitment RPC, and requires the post-result seed/commitment receipt.
-   - The client continues to verify the SHA-256 commitment and exact catalog index before the reel.
+- Apple currently requires odds disclosure before purchase for apps with loot boxes/randomized virtual items; Google Play likewise requires odds to be disclosed in advance and close to the purchase. Emoji Drops already renders the five rarity probabilities directly in the case screen and does not use real-money purchases. 
+- Current Supabase Realtime guidance recommends Broadcast for most scalable/security-sensitive realtime use cases, while Postgres Changes remains supported and simpler. The current Live Drops feed is deliberately public, payload-minimized, and has REST fallback/lifecycle cleanup; no authenticated/private topic is exposed through it.
+- Current consumer-protection guidance continues to emphasize avoiding interfaces that obscure costs, terms, or user choice. The product therefore keeps demo/virtual-money labeling, visible case prices and odds, and no artificial countdown/FOMO mechanics.
+- Current mobile/accessibility contracts remain aligned with the project scope: large touch targets, keyboard/focus handling, reduced motion, narrow layouts and explicit modal semantics.
 
-19. Navigation guard precision
-   - Tightened the synthetic-touch click guard from 8 seconds to 900ms. It still blocks stale cross-target synthetic clicks without suppressing a later intentional tap.
-   - Navigation remains owned by pointerdown + click; pointerup is not a navigation trigger.
+## Release decision
 
-20. Authenticated/local state boundary
-   - Added a release gate for anonymous local state versus authenticated server state.
-   - Login resets local state before profile_snapshot; logout/refresh failure restores the isolated demo state instead of merging stale authenticated inventory.
-   - Supabase client naming remains on the publishable-key model.
-
-21. External market/security review
-   - Current Supabase documentation recommends Broadcast over Postgres Changes for scalability/security, while distinguishing public and private channel authorization. Emoji Drops keeps Live Drops intentionally public and payload-minimized, with REST fallback and lifecycle cleanup rather than adding a new user-facing surface or an unnecessary transport migration.
-   - Current competitor patterns emphasize visible odds, live activity, upgrade/market loops and verifiable fairness. Emoji Drops keeps those elements while avoiding artificial urgency/FOMO.
-   - Current EU/FTC consumer-protection guidance reinforces clear price/odds information and avoiding manipulative purchase design, especially where minors can encounter paid randomized content.
-
-22. Release blocker
-   - GitHub's workflow-run connector currently returns no run objects for the latest PR head, so the full current-head CI result cannot yet be independently confirmed from this interface. The branch remains unmerged by design.
-
-23. Concurrency hardening found during second-half deep review
-   - Fairness commit and case-open previously acquired the shared profile/fairness-row locks in opposite orders, creating a real deadlock path under concurrent commit/open/retry activity.
-   - Canonical schema + production fairness migration now use the same fairness-round -> profile lock order as open_case_server.
-   - The Supabase schema audit now statically enforces that lock order.
-
-24. Live Drops privacy hardening
-   - The public item JSON previously carried private inventory identity fields (id, caseKey, obtainedAt) even though the feed only needs emoji/rarity/price.
-   - Canonical schema and production fairness migration now persist only the public item subset and scrub legacy rows.
-   - The browser Realtime/REST bridges also strip the same fields defensively before painting.
-
-25. Transparency / simulator labeling
-   - Header balance is explicitly labeled ДЕМО, with an accessible virtual-balance label.
-   - Public metadata now states that the site is a virtual simulator and the in-game balance is not real money.
+The implementation scope is now code-complete against the supplied final plan. The only remaining work is release verification: obtain a valid CI run for the exact PR head, resolve any real failures, rerun the full matrix, and merge only after the release gate is green. No new feature surface should be added during that gate.
