@@ -137,6 +137,12 @@ The implementation work from the supplied final plan has been applied in code, s
 - Current consumer-protection guidance continues to emphasize avoiding interfaces that obscure costs, terms, or user choice. The product therefore keeps demo/virtual-money labeling, visible case prices and odds, and no artificial countdown/FOMO mechanics.
 - Current mobile/accessibility contracts remain aligned with the project scope: large touch targets, keyboard/focus handling, reduced motion, narrow layouts and explicit modal semantics.
 
+### QA repair pass — 2026-09-24
+- Fixed two stale self-audit reads to modules that were intentionally retired during the single-owner cleanup: architecture audit no longer reads `emoji-drops-smooth-ui.js`, and the P5/P3 contract no longer reads `emoji-drops-p3-polish.js` or `emoji-drops-smooth-ui.js`.
+- Added deterministic 10/20/50 concurrency invariant coverage for buy/buy, buy/cancel and duplicate retry/double-click scenarios, checking one terminal mutation, zero negative balances, zero phantom items and zero active listings.
+- The release workflow now runs that concurrency model alongside the existing Market race contract.
+- The latest directly inspected PR run failed earlier at the legacy Assets/boot contract; that contract was subsequently rewritten in this branch to match runtime v336 and the retired-layer merge. The current head still requires a fresh PR-triggered green run before release.
+
 ## Release decision
 
 The implementation scope is code-complete against the supplied final plan. The remaining work is release verification: obtain a valid CI run for the exact PR head, resolve any real failures, rerun the full matrix, and merge only after the release gate is green. No new feature surface should be added during that gate.
