@@ -37,7 +37,7 @@ async function refresh(){
  try{
    const q=c.from('live_drops').select('nickname,item,case_id,item_price,created_at').order('created_at',{ascending:false}).limit(20);
    const r=await q;if(r?.error)throw r.error;
-   paint(Array.isArray(r?.data)?r.data:[],true,false,realtimeReady?'SUBSCRIBED':(interval?'FALLBACK':'CONNECTING'))
+   paint(Array.isArray(r?.data)?r.data.map(d=>{const i=d?.item&&typeof d.item==='object'?d.item:{};return {...d,item:{emoji:i.emoji,rarity:i.rarity,price:i.price}}}):[],true,false,realtimeReady?'SUBSCRIBED':(interval?'FALLBACK':'CONNECTING'))
  }catch(e){paint(lastRows,true,true,realtimeReady?'SUBSCRIBED':(interval?'FALLBACK':'CONNECTING'))}
  finally{inFlight=false}
 }
