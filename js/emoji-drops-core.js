@@ -35,7 +35,7 @@ b.innerHTML=`<div class="ed-profile"><div class="ed-panel"><h3>Статисти�
 function renderCollections(){const b=document.getElementById('view-collections');b.innerHTML=`<div class="ed-title"><div><h1>Коллекции</h1><div class="ed-muted">Прогресс коллекций.</div></div></div>${Object.keys(PRICES).map(k=>{const all=items(k),have=new Set(S.inventory.map(x=>x.emoji+'|'+x.rarity));return `<div class="ed-panel" style="margin-bottom:12px"><b>${I[k]} ${N[k]}</b><div class="ed-muted">${all.filter(x=>have.has(x.emoji+'|'+x.rarity)).length}/${all.length}</div></div>`}).join('')}`}
 function view(v){window.__edView=v;document.querySelectorAll('.ed-view').forEach(x=>x.classList.toggle('active',x.id==='view-'+v));document.querySelectorAll('[data-view]').forEach(x=>x.classList.toggle('active',x.dataset.view===v));if(v==='cases'){renderCases();setTimeout(()=>{if(window.__edView==='cases'&&!document.querySelector('#view-cases.active .ed-case'))renderCases()},80)}if(v==='inventory')renderInventory();if(v==='upgrade')renderUpgrade();if(v==='market')renderMarket();if(v==='profile')renderProfile();if(v==='daily')renderDaily();if(v==='collections')renderCollections()}
 async function claimDaily(){
- const auth=window.EmojiDropsAuth,cloud=!!(window.EMOJI_DROPS_SUPABASE?.url&&window.EMOJI_DROPS_SUPABASE?.anonKey&&auth?.rpc&&auth?.userId);
+ const auth=window.EmojiDropsAuth,cloud=!!(window.EMOJI_DROPS_SUPABASE?.url&&window.EMOJI_DROPS_SUPABASE?.publishableKey&&auth?.rpc&&auth?.userId);
  if(cloud){
   if(busy){toast('Подожди завершения текущей операции');return 0}
   const tx=window.__emojiDropsTransactions;
@@ -62,7 +62,7 @@ async function claimDaily(){
 }
 async function sell(id){
  if(busy)return;
- const cloud=!!(window.EMOJI_DROPS_SUPABASE?.url&&window.EMOJI_DROPS_SUPABASE?.anonKey&&window.EmojiDropsAuth?.rpc&&window.EmojiDropsAuth?.userId);
+ const cloud=!!(window.EMOJI_DROPS_SUPABASE?.url&&window.EMOJI_DROPS_SUPABASE?.publishableKey&&window.EmojiDropsAuth?.rpc&&window.EmojiDropsAuth?.userId);
  if(!cloud){toast('Войди в аккаунт для продажи');return}
  const tx=window.__emojiDropsTransactions;
  if(!tx?.run){toast('Транзакционный runtime недоступен');return}
@@ -79,7 +79,7 @@ async function sell(id){
 }
 async function sellAll(){
  if(busy||!S.inventory.length)return;
- const cloud=!!(window.EMOJI_DROPS_SUPABASE?.url&&window.EMOJI_DROPS_SUPABASE?.anonKey&&window.EmojiDropsAuth?.rpc&&window.EmojiDropsAuth?.userId);
+ const cloud=!!(window.EMOJI_DROPS_SUPABASE?.url&&window.EMOJI_DROPS_SUPABASE?.publishableKey&&window.EmojiDropsAuth?.rpc&&window.EmojiDropsAuth?.userId);
  if(!cloud){toast('Войди в аккаунт для продажи');return}
  const tx=window.__emojiDropsTransactions;
  if(!tx?.run){toast('Транзакционный runtime недоступен');return}
