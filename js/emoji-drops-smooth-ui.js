@@ -1,7 +1,7 @@
 (()=>{'use strict';
 /* Emoji Drops Smooth UI — final motion/visibility layer. No business logic; presentation only. */
 function css(){if(document.getElementById('ed-smooth-ui'))return;const s=document.createElement('style');s.id='ed-smooth-ui';s.textContent=`
-:root{--ed-ease:cubic-bezier(.22,.8,.22,1);--ed-fast:180ms;--ed-med:280ms;--ed-slow:420ms}html{scroll-behavior:smooth}body{transition:background-color .35s ease}.ed-main{transition:opacity .22s ease,transform .28s var(--ed-ease)}
+:root{--ed-ease:cubic-bezier(.22,1,.36,1);--ed-fast:140ms;--ed-med:220ms;--ed-slow:340ms}html{scroll-behavior:smooth}body{transition:background-color .35s ease}.ed-main{transition:opacity .22s ease,transform .28s var(--ed-ease)}
 button,a,input,.ed-case,.v24-live-card,.v24-listing,.v24-item,.v24-inv-card,.v24-target,.v24-mult,.v24-slot,.v26-card,.v26-inv-card{transition:transform var(--ed-med) var(--ed-ease),opacity var(--ed-fast) ease,border-color var(--ed-med) ease,background-color var(--ed-med) ease,box-shadow var(--ed-med) ease,filter var(--ed-med) ease}
 button{position:relative;overflow:hidden;cursor:pointer;touch-action:manipulation}button:not(:disabled):active{transform:translateY(1px) scale(.985)!important}button:not(:disabled):focus-visible{outline:2px solid #ffc76a;outline-offset:2px}button:disabled{cursor:default}
 button:not(:disabled)::after{content:'';position:absolute;inset:0;background:linear-gradient(110deg,transparent 25%,#fff3 50%,transparent 75%);transform:translateX(-130%);transition:transform .65s ease;pointer-events:none}button:not(:disabled):hover::after{transform:translateX(130%)}
