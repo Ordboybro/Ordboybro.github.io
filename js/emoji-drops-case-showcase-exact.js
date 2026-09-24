@@ -62,7 +62,25 @@ function renderBalance(s){document.querySelectorAll('#balance,#edBalance,[data-b
 function fairnessHex(buffer){
   return [...new Uint8Array(buffer)].map(x=>x.toString(16).padStart(2,'0')).join('');
 }
-async function verifyFairnessReceipt(receipt,caseKey){
+async function fairnessDigest(seed,nonce,caseKey,label){
+  if(!window.crypto?.subtle||typeof TextEncoder!=='function')throw new Error('FAIRNESS_VERIFY_UNAVAILABLE');
+  const digest=await window.crypto.subtle.digest('SHA-256',new TextEncoder().encode(seed+':'+nonce+':'+String(caseKey).toLowerCase()+':'+label));
+  return new Uint8Array(digest);
+}
+function fairnessBigInt(bytes){
+  let value=0n;
+  for(let i=0;i<8;i++)value=(value<<8n)+BigInt(bytes[i]);
+  return value;
+}
+function fairnessRarity(roll){
+  const scale=1n<<64n;
+  if(roll<scale/100n)return 'legendary';
+  if(roll<scale*6n/100n)return 'mythical';
+  if(roll<scale*18n/100n)return 'epic';
+  if(roll<scale*45n/100n)return 'rare';
+  return 'common';
+}
+async function verifyFairnessReceipt(receipt,caseKey,item){
   if(!receipt||typeof receipt!=='object')throw new Error('FAIRNESS_RECEIPT_MISSING');
   const seed=String(receipt.server_seed||'');
   const nonce=String(receipt.client_nonce||'');
@@ -70,10 +88,23 @@ async function verifyFairnessReceipt(receipt,caseKey){
   const roundId=String(receipt.round_id||'');
   const serverCase=String(receipt.case_id||'').toLowerCase();
   if(!seed||!nonce||!commitment||!roundId||serverCase!==String(caseKey).toLowerCase())throw new Error('FAIRNESS_RECEIPT_INVALID');
-  if(!window.crypto?.subtle||typeof TextEncoder!=='function')throw new Error('FAIRNESS_VERIFY_UNAVAILABLE');
-  const digest=await window.crypto.subtle.digest('SHA-256',new TextEncoder().encode(seed+':'+nonce+':'+serverCase));
-  if(fairnessHex(digest).toLowerCase()!==commitment)throw new Error('FAIRNESS_COMMITMENT_MISMATCH');
-  window.__emojiDropsFairness={roundId,caseId:serverCase,commitment,verifiedAt:Date.now(),algorithm:String(receipt.algorithm||'sha256-csprng-v1')};
+  const commitDigest=await window.crypto.subtle.digest('SHA-256',new TextEncoder().encode(seed+':'+nonce+':'+serverCase));
+  if(fairnessHex(commitDigest).toLowerCase()!==commitment)throw new Error('FAIRNESS_COMMITMENT_MISMATCH');
+  const rarityDigest=await fairnessDigest(seed,nonce,serverCase,'rarity');
+  const itemDigest=await fairnessDigest(seed,nonce,serverCase,'item');
+  const rarity= fairnessRarity(fairnessBigInt(rarityDigest));
+  const pool=Array.isArray(window.cases?.[serverCase])?window.cases[serverCase].filter(x=>String(x?.rarity||'common')===rarity):[];
+  if(!pool.length)throw new Error('FAIRNESS_CATALOG_UNAVAILABLE');
+  const itemRoll=fairnessBigInt(itemDigest);
+  const expectedIndex=Number((itemRoll*BigInt(pool.length))>>64n);
+  const expected=pool[expectedIndex];
+  if(!expected)throw new Error('FAIRNESS_ITEM_UNAVAILABLE');
+  const receivedIndex=Number(item?.item_index);
+  const receivedPrice=Number(String(item?.price??'').replace(/[^0-9.\-]/g,''));
+  if(!Number.isInteger(receivedIndex)||receivedIndex<0)throw new Error('FAIRNESS_ITEM_INDEX_INVALID');
+  if(String(item?.rarity)!==rarity||receivedIndex!==expectedIndex)throw new Error('FAIRNESS_OUTCOME_MISMATCH');
+  if(String(item?.emoji)!==String(expected.emoji)||Math.abs(receivedPrice-Number(String(expected.price).replace(/[^0-9.\-]/g,'')))>0.001)throw new Error('FAIRNESS_CATALOG_MISMATCH');
+  window.__emojiDropsFairness={roundId,caseId:serverCase,commitment,verifiedAt:Date.now(),algorithm:String(receipt.algorithm||'sha256-csprng-v1'),rarity,itemIndex:expectedIndex};
   return true;
 }
 function clientNonce(){
@@ -95,7 +126,7 @@ async function transactionOpen(k,cost){
     const data=r?.data;
     if(!data?.item||typeof data.item!=='object'||!data.item.id||!data.item.emoji||!data.item.rarity)throw new Error('INVALID_CASE_RESULT');
     if(!data.fairness||String(data.fairness.round_id)!==String(round.round_id))throw new Error('FAIRNESS_RESULT_MISMATCH');
-    await verifyFairnessReceipt(data.fairness,k);
+    await verifyFairnessReceipt(data.fairness,k,data.item);
     return data;
   }
   const pool=items(k);
