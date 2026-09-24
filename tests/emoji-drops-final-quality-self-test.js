@@ -17,7 +17,13 @@ ctx.window.__emojiDropsCore={_s:{balance:250,inventory:[],stats:{},history:[]},s
 vm.runInContext(tx,ctx,{timeout:2000});const t=ctx.window.__emojiDropsTransactions;if(t?.version!==11||t?.journal!=='emojiDropsTxnV4'||t?.commitGraceMs!==1200||t?.nonBlockingLease!==true||t?.faultAware!==true)throw Error('Transaction v11 contract failed');
 const schema=fs.readFileSync('supabase/schema.sql','utf8');
 for(const marker of ['select balance,inventory into bal,inv from public.profiles where id=uid','inventory=coalesce(inv,\'[]\'::jsonb)||jsonb_build_array(item)','where x->>\'id\'<>p_item_id','update public.market_listings set status=\'sold\',buyer_id=uid,sold_at=now()','set status=\'cancelled\',cancelled_at=now()'])if(!schema.includes(marker))throw Error('Cross-feature inventory invariant marker missing: '+marker);
-if(!/buy_market_listing[\s\S]*perform 1 from public\.profiles where id in \(uid,seller_id\) order by id for update;[\s\S]*inventory=coalesce\(\[\]|inventory=coalesce\(\S+,'[]'::jsonb\)\)\|\|jsonb_build_array\(item\)/i.test(schema))throw Error('Market buy must append the exact purchased item only after canonical locks');
+const buyStart=schema.indexOf('create or replace function public.buy_market_listing');
+const buyEnd=schema.indexOf('create or replace function public.cancel_market_listing',buyStart);
+const buy=buyStart>=0&&buyEnd>buyStart?schema.slice(buyStart,buyEnd):'';
+const orderedProfile=buy.indexOf('perform 1 from public.profiles where id in (uid,seller_id) order by id for update;');
+const lockedListing=buy.indexOf('select * into l from public.market_listings where id=p_listing_id for update;');
+if(orderedProfile<0||lockedListing<0||orderedProfile>lockedListing)throw Error('Market buy must lock profiles before the listing row');
+if(!buy.includes("inventory=coalesce(inventory,'[]'::jsonb)||jsonb_build_array(item)"))throw Error('Market buy must append the exact purchased item');
 const s=ctx.window.__emojiDropsCore._s,original=JSON.stringify(s),a=t.begin('quality');if(!a)throw Error('Transaction begin failed');s.balance=999;s.inventory.push({id:'q',emoji:'😀',rarity:'common',price:'10EC'});if(!t.rollback(a)||JSON.stringify(s)!==original)throw Error('Rollback invariant failed');
 for(let i=0;i<10000;i++){s.balance=250;s.balance+=100;s.balance-=100;if(s.balance!==250)throw Error('Balance invariant failed')}
 console.log('Final quality self-test OK: dataset, rarities, hardening, v10 transaction rollback, long-session balance invariant');
