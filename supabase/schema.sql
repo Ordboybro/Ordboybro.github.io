@@ -6,10 +6,10 @@ create extension if not exists pgcrypto;
 create or replace function public.secure_uniform_roll() returns numeric
 language sql volatile security definer set search_path='' as $$
   select (
-    get_byte(gen_random_bytes(4),0)::numeric*16777216 +
-    get_byte(gen_random_bytes(4),1)::numeric*65536 +
-    get_byte(gen_random_bytes(4),2)::numeric*256 +
-    get_byte(gen_random_bytes(4),3)::numeric
+    get_byte(public.gen_random_bytes(4),0)::numeric*16777216 +
+    get_byte(public.gen_random_bytes(4),1)::numeric*65536 +
+    get_byte(public.gen_random_bytes(4),2)::numeric*256 +
+    get_byte(public.gen_random_bytes(4),3)::numeric
   ) / 4294967296;
 $$;
 revoke execute on function public.secure_uniform_roll() from public,anon,authenticated;
