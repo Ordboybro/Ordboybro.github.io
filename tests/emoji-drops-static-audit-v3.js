@@ -44,7 +44,7 @@ for(const marker of ['version:11','emoji-drops-view-committed','pointerdown','TO
 if(/pointerup[^\n]*commit\(/.test(nav))throw Error('Navigation must not commit views from pointerup');
 
 const exact=read('js/emoji-drops-case-showcase-exact.js');
-for(const marker of ['version:15','case_fairness_commit','verifyFairnessReceipt','orientation:landscape','#edExactBox .edx-open','data-result-locked'])if(!exact.includes(marker))throw Error('Exact case contract missing: '+marker);
+for(const marker of ['version:15','case_fairness_commit','verifyFairnessReceipt','FAIRNESS_OUTCOME_MISMATCH','item_index','orientation:landscape','#edExactBox .edx-open','data-result-locked'])if(!exact.includes(marker))throw Error('Exact case contract missing: '+marker);
 if(/window\.addEventListener\(['"]click['"]/.test(exact))throw Error('Exact case must not own a global click navigation layer');
 
 const live=read('js/emoji-drops-live-final.js');
@@ -62,7 +62,7 @@ const supa=read('js/supabase-config.js');
 const auth=read('js/supabase-auth.js');
 if(!supa.includes('publishableKey')||/anonKey/.test(supa)||!auth.includes('publishableKey')||/anonKey/.test(auth))throw Error('Supabase publishable-key naming drift');
 
-if(!schema.includes('case_fairness_rounds')||!schema.includes('case_fairness_commit')||!schema.includes('secure_uniform_roll'))throw Error('Server fairness/security contract missing');
+if(!schema.includes('case_fairness_rounds')||!schema.includes('case_fairness_commit')||!schema.includes('secure_uniform_roll')||/'round_id',round\.id/.test(schema))throw Error('Server fairness/security contract missing');
 const marketSig=schema.match(/market_snapshot\(\)\s*returns table\(([\s\S]*?)\)\s+language/i)?.[1]||'';
 if(/seller_id\s+uuid/i.test(marketSig)||!/is_owner\s+boolean/i.test(marketSig))throw Error('Market privacy contract drift');
 for(const mig of ['supabase/migrations/20260922150000_market_snapshot_privacy.sql','supabase/migrations/20260923170000_canonical_market_rpc_identity.sql','supabase/migrations/20260923190000_final_rpc_identity_hardening.sql','supabase/migrations/20260924110000_case_fairness_commitment.sql'])if(!fs.existsSync(mig))throw Error('Required production migration missing: '+mig);
