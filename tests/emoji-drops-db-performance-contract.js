@@ -19,7 +19,7 @@ for(const idx of requiredIndexes){
 if(!/create index if not exists market_listings_active_created_idx on public\.market_listings\(status,created_at desc\)/i.test(schema))throw new Error('Market listing read-path index drifted');
 if(!/create index if not exists case_items_lookup_idx on public\.case_items\(case_id,rarity,item_price,emoji\)/i.test(schema))throw new Error('Case catalog lookup index drifted');
 if(!/create index if not exists live_drops_created_idx on public\.live_drops\(created_at desc\)/i.test(schema))throw new Error('Live Drops time-order index drifted');
-if(!/select \* into l from public\.market_listings[\s\S]*?for update;[\s\S]*?perform 1 from public\.profiles where id in \(uid,l\.seller_id\) order by id for update;/i.test(schema))throw new Error('Market lock order drifted: listing must lock before the ordered profile lock');
+if(!/select seller_id into seller_id from public\.market_listings[\s\S]*?perform 1 from public\.profiles where id in \(uid,seller_id\) order by id for update;[\s\S]*?select \* into l from public\.market_listings[\s\S]*?for update/i.test(schema))throw new Error('Market lock order drifted: ordered profile lock must precede listing lock');
 if(!/perform 1 from public\.profiles where id=uid for update;[\\s\\S]*select \* into fair_round from public\.case_fairness_rounds[\\s\\S]*for update/i.test(schema))throw new Error('Fairness lock order drifted: profile must lock before fairness round');
 
 const dbUrl=process.env.EMOJI_DROPS_DB_URL||process.env.SUPABASE_DB_URL;
