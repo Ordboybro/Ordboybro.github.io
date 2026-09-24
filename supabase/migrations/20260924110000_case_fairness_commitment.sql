@@ -22,7 +22,7 @@ create index if not exists case_fairness_user_created_idx
 create or replace function public.fair_uniform(p_seed text,p_nonce text,p_case_id text,p_label text) returns numeric
 language sql immutable security definer set search_path='' as $fairuniform$
   with d as (
-    select digest(coalesce(p_seed,'')||':'||coalesce(p_nonce,'')||':'||lower(trim(coalesce(p_case_id,'')))||':'||coalesce(p_label,''),'sha256') as b
+    select public.digest(coalesce(p_seed,'')||':'||coalesce(p_nonce,'')||':'||lower(trim(coalesce(p_case_id,'')))||':'||coalesce(p_label,''),'sha256') as b
   )
   select (
     get_byte(b,0)::numeric*72057594037927936 +
@@ -51,13 +51,14 @@ begin
   if public.case_cost(case_key) is null then raise exception 'INVALID_CASE'; end if;
   if char_length(nonce)<8 or char_length(nonce)>128 then raise exception 'INVALID_CLIENT_NONCE'; end if;
   if not exists(select 1 from public.case_items where case_id=case_key) then raise exception 'CASE_ITEMS_UNAVAILABLE'; end if;
-  -- Lock order contract: fairness round -> profile. This matches open_case_server
-  -- and prevents commit/open deadlocks under concurrent taps or retries.
-  delete from public.case_fairness_rounds where user_id=uid and consumed_at is null;
+  -- Serialize commit/open per user at the profile row first, then the fairness round.
+  -- Both mutation paths use this order, preventing concurrent commit/open deadlocks and
+  -- eliminating the partial-unique-index race between two commit retries.
   perform 1 from public.profiles where id=uid for update;
   if not found then raise exception 'PROFILE_NOT_FOUND'; end if;
+  delete from public.case_fairness_rounds where user_id=uid and consumed_at is null;
   seed:=encode(public.gen_random_bytes(32),'hex');
-  commitment:=encode(digest(seed||':'||nonce||':'||case_key,'sha256'),'hex');
+  commitment:=encode(public.digest(seed||':'||nonce||':'||case_key,'sha256'),'hex');
   insert into public.case_fairness_rounds(user_id,case_id,client_nonce,server_seed,commitment)
     values(uid,case_key,nonce,seed,commitment)
     returning id into round_id;
@@ -88,6 +89,8 @@ begin
   if uid is null then raise exception 'AUTH_REQUIRED'; end if;
   cost:=public.case_cost(p_case_id);
   if cost is null or p_cost is null or round(p_cost,2)<>round(cost,2) then raise exception 'INVALID_CASE_COST'; end if;
+  perform 1 from public.profiles where id=uid for update;
+  if not found then raise exception 'PROFILE_NOT_FOUND'; end if;
   select * into fair_round from public.case_fairness_rounds where id=p_round_id and user_id=uid and consumed_at is null for update;
   if fair_round.id is null then raise exception 'FAIRNESS_COMMIT_REQUIRED'; end if;
   if fair_round.case_id<>lower(trim(p_case_id)) then raise exception 'FAIRNESS_CASE_MISMATCH'; end if;
@@ -95,9 +98,9 @@ begin
     update public.case_fairness_rounds set consumed_at=now() where id=fair_round.id;
     raise exception 'FAIRNESS_COMMIT_EXPIRED';
   end if;
-  expected_commitment:=encode(digest(fair_round.server_seed||':'||fair_round.client_nonce||':'||fair_round.case_id,'sha256'),'hex');
+  expected_commitment:=encode(public.digest(fair_round.server_seed||':'||fair_round.client_nonce||':'||fair_round.case_id,'sha256'),'hex');
   if expected_commitment<>fair_round.commitment then raise exception 'FAIRNESS_COMMIT_INVALID'; end if;
-  select balance,inventory into bal,inv from public.profiles where id=uid for update;
+  select balance,inventory into bal,inv from public.profiles where id=uid;
   if bal is null then raise exception 'PROFILE_NOT_FOUND'; end if;
   if bal<cost then raise exception 'INSUFFICIENT_FUNDS'; end if;
   roll:=public.fair_uniform(fair_round.server_seed,fair_round.client_nonce,fair_round.case_id,'rarity');
