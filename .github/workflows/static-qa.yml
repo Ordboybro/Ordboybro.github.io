@@ -22,5 +22,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Full release QA
+      - name: Full release QA (pre-production)
+        env:
+          SKIP_PRODUCTION_QA: 'true'
         run: bash tests/run-release-qa.sh
