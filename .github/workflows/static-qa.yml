@@ -9,6 +9,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: emoji-drops-static-qa-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   qa:
     runs-on: ubuntu-latest
