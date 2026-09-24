@@ -10,7 +10,7 @@ need(/revoke all on table public\.case_fairness_rounds from public,anon,authenti
 need(/case_fairness_active_user_idx[\s\S]*?where consumed_at is null/i.test(schema),'Exactly one active fairness round per user is not constrained');
 need(/create or replace function public\.fair_uniform\(p_seed text,p_nonce text,p_case_id text,p_label text\)[\s\S]*?security definer set search_path=''/i.test(schema),'Fair uniform verifier function must be SECURITY DEFINER with empty search_path');
 need(/revoke execute on function public\.fair_uniform\(text,text,text,text\) from public,anon,authenticated/i.test(schema),'Fair uniform helper must not be publicly executable');
-need(/create or replace function public\.case_fairness_commit\(p_case_id text,p_client_nonce text\)[\s\S]*?server_seed text[\s\S]*?commitment text/i.test(schema),'Commit RPC must generate server seed + commitment');
+need(/create or replace function public\.case_fairness_commit\(p_case_id text,p_client_nonce text\)[\s\S]*?seed text;[\s\S]*?commitment text;/i.test(schema),'Commit RPC must generate server seed + commitment');
 need(/grant execute on function public\.case_fairness_commit\(text,text\) to authenticated/i.test(schema),'Commit RPC must be authenticated-only');
 need(/create or replace function public\.open_case_server\(p_case_id text,p_cost numeric,p_round_id uuid\)/i.test(schema),'Open RPC must consume the committed round id');
 need(/select \* into fair_round from public\.case_fairness_rounds[\s\S]*?for update/i.test(schema),'Open RPC must lock the committed fairness round');
