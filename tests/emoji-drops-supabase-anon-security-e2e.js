@@ -1,7 +1,7 @@
 const fs=require('node:fs');
 const assert=require('node:assert/strict');
 const src=fs.readFileSync('js/supabase-config.js','utf8');
-const url=src.match(/url:'([^']+)'/)?.[1],key=src.match(/anonKey:'([^']+)'/)?.[1];
+const url=src.match(/url:'([^']+)'/)?.[1],key=src.match(/publishableKey:'([^']+)'/)?.[1];
 if(!url||!key)throw Error('Supabase public config unavailable');
 async function req(path,opts={}){const h=new Headers(opts.headers||{});h.set('apikey',key);h.set('Accept','application/json');return fetch(url+'/rest/v1/'+path,{...opts,headers:h})}
 async function rpc(name,body={}){return fetch(url+'/rest/v1/rpc/'+name,{method:'POST',headers:{apikey:key,'Content-Type':'application/json'},body:JSON.stringify(body)})}
