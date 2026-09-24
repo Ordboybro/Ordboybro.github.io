@@ -17,10 +17,10 @@ need(/select \* into round from public\.case_fairness_rounds[\s\S]*?for update/i
 need(/expected_commitment:=encode\(digest\(round\.server_seed\|\|':'\|\|round\.client_nonce\|\|':'\|\|round\.case_id,'sha256'\),\'hex'\)/i.test(schema),'Open RPC must re-check the commitment');
 need(/fair_uniform\(round\.server_seed,round\.client_nonce,round\.case_id,'rarity'\)/i.test(schema),'Authoritative rarity roll must be committed');
 need(/fair_uniform\(round\.server_seed,round\.client_nonce,round\.case_id,'item'\)/i.test(schema),'Authoritative item roll must be committed');
-need(/server_seed.*commitment|commitment.*server_seed/i.test(schema),'Fairness receipt must include commitment and revealed seed');
+need(/server_seed.*commitment|commitment.*server_seed/i.test(schema),'Fairness receipt must include commitment and revealed seed');need(/item_index.*chosen\.item_index/.test(schema),'Authoritative catalog index must be included in the case receipt');
 need(!/open_case_server\([^)]*p_round_id uuid/.test(schema.replace(/create or replace function public\.open_case_server\(p_case_id text,p_cost numeric,p_round_id uuid\)/,'')),'Unexpected duplicate open_case_server definition');
 need(!/open_case_server\([^)]*\)\s+returns/i.test(exact.split('function transactionOpen')[1]?.slice(0,7000)||''),'Client must call the canonical commit/open RPC contract, not an old direct two-argument path');
 need(/case_fairness_commit/.test(exact),'Client must request a fairness commitment before opening');
 need(/p_round_id:round\.round_id/.test(exact),'Client must send the committed round id to the open RPC');
-need(/verifyFairnessReceipt/.test(exact)&&/SHA-256/.test(exact),'Client must verify the returned commitment before animating');
+need(/verifyFairnessReceipt/.test(exact)&&/SHA-256/.test(exact)&&/FAIRNESS_OUTCOME_MISMATCH/.test(exact)&&/item_index/.test(exact),'Client must verify the commitment and exact catalog outcome before animating');
 console.log('Fairness contract OK: authenticated commit, locked single-use round, empty-search-path verifier, committed case outcome, revealed receipt, and client-side commitment verification.');
