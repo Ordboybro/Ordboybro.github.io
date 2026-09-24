@@ -116,4 +116,7 @@ const finalRpc=fs.readFileSync(finalRpcMigration,'utf8');
 for(const marker of ["p.proname='open_case_server'","p.proname='upgrade_server'","p.proname='create_market_listing'","p.proname='buy_market_listing'","p.proname='cancel_market_listing'","pg_get_function_identity_arguments(p.oid)","execute format(","drop function if exists","notify pgrst, 'reload schema'"]){if(!finalRpc.includes(marker))throw new Error('Final RPC identity hardening marker missing: '+marker)}
 if(!/for\s+r\s+in\s+select[\s\S]*p\.proname in \('buy_market_listing','cancel_market_listing'\)[\s\S]*execute format\([\s\S]*drop function/i.test(marketRpc))throw new Error('Canonical market RPC migration must dynamically remove unknown legacy overloads');
 
+if(/revoke execute on function public\.open_case_server\(text,numeric\)/i.test(schema)||/grant execute on function public\.open_case_server\(text,numeric\)/i.test(schema))throw new Error('Legacy two-argument open_case_server grant remains in canonical schema');
+if(/'round_id',round\.id/i.test(schema))throw new Error('Fairness receipt still references stale round variable');
+if(/revoke execute on function public\.upgrade_server\(text,numeric,numeric\) from/i.test(schema))throw new Error('Legacy three-argument upgrade revoke must be dropped before revoke/grant operations');
 console.log('Supabase schema audit OK');
