@@ -32,3 +32,11 @@ need(/case_fairness_commit/.test(exact),'Client must request a fairness commitme
 need(/p_round_id:round\.round_id/.test(exact),'Client must send the committed round id to the open RPC');
 need(/verifyFairnessReceipt/.test(exact)&&/SHA-256/.test(exact)&&/FAIRNESS_OUTCOME_MISMATCH/.test(exact)&&/item_index/.test(exact),'Client must verify the commitment and exact catalog outcome before animating');
 console.log('Fairness contract OK: authenticated commit, locked single-use round, empty-search-path verifier, committed case outcome, revealed receipt, and client-side commitment verification.');
+
+
+need(/public\.gen_random_bytes/.test(schema),'Authoritative RNG must schema-qualify pgcrypto random bytes under empty search_path');
+need(/public\.digest/.test(schema),'Fairness verifier must schema-qualify pgcrypto digest under empty search_path');
+const commitFn=schema.slice(schema.indexOf('create or replace function public.case_fairness_commit'),schema.indexOf('revoke execute on function public.case_fairness_commit'));
+const openFn=schema.slice(schema.indexOf('create or replace function public.open_case_server'),schema.indexOf('create or replace function public.upgrade_server'));
+need(commitFn.indexOf('perform 1 from public.profiles where id=uid for update')<commitFn.indexOf('delete from public.case_fairness_rounds'),'Commit must lock profile before replacing an active fairness round');
+need(openFn.indexOf('perform 1 from public.profiles where id=uid for update')<openFn.indexOf('select * into fair_round'),'Open must use the same profile-first lock order as commit');
