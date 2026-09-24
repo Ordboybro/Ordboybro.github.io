@@ -6,7 +6,7 @@ PR: #35
 
 ## Scope of this pass
 
-This file is the persistent checkpoint for the user's request to finish **exactly the first half of the remaining final-plan blocks** before doing the second half. No new user-facing features, pages, currencies, or buttons were introduced.
+This file is the persistent checkpoint for the user's request to finish **the remaining final-plan blocks** before doing the second half. No new user-facing features, pages, currencies, or buttons were introduced.
 
 ### Half 1 — completed / audited
 
@@ -62,7 +62,7 @@ This file is the persistent checkpoint for the user's request to finish **exactl
 11. **Mobile + Safari**
    - Mobile matrix now exactly covers 320x568, 360x800, 375x812, 390x844, 412x915, 430x932, 844x390 and 915x412.
    - WebKit 390x844 runs the physical touch case → modal → close flow.
-   - Case-open controls use a 52px mobile height to preserve a >=48px physical hit target after layout transforms.
+   - Case-open controls use a 50px mobile height to preserve a >=48px physical hit target after fractional layout rounding/transforms.
    - Profile item actions were normalized to 48px touch targets.
 
 12. **Accessibility**
@@ -84,8 +84,8 @@ This file is the persistent checkpoint for the user's request to finish **exactl
 17. **Release QA**
    - Browser E2E, Upgrade E2E, accessibility, performance, mobile, recovery, anonymous Supabase security, architecture, visual regression and production smoke have all passed on the latest full run before the release-gate-only workflow fix.
    - The release gate itself was corrected to evaluate prior-step outcomes with `success()` rather than self-referential `job.status`.
-   - A final rerun on the latest SHA is required before merge.
+   - The latest code SHA is now `522be97fb5613c49f6fd56fe72591ed9222bb561`. The workflow was triggered, but GitHub marked the new run as a workflow-file failure with zero jobs, so it has not yet produced a valid test result. Do not merge until a valid full run is green.
 
 ## Release status
 
-The implementation work for the remaining half is complete. **Do not merge until the latest SHA receives a full green CI run including the final release gate.**
+The implementation work for the remaining half is complete. **The code-level mobile blocker found in the latest full run is fixed; the remaining release blocker is obtaining a valid full CI run for the latest SHA.** Do not merge until the full release gate is green.
