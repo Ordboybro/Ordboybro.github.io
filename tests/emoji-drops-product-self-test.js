@@ -9,6 +9,8 @@ for(const marker of ['product-layer','Emoji Coin','emoji-coin','ed-product-tools
 if(!/KEY='emojiDropsStateV3'/.test(product)||!/KEY='emojiDropsStateV3'/.test(core)||!/KEY='emojiDropsStateV3'/.test(tx))throw Error('Shared state key contract missing');
 if(!/version[:=]11/.test(tx)||!/beforeHash/.test(tx)||!/afterHash/.test(tx)||!/COMMIT_GRACE_MS/.test(tx)||!/nonBlockingLease/.test(tx)||!/faultAware/.test(tx))throw Error('Transaction v11 verification contract missing');
 if(/setInterval\s*\(/.test(product))throw Error('Product layer must not use polling intervals');
+if(!/window\.__emojiDropsCore\?\.state\?\.\(\)/.test(product))throw Error('Product layer must prefer the canonical core state over direct local storage');
+if(!/if\(window\.EmojiDropsAuth\?\.userId\)return;/.test(product))throw Error('Authenticated progression must not expose local-only progression');
 if(!/classList\.contains\('ed-coin'\)/.test(product))throw Error('Semantic currency transform must be idempotent');
 if(!/__emojiDropsMutationHub/.test(product))throw Error('Product layer shared mutation contract missing');
 console.log('Product self-test OK: semantic Emoji Coin, idempotent currency transform, shared mutation hub, catalog/inventory tools, progression, achievements, persistence/performance contracts, transaction v11 compatibility');
