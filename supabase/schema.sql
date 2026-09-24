@@ -801,14 +801,47 @@ update public.live_drops
 create index if not exists live_drops_created_idx on public.live_drops(created_at desc);
 create index if not exists live_drops_user_idx on public.live_drops(user_id);
 
--- Realtime is optional in local Supabase projects; add the table only when the publication exists.
-do $$ begin
+-- Live Drops use a custom public Broadcast payload instead of Postgres Changes.
+do $
+begin
   if exists (select 1 from pg_publication where pubname='supabase_realtime')
-     and not exists (select 1 from pg_publication_tables where pubname='supabase_realtime' and schemaname='public' and tablename='live_drops') then
-    execute 'alter publication supabase_realtime add table public.live_drops';
+     and exists (select 1 from pg_publication_tables where pubname='supabase_realtime' and schemaname='public' and tablename='live_drops') then
+    execute 'alter publication supabase_realtime drop table public.live_drops';
   end if;
 exception when others then null;
-end $$;
+end $;
+
+create or replace function public.live_drops_broadcast_insert()
+returns trigger
+language plpgsql
+security definer
+set search_path=''
+as $
+begin
+  perform realtime.send(
+    jsonb_build_object(
+      'nickname',new.nickname,
+      'item',jsonb_build_object(
+        'emoji',new.item->>'emoji',
+        'rarity',new.item->>'rarity',
+        'price',new.item->>'price'
+      ),
+      'case_id',new.case_id,
+      'item_price',new.item_price,
+      'created_at',new.created_at
+    ),
+    'live_drop',
+    'emoji-drops-live-final',
+    false
+  );
+  return new;
+end;
+$;
+revoke execute on function public.live_drops_broadcast_insert() from public,anon,authenticated;
+drop trigger if exists live_drops_broadcast_insert on public.live_drops;
+create trigger live_drops_broadcast_insert
+after insert on public.live_drops
+for each row execute function public.live_drops_broadcast_insert();
 
 -- Make the intended public API explicit; new functions are not executable by arbitrary roles.
 alter default privileges in schema public revoke select,insert,update,delete on tables from anon,authenticated;
