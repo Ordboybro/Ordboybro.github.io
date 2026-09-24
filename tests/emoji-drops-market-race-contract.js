@@ -7,7 +7,7 @@ const required=[
   'select * into l from public.market_listings where id=p_listing_id for update',
   "l.status<>'active'",
   'seller_id=uid',
-  'perform 1 from public.profiles where id in (uid,l.seller_id) order by id for update',
+  'perform 1 from public.profiles where id in (uid,seller_id) order by id for update',
   "update public.market_listings set status='sold'",
   "update public.market_listings set status='cancelled'",
   'grant execute on function public.buy_market_listing(uuid) to authenticated',
