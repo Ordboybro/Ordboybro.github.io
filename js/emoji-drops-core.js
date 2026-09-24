@@ -63,7 +63,7 @@ async function claimDaily(){
 }
 async function sell(id){
  if(busy)return;
- const cloud=!!(window.EMOJI_DROPS_SUPABASE?.url&&window.EMOJI_DROPS_SUPABASE?.anonKey&&window.EmojiDropsAuth?.rpc&&window.EmojiDropsAuth?.userId);
+ const cloud=!!(window.EMOJI_DROPS_SUPABASE?.url&&(window.EMOJI_DROPS_SUPABASE?.publishableKey||window.EMOJI_DROPS_SUPABASE?.anonKey)&&window.EmojiDropsAuth?.rpc&&window.EmojiDropsAuth?.userId);
  if(!cloud){toast('Войди в аккаунт для продажи');return}
  const tx=window.__emojiDropsTransactions;
  if(!tx?.run){toast('Транзакционный runtime недоступен');return}
@@ -99,6 +99,8 @@ function bind(){document.body.innerHTML=appHTML();/* Navigation activation is ow
 document.addEventListener('change',e=>{if(!e.target.matches('[data-auth-mode]'))return;const n=e.target.closest('#edAuthForm')?.querySelector('[data-auth-nickname]');if(n)n.style.display=e.target.value==='signup'?'block':'none';});
 document.addEventListener('input',e=>{if(e.target.matches('[data-search]')){const b=document.getElementById('view-inventory');b.dataset.q=e.target.value;const caret=e.target.selectionStart;renderInventory();const n=b.querySelector('[data-search]');if(n){n.focus();try{n.setSelectionRange(caret,caret)}catch{}}}});document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelector('#edExact.show .edx-close')?.click()});document.addEventListener('pointerdown',e=>{const b=e.target.closest('button');if(!b||b.disabled)return;const r=b.getBoundingClientRect(),d=Math.max(r.width,r.height)*1.8,sp=document.createElement('span');sp.className='ed-ripple';sp.style.width=d+'px';sp.style.height=d+'px';sp.style.left=(e.clientX-r.left-d/2)+'px';sp.style.top=(e.clientY-r.top-d/2)+'px';b.style.position=b.style.position||'relative';b.appendChild(sp);setTimeout(()=>sp.remove(),600)},{passive:true});renderAll();persist()}
 style();if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind,{once:true});else bind();
-const scheduleRemoteSync=()=>{clearTimeout(remoteSyncTimer);if(document.hidden)return;remoteSyncTimer=setTimeout(()=>{remoteSyncTimer=0;syncRemoteProfile()},160)};window.addEventListener('emoji-drops-auth-ready',scheduleRemoteSync,{passive:true});window.addEventListener('emoji-drops-auth-change',scheduleRemoteSync,{passive:true});document.addEventListener('visibilitychange',()=>{if(!document.hidden)scheduleRemoteSync()});window.addEventListener('pageshow',scheduleRemoteSync,{passive:true});window.addEventListener('focus',scheduleRemoteSync,{passive:true});setTimeout(scheduleRemoteSync,250);
+const scheduleRemoteSync=()=>{clearTimeout(remoteSyncTimer);if(document.hidden)return;remoteSyncTimer=setTimeout(()=>{remoteSyncTimer=0;syncRemoteProfile()},160)};
+const handleAuthChange=()=>{clearTimeout(remoteSyncTimer);S=load();renderAll();scheduleRemoteSync()};
+window.addEventListener('emoji-drops-auth-ready',scheduleRemoteSync,{passive:true});window.addEventListener('emoji-drops-auth-change',handleAuthChange,{passive:true});document.addEventListener('visibilitychange',()=>{if(!document.hidden)scheduleRemoteSync()});window.addEventListener('pageshow',scheduleRemoteSync,{passive:true});window.addEventListener('focus',scheduleRemoteSync,{passive:true});setTimeout(scheduleRemoteSync,250);
 window.__emojiDropsCore={version:APP,state:()=>S,render:renderAll,view,storageKey:stateKey};window.__emojiDropsEconomy={version:2,state:S,save:persist,rarities:R,casePrices:PRICES,xpNeed};
 })();
