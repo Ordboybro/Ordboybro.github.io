@@ -585,6 +585,9 @@ revoke execute on function public.market_snapshot() from public,anon;
 grant execute on function public.market_snapshot() to authenticated;
 grant execute on function public.market_snapshot() to anon;
 
+-- Remove stale overloads left by older schema revisions; PostgREST must expose one buy function signature.
+drop function if exists public.buy_market_listing(text);
+drop function if exists public.buy_market_listing(uuid);
 create or replace function public.buy_market_listing(p_listing_id uuid) returns jsonb
 language plpgsql security definer set search_path='' as $$
 declare uid uuid:=auth.uid(); l public.market_listings%rowtype; buyer public.profiles%rowtype; seller public.profiles%rowtype; item jsonb;
