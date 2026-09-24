@@ -17,6 +17,7 @@ need(auth.includes('refreshSession')&&auth.includes('scheduleRefresh'),'Supabase
 need(auth.includes('/auth/v1/token?grant_type=refresh_token'),'refresh-token endpoint missing');
 need(auth.includes('emoji-drops-auth-change'),'auth lifecycle event missing');
 need(core.includes("rpc('profile_snapshot',{})")&&core.includes('syncRemoteProfile'),'server profile synchronization missing');
+need(core.includes('stateKey=')&&core.includes('`${KEY}:user:${uid}`')&&core.includes('`${KEY}:guest`'),'authenticated/guest local state isolation missing');
 need(!/Level \$\{S\.level\}|\$\{Math\.round\(S\.xp\)/.test(core),'profile still exposes local-only progression values');need(exact.includes('resultTimer')&&exact.includes('caseRun')&&exact.includes('data-result-locked'),'case result lifecycle lock missing');
 need(schema.includes('create or replace function public.profile_snapshot()'),'profile_snapshot RPC missing');
 need(schema.includes('create or replace function public.claim_daily_server()'),'server Daily RPC missing');
