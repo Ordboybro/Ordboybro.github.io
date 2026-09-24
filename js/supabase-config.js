@@ -4,5 +4,7 @@
  */
 window.EMOJI_DROPS_SUPABASE=Object.freeze({
   url:'https://ikodftqyzfeeoophwlvy.supabase.co',
+  publishableKey:'sb_publishable_9Zouq9ZlMFl8dEupnd75PA_RwHdCajK',
+  /* anonKey remains as a compatibility alias for the existing runtime contract. */
   anonKey:'sb_publishable_9Zouq9ZlMFl8dEupnd75PA_RwHdCajK'
 });
