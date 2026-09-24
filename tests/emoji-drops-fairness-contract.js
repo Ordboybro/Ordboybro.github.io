@@ -30,7 +30,7 @@ need(!/open_case_server\([^)]*p_round_id uuid/.test(schema.replace(/create or re
 need(!/open_case_server\([^)]*\)\s+returns/i.test(exact.split('function transactionOpen')[1]?.slice(0,7000)||''),'Client must call the canonical commit/open RPC contract, not an old direct two-argument path');
 need(/case_fairness_commit/.test(exact),'Client must request a fairness commitment before opening');
 need(/p_round_id:round\.round_id/.test(exact),'Client must send the committed round id to the open RPC');
-need(/verifyFairnessReceipt/.test(exact)&&/SHA-256/.test(exact)&&/FAIRNESS_OUTCOME_MISMATCH/.test(exact)&&/item_index/.test(exact),'Client must verify the commitment and exact catalog outcome before animating');
+need(/verifyFairnessReceipt/.test(exact)&&/SHA-256/.test(exact)&&/FAIRNESS_OUTCOME_MISMATCH/.test(exact)&&/expectedCatalogIndex/.test(exact)&&/findIndex\(x=>x===expected\)/.test(exact),'Client must verify the commitment and canonical catalog index before animating');
 console.log('Fairness contract OK: authenticated commit, locked single-use round, empty-search-path verifier, committed case outcome, revealed receipt, and client-side commitment verification.');
 
 
