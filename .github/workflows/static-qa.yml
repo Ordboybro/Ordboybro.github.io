@@ -12,17 +12,11 @@ permissions:
 jobs:
   qa:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Workflow bootstrap
-        run: |
-          set -euo pipefail
-          node --version
-          test -f index.html
-          test -f js/app-v2.js
-          echo "QA workflow bootstrap OK"
-
-# FULL_QA_BACKUP_BASELINE: preserved in git history before temporary workflow bootstrap.
+      - name: Full release QA
+        run: bash tests/run-release-qa.sh
