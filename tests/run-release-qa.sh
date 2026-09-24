@@ -49,25 +49,7 @@ run "Supabase schema security/atomicity" node tests/emoji-drops-supabase-schema-
 run "Committed fairness" node tests/emoji-drops-fairness-contract.js
 run "Auth/local/cloud boundary" node tests/emoji-drops-auth-boundary-self-test.js
 run "Server/frontend catalog consistency" node tests/emoji-drops-catalog-consistency.js
-run_shell "Canonical economy consistency" "python3 - <<'PY'
-from pathlib import Path
-import re
-data=Path('js/data.js').read_text()
-schema=Path('supabase/schema.sql').read_text()
-prices={'smile':100,'moves':80,'nature':60,'food':40,'animals':20,'transport':20,'sport':250,'games':500}
-for k,p in prices.items():
-    if not re.search(r'(?m)^\s*["\']?'+re.escape(k)+r'["\']?\s*:\s*\[',data):
-        raise SystemExit('Missing frontend case: '+k)
-    if not re.search(r'when [\'\"]'+re.escape(k)+r'[\'\"] then '+str(p)+r'\b',schema,re.I):
-        raise SystemExit('Case price drift: '+k)
-rows=re.findall(r"\\('[^']+',\\d+,'[^']*','(common|rare|epic|mythical|legendary)',[0-9.]+\\)",schema)
-if len(rows)<300: raise SystemExit('Server catalog unexpectedly small: '+str(len(rows)))
-for k in prices:
-    if not re.search(r"\\('"+re.escape(k)+r"',",schema): raise SystemExit('Server catalog incomplete: '+k)
-for marker in ['for update','SELF_PURCHASE_FORBIDDEN','claim_daily_server','INVALID_TARGET','case_items_lookup_idx','alter publication supabase_realtime add table public.live_drops','secure_uniform_roll','roll numeric:=public.secure_uniform_roll()']:
-    if marker not in schema: raise SystemExit('Economy/realtime contract missing: '+marker)
-print('Canonical economy consistency OK')
-PY"
+run "Canonical economy consistency" node tests/emoji-drops-canonical-economy-consistency.js
 run "Security/privacy audit" node tests/emoji-drops-security-audit.js
 run "Market privacy" node tests/emoji-drops-market-privacy-self-test.js
 run "Market race contract" node tests/emoji-drops-market-race-contract.js
