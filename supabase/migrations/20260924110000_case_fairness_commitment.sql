@@ -120,7 +120,7 @@ begin
     where id=uid;
   if to_regclass('public.live_drops') is not null then
     execute 'insert into public.live_drops(user_id,nickname,item,case_id,item_price,created_at) values ($1,$2,$3,$4,$5,now())'
-      using uid,(select nickname from public.profiles where id=uid),item,chosen.case_id,chosen.item_price;
+      using uid,(select nickname from public.profiles where id=uid),jsonb_build_object('emoji',item->>'emoji','rarity',item->>'rarity','price',item->>'price'),chosen.case_id,chosen.item_price;
     execute 'delete from public.live_drops where created_at < now()-interval ''30 minutes''';
   end if;
   update public.case_fairness_rounds
@@ -188,5 +188,10 @@ begin
 end; $$;
 revoke execute on function public.upgrade_server(text,numeric,numeric,text,text,text,numeric) from public,anon;
 grant execute on function public.upgrade_server(text,numeric,numeric,text,text,text,numeric) to authenticated;
+
+-- Scrub legacy Live Drops rows created before the public-payload contract.
+update public.live_drops
+   set item=jsonb_build_object('emoji',item->>'emoji','rarity',item->>'rarity','price',item->>'price')
+ where item ? 'id' or item ? 'caseKey' or item ? 'obtainedAt';
 
 notify pgrst, 'reload schema';
