@@ -10,7 +10,7 @@ need(app.includes('live-final-20'),'Live Drops cache contract missing');need(app
 need(app.includes('final-ux-15'),'Profile UX cache contract missing');
 need(hard.includes('const VERSION=11')&&!hard.includes('#edExact'),'generic hardening must not own exact case modal');
 need(app.includes('final-ux-15')&&ux.includes('emojiDropsFavoritesV2')&&!app.includes('emoji-drops-final-ux-v4.js'),'Duplicate Favorites/UX owner remains loaded');
-need(app.includes('market-v26-20')&&market.includes('version:31')&&market.includes('destroy')&&market.includes('is_owner'),'Market lifecycle owner/cache contract missing');
+need(app.includes('market-v26-21')&&market.includes('version:32')&&market.includes('destroy')&&market.includes('is_owner'),'Market lifecycle owner/cache contract missing');
 for(const retired of ['emoji-drops-action-resilience.js','emoji-drops-p3-polish.js','emoji-drops-v23-stability.js','emoji-drops-case-authority-v2.js','emoji-drops-case-open-bridge.js','emoji-drops-case-authority-finalizer.js','emoji-drops-market-authority-final.js','emoji-drops-smooth-ui.js','emoji-drops-modal-finalizer.js','emoji-drops-exact-landscape-polish.js','emoji-drops-cta-lock.js','emoji-drops-product-plus.js'])need(!app.includes(retired),`retired compatibility layer still loaded: ${retired}`);
 need(auth.includes('refreshSession')&&auth.includes('scheduleRefresh'),'Supabase session auto-refresh missing');
 need(auth.includes('/auth/v1/token?grant_type=refresh_token'),'refresh-token endpoint missing');
