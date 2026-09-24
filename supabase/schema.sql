@@ -754,25 +754,30 @@ grant execute on function public.buy_market_listing(uuid) to authenticated;
 
 create or replace function public.cancel_market_listing(p_listing_id uuid) returns jsonb
 language plpgsql security definer set search_path='' as $$
-declare uid uuid:=auth.uid(); l public.market_listings%rowtype;
+declare
+  uid uuid:=auth.uid();
+  l public.market_listings%rowtype;
+  seller_id uuid;
 begin
   if uid is null then raise exception 'AUTH_REQUIRED'; end if;
+  select ml.seller_id into seller_id from public.market_listings ml where ml.id=p_listing_id;
+  if seller_id is null then raise exception 'LISTING_UNAVAILABLE'; end if;
+  if seller_id<>uid then raise exception 'NOT_LISTING_OWNER'; end if;
+  perform 1 from public.profiles where id=uid for update;
   select * into l from public.market_listings where id=p_listing_id for update;
-  if l.id is null or l.status<>'active' then raise exception 'LISTING_UNAVAILABLE'; end if;
-  if l.seller_id<>uid then raise exception 'NOT_LISTING_OWNER'; end if;
-  update public.profiles set inventory=coalesce(inventory,'[]'::jsonb)||jsonb_build_array(l.item),updated_at=now() where id=uid;
-  update public.market_listings set status='cancelled',cancelled_at=now() where id=l.id;
+  if l.id is null or l.status<>'active' or l.seller_id<>seller_id then raise exception 'LISTING_UNAVAILABLE'; end if;
+  update public.profiles
+     set inventory=coalesce(inventory,'[]'::jsonb)||jsonb_build_array(l.item),
+         updated_at=now()
+   where id=uid;
+  update public.market_listings
+     set status='cancelled',cancelled_at=now()
+   where id=l.id;
   return jsonb_build_object('item',l.item,'listing_id',l.id);
 end; $$;
 revoke execute on function public.cancel_market_listing(uuid) from public,anon;
 grant execute on function public.cancel_market_listing(uuid) to authenticated;
 
--- Direct table access is intentionally denied for the economy tables; clients use the narrow RPC surface.
-revoke all on table public.profiles from anon,authenticated;
-revoke all on table public.case_items from anon,authenticated;
-revoke all on table public.market_listings from anon,authenticated;
-
--- Live Drops is read-only to clients; writes are performed by server-side RPCs.
 create table if not exists public.live_drops (
   id bigint generated always as identity primary key,
   user_id uuid references public.profiles(id) on delete cascade,
