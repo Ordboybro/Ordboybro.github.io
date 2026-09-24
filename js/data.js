@@ -41,7 +41,7 @@ moves:80,
 nature:60,
 food:40,
 animals:20,
-transport:20,
+transport:10,
 sport:250,
 games:500
 
