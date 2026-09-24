@@ -18,6 +18,11 @@ const market=fs.readFileSync('js/emoji-drops-market-v26.js','utf8'),live=fs.read
 const hard=fs.readFileSync('js/emoji-drops-final-hardening.js','utf8');
 if(hard.includes('#edExact'))throw Error('Generic hardening still owns the exact case modal');
 if(!/version:31/.test(market)||!market.includes('destroy'))throw Error('Market lifecycle owner contract missing');
+const p3=fs.readFileSync('js/emoji-drops-p3-polish.js','utf8'),smooth=fs.readFileSync('js/emoji-drops-smooth-ui.js','utf8');
+if(/function settingsControl\(/.test(p3)||/\.ed-p3-settings/.test(p3))throw Error('P3 must not inject a secondary settings control');
+if(/nav\.addEventListener\(['"]touch/.test(p3))throw Error('P3 must not own navigation touch gestures');
+if(/animation:[^;{}]+infinite/.test(smooth))throw Error('Smooth UI contains persistent infinite animation');
+if((index.match(/id="ed-boot-style"/g)||[]).length!==1)throw Error('Duplicate boot style shell remains');
 if(!/version:19/.test(live)||!live.includes('destroyed')||!live.includes('generation'))throw Error('Live Drops lifecycle generation contract missing');
 if(!fs.readFileSync('supabase/schema.sql','utf8').includes('create or replace function public.claim_daily_server()'))throw Error('Daily server authority missing');
 for(const marker of ['navigation-final','case-showcase-exact','transaction-layer','upgrade-final','market-v26','live-final'])if(!ownership.includes(marker))throw Error('Ownership matrix missing: '+marker);
